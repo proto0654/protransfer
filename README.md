@@ -9,11 +9,16 @@
 
 Превью для заказчика: **https://proto0654.github.io/protransfer/**
 
-Деплой — сборка `dist` в ветку `gh-pages` (Pages → Source: ветка `gh-pages`, папка `/`):
+Деплой — автоматически из ветки `main` через GitHub Actions (`.github/workflows/deploy.yml`,
+Pages → Source: **GitHub Actions**): пуш в `main` → сборка → публикация.
+
+Резервный способ (если Actions лежит) — публикация готового `dist` в ветку `gh-pages`:
 
 ```bash
 npm run deploy   # build + push dist в gh-pages
 ```
+
+Для него в настройках Pages нужно переключить Source на ветку `gh-pages` (папка `/`).
 
 ## Команды
 
@@ -45,7 +50,8 @@ src/data/reviews.json       отзывы
 src/data/faq.json           вопросы и ответы
 public/fleet/*.jpg          фото автомобилей для карточек тарифов (880×420, сжаты)
 public/favicon.svg          иконка сайта
-public/.nojekyll            отключает Jekyll при публикации на GitHub Pages
+public/.nojekyll            отключает Jekyll при публикации из ветки gh-pages (резервный деплой)
+.github/workflows/deploy.yml сборка и публикация на GitHub Pages из ветки main
 ```
 
 ## Как считается цена

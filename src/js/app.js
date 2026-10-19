@@ -208,11 +208,11 @@ export default function app() {
               [to.lat, to.lon],
             ]
 
-      mapStore.layer.add(new ymaps.Polyline(coords, {}, { strokeColor: '#FFB020', strokeWidth: 9, strokeOpacity: 0.45 }))
+      mapStore.layer.add(new ymaps.Polyline(coords, {}, { strokeColor: '#D93B31', strokeWidth: 9, strokeOpacity: 0.45 }))
       mapStore.layer.add(new ymaps.Polyline(coords, {}, { strokeColor: '#0B1422', strokeWidth: 4, strokeOpacity: 0.9 }))
 
       const pinFrom = this.pin('А', '#0B1422')
-      const pinTo = this.pin('Б', '#FFB020')
+      const pinTo = this.pin('Б', '#D93B31')
       mapStore.layer.add(
         new ymaps.Placemark([from.lat, from.lon], { ...pinFrom.properties, hintContent: from.name }, pinFrom.options),
       )

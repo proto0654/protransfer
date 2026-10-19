@@ -45,7 +45,7 @@
     >
       <div class="container-x flex h-16 items-center justify-between gap-4 lg:h-20">
         <a href="#" class="flex items-center gap-2.5 text-white" aria-label="Про Трансфер — на главную">
-          <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-sm font-extrabold text-ink">ПТ</span>
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-sm font-extrabold text-white">ПТ</span>
           <span class="leading-tight">
             <span class="block text-[14px] font-extrabold uppercase tracking-[0.12em]">Про Трансфер</span>
             <span class="block text-[10px] uppercase tracking-[0.16em] text-white/45">Крым · Юг России</span>
@@ -126,25 +126,101 @@
       <!-- ============ HERO ============ -->
       <section class="hero-bg relative overflow-hidden pb-32 pt-28 sm:pb-36 sm:pt-32 lg:pb-44 lg:pt-40">
         <div class="hero-grid pointer-events-none absolute inset-0"></div>
-        <svg
-          class="pointer-events-none absolute -right-24 top-24 hidden h-[420px] w-[720px] opacity-40 lg:block"
-          viewBox="0 0 720 420"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            class="route-dash"
-            d="M40 360C130 330 120 220 230 210s130 80 220 40 60-130 190-140"
-            stroke="#FFB020"
-            stroke-opacity=".55"
-            stroke-width="1.5"
-          />
-          <circle cx="40" cy="360" r="5" fill="#FFB020" />
-          <circle cx="230" cy="210" r="4" fill="#FFB020" opacity=".7" />
-          <circle cx="450" cy="250" r="4" fill="#FFB020" opacity=".7" />
-          <circle cx="640" cy="110" r="6" fill="#FFB020" />
-          <circle cx="640" cy="110" r="14" stroke="#FFB020" stroke-opacity=".35" />
-        </svg>
+        <div class="hero-routes pointer-events-none absolute inset-0" aria-hidden="true">
+          <svg class="h-full w-full" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" fill="none">
+            <defs>
+              <linearGradient id="hr-line" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#D93B31" stop-opacity="0" />
+                <stop offset=".3" stop-color="#F0715F" stop-opacity=".65" />
+                <stop offset="1" stop-color="#E8564A" stop-opacity="1" />
+              </linearGradient>
+              <radialGradient id="hr-glow" cx=".5" cy=".5" r=".5">
+                <stop offset="0" stop-color="#E8564A" stop-opacity=".45" />
+                <stop offset=".55" stop-color="#E8564A" stop-opacity=".13" />
+                <stop offset="1" stop-color="#E8564A" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+
+            <!-- верхняя трасса -->
+            <path
+              class="route-dash-3"
+              d="M-60 396C214 378 386 238 608 240C830 242 908 366 1092 346C1276 326 1338 158 1530 138C1612 130 1672 128 1752 108"
+              stroke="url(#hr-line)"
+              stroke-width="1.2"
+              stroke-linecap="round"
+              opacity=".42"
+            />
+            <!-- главная трасса -->
+            <path
+              class="route-dash"
+              d="M-80 726C172 722 302 566 502 546C702 526 794 648 964 622C1134 596 1198 438 1360 380C1472 340 1562 330 1692 298"
+              stroke="url(#hr-line)"
+              stroke-width="2.4"
+              stroke-linecap="round"
+            />
+            <!-- нижняя трасса -->
+            <path
+              class="route-dash-2"
+              d="M-140 900C152 892 334 806 528 806C746 806 858 704 1044 704C1230 704 1308 562 1510 520C1602 501 1672 498 1752 480"
+              stroke="url(#hr-line)"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              opacity=".6"
+            />
+
+            <!-- промежуточные узлы -->
+            <g opacity=".9">
+              <circle cx="964" cy="622" r="12" stroke="#E8564A" stroke-opacity=".38" />
+              <circle cx="964" cy="622" r="4.5" fill="#E8564A" />
+              <circle cx="1044" cy="704" r="3.6" fill="#E8564A" opacity=".8" />
+              <circle cx="1092" cy="346" r="3.6" fill="#E8564A" opacity=".7" />
+              <circle cx="502" cy="546" r="3" fill="#E8564A" opacity=".5" />
+            </g>
+
+            <!-- точка прибытия -->
+            <g>
+              <circle cx="1360" cy="380" r="96" fill="url(#hr-glow)" />
+              <circle class="pin-pulse" cx="1360" cy="380" r="17" stroke="#E8564A" stroke-width="1.4" stroke-opacity=".65" />
+              <circle cx="1360" cy="380" r="15" stroke="#E8564A" stroke-opacity=".3" />
+              <circle cx="1360" cy="380" r="7.5" fill="#E8564A" />
+              <circle cx="1360" cy="380" r="2.8" fill="#0B1422" />
+            </g>
+
+            <!-- бегущие точки по трассам -->
+            <g class="route-comet">
+              <circle r="3.6" fill="#FFE3DC">
+                <animateMotion
+                  dur="17s"
+                  repeatCount="indefinite"
+                  path="M-80 726C172 722 302 566 502 546C702 526 794 648 964 622C1134 596 1198 438 1360 380C1472 340 1562 330 1692 298"
+                />
+              </circle>
+              <circle cy="0" r="9" fill="#E8564A" opacity=".3">
+                <animateMotion
+                  dur="17s"
+                  repeatCount="indefinite"
+                  path="M-80 726C172 722 302 566 502 546C702 526 794 648 964 622C1134 596 1198 438 1360 380C1472 340 1562 330 1692 298"
+                />
+              </circle>
+              <circle r="2.8" fill="#F7ADA2" opacity=".85">
+                <animateMotion
+                  dur="29s"
+                  begin="4s"
+                  repeatCount="indefinite"
+                  path="M-140 900C152 892 334 806 528 806C746 806 858 704 1044 704C1230 704 1308 562 1510 520C1602 501 1672 498 1752 480"
+                />
+              </circle>
+              <circle r="2.4" fill="#F7ADA2" opacity=".7">
+                <animateMotion
+                  dur="44s"
+                  begin="9s"
+                  repeatCount="indefinite"
+                  path="M-60 396C214 378 386 238 608 240C830 242 908 366 1092 346C1276 326 1338 158 1530 138C1612 130 1672 128 1752 108"
+                />
+              </circle>
+            </g>
+          </svg>
+        </div>
 
         <div class="container-x relative">
           <div class="max-w-3xl rise">
@@ -630,7 +706,7 @@
           <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <template x-for="item in site.advantages" :key="item.title">
               <div class="card p-5 transition hover:-translate-y-1 hover:shadow-soft sm:p-6">
-                <span class="grid h-11 w-11 place-items-center rounded-2xl bg-accent/15 text-ink">
+                <span class="grid h-11 w-11 place-items-center rounded-2xl bg-accent/15 text-accent">
                   <svg class="icon h-5 w-5" aria-hidden="true">
                     <use :href="'#i-' + item.icon" />
                   </svg>
@@ -676,7 +752,7 @@
                   <span
                     x-show="t.tag"
                     x-cloak
-                    class="absolute left-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.1em] text-ink"
+                    class="absolute left-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.1em] text-white"
                     x-text="t.tag"
                   ></span>
                   <span class="absolute right-3 top-3 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-bold text-ink/70 backdrop-blur">
@@ -722,7 +798,7 @@
             <article class="relative flex flex-col justify-between overflow-hidden rounded-3xl bg-ink p-5 text-white sm:p-6">
               <div class="pointer-events-none absolute -right-12 -top-16 h-56 w-56 rounded-full bg-accent/20 blur-3xl"></div>
               <div class="relative">
-                <span class="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-ink">
+                <span class="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-white">
                   <svg class="icon h-5 w-5" aria-hidden="true"><use href="#i-sign" /></svg>
                 </span>
                 <h3 class="mt-4 text-lg font-extrabold leading-tight">Не уверены, какой тариф нужен?</h3>
@@ -787,7 +863,7 @@
                     <div class="text-[10px] font-bold uppercase tracking-wider text-ink/35">Эконом · в одну сторону</div>
                     <div class="mt-0.5 text-xl font-extrabold" x-text="'от ' + money(r.price)"></div>
                   </div>
-                  <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-white transition group-hover:bg-accent group-hover:text-ink">
+                  <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-white transition group-hover:bg-accent group-hover:text-white">
                     <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-arrow-up-right" /></svg>
                   </span>
                 </div>
@@ -812,7 +888,7 @@
             <div class="pointer-events-none absolute left-0 right-0 top-6 hidden border-t border-dashed border-white/15 lg:block"></div>
             <template x-for="(step, index) in site.steps" :key="step.title">
               <div class="relative">
-                <div class="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-sm font-extrabold text-ink" x-text="'0' + (index + 1)"></div>
+                <div class="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-sm font-extrabold text-white" x-text="'0' + (index + 1)"></div>
                 <h3 class="mt-5 text-[16px] font-extrabold" x-text="step.title"></h3>
                 <p class="mt-2 text-[13px] leading-relaxed text-white/50" x-text="step.text"></p>
               </div>
@@ -969,13 +1045,73 @@
       <section id="contacts" class="pb-16 sm:pb-24">
         <div class="container-x">
           <div class="relative overflow-hidden rounded-[32px] bg-ink px-5 py-10 text-white sm:p-10 lg:p-14">
-            <div class="pointer-events-none absolute -right-20 -top-24 h-80 w-80 rounded-full bg-accent/15 blur-3xl"></div>
-            <svg class="pointer-events-none absolute -bottom-10 right-0 h-64 w-96 opacity-20" viewBox="0 0 400 240" fill="none" aria-hidden="true">
-              <path class="route-dash" d="M0 200C80 180 120 90 210 110s80 70 190 40" stroke="#FFB020" stroke-width="1.5" />
-              <circle cx="10" cy="200" r="5" fill="#FFB020" />
-              <circle cx="210" cy="110" r="4" fill="#FFB020" />
-              <circle cx="395" cy="150" r="6" fill="#FFB020" />
-            </svg>
+            <div class="pointer-events-none absolute -right-28 -top-40 h-[560px] w-[560px] rounded-full bg-accent/25 blur-[120px]"></div>
+            <div class="pointer-events-none absolute -bottom-48 -left-32 h-[480px] w-[480px] rounded-full bg-accent/15 blur-[120px]"></div>
+
+            <div class="contacts-routes pointer-events-none absolute inset-0" aria-hidden="true">
+              <svg class="h-full w-full" viewBox="0 0 1200 620" preserveAspectRatio="xMidYMid slice" fill="none">
+                <defs>
+                  <linearGradient id="cr-line" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0" stop-color="#D93B31" stop-opacity=".1" />
+                    <stop offset=".5" stop-color="#E8564A" stop-opacity=".7" />
+                    <stop offset="1" stop-color="#F0715F" stop-opacity="1" />
+                  </linearGradient>
+                  <radialGradient id="cr-glow" cx=".5" cy=".5" r=".5">
+                    <stop offset="0" stop-color="#E8564A" stop-opacity=".42" />
+                    <stop offset="1" stop-color="#E8564A" stop-opacity="0" />
+                  </radialGradient>
+                </defs>
+
+                <!-- нижняя трасса -->
+                <path
+                  class="route-dash-2"
+                  d="M-60 664C204 642 324 518 534 510C764 502 884 600 1064 578C1244 556 1304 426 1444 398"
+                  stroke="url(#cr-line)"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                  opacity=".7"
+                />
+                <!-- главная трасса -->
+                <path
+                  class="route-dash"
+                  d="M-80 512C168 494 282 350 504 330C726 310 826 424 1016 398C1206 372 1258 214 1406 174"
+                  stroke="url(#cr-line)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+                <!-- верхняя трасса -->
+                <path
+                  class="route-dash-3"
+                  d="M40 -60C240 22 340 152 540 172C740 192 860 104 1040 124C1180 140 1250 202 1360 234"
+                  stroke="url(#cr-line)"
+                  stroke-width="1.1"
+                  stroke-linecap="round"
+                  opacity=".45"
+                />
+
+                <g opacity=".9">
+                  <circle cx="1016" cy="398" r="11" stroke="#E8564A" stroke-opacity=".35" />
+                  <circle cx="1016" cy="398" r="4" fill="#E8564A" />
+                  <circle cx="1064" cy="578" r="3.2" fill="#E8564A" opacity=".8" />
+                  <circle cx="1040" cy="124" r="3.2" fill="#E8564A" opacity=".7" />
+                </g>
+
+                <g>
+                  <circle cx="1016" cy="398" r="82" fill="url(#cr-glow)" />
+                  <circle class="pin-pulse" cx="1016" cy="398" r="15" stroke="#E8564A" stroke-width="1.3" stroke-opacity=".6" />
+                </g>
+
+                <g class="route-comet">
+                  <circle r="3" fill="#FFE3DC">
+                    <animateMotion
+                      dur="21s"
+                      repeatCount="indefinite"
+                      path="M-80 512C168 494 282 350 504 330C726 310 826 424 1016 398C1206 372 1258 214 1406 174"
+                    />
+                  </circle>
+                </g>
+              </svg>
+            </div>
 
             <div class="relative grid gap-10 lg:grid-cols-2 lg:gap-14">
               <div>
@@ -987,7 +1123,7 @@
                 </p>
 
                 <a :href="'tel:' + site.phoneHref" class="mt-7 inline-flex items-center gap-3 text-2xl font-extrabold tracking-tight transition hover:text-accent sm:text-3xl">
-                  <span class="grid h-11 w-11 place-items-center rounded-full bg-accent text-ink">
+                  <span class="grid h-11 w-11 place-items-center rounded-full bg-accent text-white">
                     <svg class="icon h-5 w-5" aria-hidden="true"><use href="#i-phone" /></svg>
                   </span>
                   <span x-text="site.phone"></span>
@@ -1043,7 +1179,7 @@
         <div class="grid gap-10 lg:grid-cols-12">
           <div class="lg:col-span-4">
             <a href="#" class="flex items-center gap-2.5 text-white">
-              <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-sm font-extrabold text-ink">ПТ</span>
+              <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-sm font-extrabold text-white">ПТ</span>
               <span class="leading-tight">
                 <span class="block text-[14px] font-extrabold uppercase tracking-[0.12em]">Про Трансфер</span>
                 <span class="block text-[10px] uppercase tracking-[0.16em] text-white/40">Крым · Юг России</span>

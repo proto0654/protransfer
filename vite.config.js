@@ -13,6 +13,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: 'index.html',
+        preview: 'preview.html',
         legal: 'legal.html',
       },
     },

@@ -7,7 +7,9 @@
 
 ## Демо
 
-Превью для заказчика: **https://proto0654.github.io/protransfer/**
+Корневая страница временно показывает заглушку технических работ. Рабочая версия сохранена по адресу
+**https://proto0654.github.io/protransfer/preview.html**. Чтобы вернуть её на главную, восстановите
+`preview.html` как `index.html` и удалите дополнительный `preview` entry из `vite.config.js`.
 
 Деплой — автоматически из ветки `main` через GitHub Actions (`.github/workflows/deploy.yml`,
 Pages → Source: **GitHub Actions**): пуш в `main` → сборка → публикация.

@@ -139,12 +139,12 @@
     "group": "faq",
     "default": "Позвоните или напишите — отвечаем круглосуточно."
   },
-  "contacts_/_cta_title_1": {
+  "contacts_cta_title_1": {
     "label": "Заголовок 1",
     "group": "contacts_/_cta",
     "default": "Поездка начинается с одного звонка"
   },
-  "contacts_/_cta_text_1": {
+  "contacts_cta_text_1": {
     "label": "Текст 1",
     "group": "contacts_/_cta",
     "default": "Диспетчер на связи круглосуточно. Подберём машину, посчитаем маршрут и подтвердим бронь — без предоплаты."

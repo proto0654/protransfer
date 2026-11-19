@@ -26,10 +26,14 @@ npm run deploy   # build + push dist в gh-pages
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # -> dist/
-npm run preview  # локальный предпросмотр сборки
+npm run dev            # http://localhost:5173 — /wp-json проксируется на staging WP
+npm run build          # -> dist/
+npm run preview        # локальный предпросмотр сборки
+npm run deploy:weblaba # plugin/theme/MU → protransfer.weblaba.ru (SSH)
 ```
+
+Стейджинг WordPress: https://protransfer.weblaba.ru/ — детали в [docs/WORDPRESS-STAGING.md](docs/WORDPRESS-STAGING.md).
+Dev ходит в `/wp-json/pt/v1/bootstrap` (proxy); при недоступности API — fallback на `src/data/*.json`.
 
 Сборка использует относительные пути (`base: './'` в `vite.config.js`), поэтому `dist/` работает
 и из корня домена, и из подпапки вида `/protransfer/` на GitHub Pages.

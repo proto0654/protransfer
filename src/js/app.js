@@ -1,9 +1,3 @@
-import site from '../data/site.json'
-import points from '../data/points.json'
-import tariffs from '../data/tariffs.json'
-import routesData from '../data/routes.json'
-import reviews from '../data/reviews.json'
-import faq from '../data/faq.json'
 import {
   buildOverrides,
   estimateKm,
@@ -17,12 +11,10 @@ import {
   defaultPickupTime,
 } from './calc.js'
 
-const overrides = buildOverrides(routesData.overrides)
 const ORDERS_KEY = 'protransfer_orders'
-const extraStopPrice = 500
 const routeCache = new Map()
 
-// карта Яндекса: ключ задаётся в src/data/site.json → map.apiKey
+// карта Яндекса: ключ задаётся в site.map.apiKey (JSON или WP)
 const MAP = {
   center: [45.15, 34.4],
   zoom: 8,
@@ -39,7 +31,17 @@ const typeLabels = {
   resort: 'курорт',
 }
 
-export default function app() {
+export default function app(data) {
+  const site = data.site
+  const points = data.points
+  const tariffs = data.tariffs
+  const reviews = data.reviews
+  const faq = data.faq
+  const routesData = data.routes
+  const overrides = buildOverrides(routesData.overrides || [])
+  const extraStopPrice = Number(data.calc?.extra_stop_price ?? 500)
+  const roundTripFactor = Number(data.calc?.round_trip_factor ?? 1.9)
+
   return {
     site,
     points,
@@ -47,6 +49,7 @@ export default function app() {
     reviews,
     faq,
     routes: routesData,
+    dataSource: data.source || 'json',
 
     fromName: 'Аэропорт Симферополь',
     toName: 'Ялта',
@@ -559,7 +562,7 @@ export default function app() {
       const info = this.routeInfo
       if (!info || !tariff || tariff.onRequest) return null
       let price = Math.max(tariff.minPrice, tariff.base + tariff.perKm * info.km)
-      if (this.roundTrip) price *= 1.9
+      if (this.roundTrip) price *= roundTripFactor
       if (this.extraStop) price += extraStopPrice
       return roundPrice(price)
     },

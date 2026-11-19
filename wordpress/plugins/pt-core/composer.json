@@ -1,0 +1,13 @@
+{
+  "name": "weblaba/pt-core",
+  "description": "Protransfer content, calculator and seed commands",
+  "type": "wordpress-plugin",
+  "require": {
+    "php": ">=8.1",
+    "htmlburger/carbon-fields": "^3.6"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "allow-plugins": false
+  }
+}

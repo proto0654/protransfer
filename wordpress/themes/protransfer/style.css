@@ -1,0 +1,16 @@
+/*
+ Theme Name:   Protransfer
+ Theme URI:    https://protransfer.weblaba.ru/
+ Description:  GeneratePress child theme for Про Трансфер staging.
+ Author:       WebLaba
+ Template:     generatepress
+ Version:      0.1.0
+ Text Domain:  protransfer
+*/
+
+body.home .site-content {
+  max-width: 48rem;
+  margin: 4rem auto;
+  padding: 0 1.25rem;
+  text-align: center;
+}

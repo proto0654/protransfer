@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist --dotfiles -m \"deploy: сборка dist\""
+    "deploy": "npm run build && gh-pages -d dist --dotfiles -m \"deploy: сборка dist\"",
+    "deploy:weblaba": "node scripts/deploy-weblaba.mjs"
   },
   "dependencies": {
     "alpinejs": "^3.17.4"

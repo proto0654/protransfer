@@ -22,9 +22,9 @@ Stack: WordPress (ru), GeneratePress parent + `protransfer` child, Carbon Fields
 - `/wp-json` → `https://protransfer.weblaba.ru`
 - `/wp-content/uploads` → same
 
-The landing loads `/wp-json/pt/v1/bootstrap` first; if WP is down, falls back to `src/data/*.json`. Force JSON: `VITE_DATA_SOURCE=json`.
+The WordPress theme embeds bootstrap data in its response. Local Vite uses `/wp-json/pt/v1/bootstrap` through the proxy. An API error, eight-second timeout, or empty points/tariffs enables bundled demo JSON. Force JSON: `VITE_DATA_SOURCE=json`. Staging owns editor data and uploads; Git owns code and build inputs.
 
-Same idea as weblaba-nuxt (`/api/wp/**` → api.weblaba.ru) and eastagro (localhost → stage).
+Use the same staging backend for local previews and the published landing; do not copy its database or credentials into Git.
 
 ## Deploy from `main` → this staging stand
 
@@ -51,7 +51,7 @@ wp pt seed
 wp pt seed --force
 ```
 
-Admin: **Тарифы → Отладка** — SIP→Ялта and other pairs, server-side quote breakdown.
+Seed is an explicit initial/import operation; `--force` overwrites saved values and is not part of deployment. Admin **Тарифы → Отладка** tests published points/tariffs with a server-side quote breakdown.
 
 ## Calculator settings and testing
 
@@ -71,12 +71,20 @@ The child theme renders the built landing through WordPress, applies escaped con
 
 Legal documents are edited in the site's **Документы** content group and filtered through `wp_kses_post`. On WordPress, links use `/?pt_legal=1#privacy`, `#consent` and `#offer`; the same theme serves the built legal page. Static builds continue using `legal.html`. Existing legal copy is only an initial template and still needs the business owner's approval before publication.
 
-Additional verification: `node --test scripts/content.test.js` and `php scripts/landing-content.test.php`. These check field coverage, fallback behavior and escaped server rendering without a full WordPress runtime. A browser check against WordPress with Carbon Fields 3.6.11 is still required before publishing.
+Additional verification: `node --test scripts/content.test.js` and `php scripts/landing-content.test.php`. These check marker/schema consistency, field identifiers, fallback behavior and escaped server rendering without a full WordPress runtime. A complete save/reload/render walkthrough against WordPress with Carbon Fields 3.6.11 remains an acceptance task; HTTP smoke checks alone do not prove editorial coverage. Content keys must match `[a-z][a-z0-9_]*`; Carbon Fields rejects names containing spaces or slashes, and client bindings use these keys as property names.
 
 ## Deployment backups and rollback
 
-The same server identity and preservation rules as the Znak Vechnosti staging deployment apply. The script accepts only the documented Protransfer docroot. Before any upload it exports the current database, compresses and verifies it, and archives `wp-content`, `wp-config.php` and an existing `.htaccess` into the private `~/.local/share/protransfer/backups/<UTC timestamp>-<commit>/` directory. The backup directory records the target commit; successful publication records `~/.local/share/protransfer/deployed-commit`.
+The script accepts only the documented Protransfer docroot. Before any upload it exports the current database, compresses and verifies it, and archives `wp-content`, `wp-config.php` and an existing `.htaccess` into the private `~/.local/share/protransfer/backups/<UTC timestamp>-<commit>/` directory. The backup directory records the target commit; successful publication records `~/.local/share/protransfer/deployed-commit`.
 
 GitHub deployments are serialized without cancelling an in-progress upload. SSH scripts are sent through stdin to Bash so shell variables and multiline commands reach the server intact. Failed backups and Composer commands stop deployment. Existing uploads, configuration and editor data are preserved; seed remains a separate, explicit first-install/content-import operation.
 
 For rollback, restore the matching code archive from that backup. Restore its database only when required and explicitly authorized; do not use the older pre-WordPress database dump for ordinary rollback. Inspect the backup manifest and archive contents before restoring. Deployment is currently an in-place upload, so review the run log and public responses if a transfer fails midway.
+
+The installed WP-CLI needs `--no-tablespaces=true` when exporting with `--column-statistics=0`; the bare `--no-tablespaces` flag was converted to an unsupported `tablespaces=` option. The deployment script uses the explicit form and verifies the compressed result before uploading.
+
+## Verification boundary
+
+For each publication, inspect the Actions conclusion and the private `deployed-commit` file, then check the homepage, `/?pt_legal=1`, bootstrap API and admin/login response. Verify built JS/CSS responses and MIME types, valid content identifiers and public `noindex` headers. Local `/wp-json/pt/v1/bootstrap` must reach the same staging backend. These read-only checks do not verify logging in or saving content.
+
+The calculator still uses provider distances in the browser and estimated/manual distances in admin. Orders remain a localStorage/messenger demo; neither the quote endpoint nor the registered order post type provides server-side order intake. Some UI strings and template content remain code; do not treat marker coverage as a complete inventory of all editorial values.

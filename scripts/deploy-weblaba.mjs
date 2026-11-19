@@ -100,8 +100,8 @@ console.log('Creating verified rollback backup:', backup)
 ssh(`umask 077
 mkdir -p ${shellQuote(backup)}
 ${wp} core is-installed
-${wp} db export ${shellQuote(backup + '/database.sql')} --single-transaction --skip-lock-tables --no-tablespaces --column-statistics=0
- gzip ${shellQuote(backup + '/database.sql')}
+${wp} db export ${shellQuote(backup + '/database.sql')} --single-transaction --skip-lock-tables --no-tablespaces=true --column-statistics=0
+gzip ${shellQuote(backup + '/database.sql')}
 gzip -t ${shellQuote(backup + '/database.sql.gz')}
 cd ${shellQuote(docroot)}
 paths=(wp-content wp-config.php)

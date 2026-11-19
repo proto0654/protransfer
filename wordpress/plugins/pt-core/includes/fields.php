@@ -124,50 +124,81 @@ add_action('carbon_fields_register_fields', function () {
                 ->set_header_template('<%- label %>'),
         ]);
 
+    $content_groups = [];
+    $group_labels = [
+        'advantages' => 'Преимущества', 'tariffs' => 'Автопарк', 'popular_routes' => 'Направления',
+        'how_it_works' => 'Как это работает', 'services' => 'Услуги', 'reviews' => 'Отзывы',
+        'faq' => 'Вопросы и ответы', 'contacts' => 'Контакты', 'footer' => 'Подвал',
+    ];
+    foreach (pt_landing_schema() as $key => $definition) {
+        $group = $group_labels[$definition['group']] ?? $definition['group'];
+        $content_groups[$group][] = Field::make($definition['type'] ?? 'textarea', 'pt_copy_' . $key, $definition['label'])
+            ->set_default_value($definition['default']);
+    }
+    foreach ($content_groups as $group => $fields) {
+        Container::make('post_meta', 'Лендинг: ' . $group)
+            ->where('post_type', '=', 'pt_settings')
+            ->add_fields($fields);
+    }
+    Container::make('post_meta', 'Поисковые системы и обложка')
+        ->where('post_type', '=', 'pt_settings')
+        ->add_fields([
+            Field::make('text', 'pt_seo_title', 'Заголовок страницы (SEO)'),
+            Field::make('textarea', 'pt_seo_description', 'Описание страницы (SEO)'),
+            Field::make('image', 'pt_hero_image', 'Фоновое изображение первого экрана'),
+        ]);
+
+    $calc_defaults = pt_calc_defaults();
     Container::make('theme_options', 'Калькулятор')
         ->set_page_parent('edit.php?post_type=pt_tariff')
         ->set_page_file('pt-calculator')
         ->add_fields([
             Field::make('text', 'pt_road_factor', 'Коэффициент дороги (haversine)')
-                ->set_default_value('1.35')
+                ->set_default_value((string) $calc_defaults['road_factor'])
                 ->set_attribute('type', 'number')
                 ->set_attribute('step', '0.01'),
             Field::make('text', 'pt_km_round', 'Округление км')
-                ->set_default_value('5')
+                ->set_default_value((string) $calc_defaults['km_round'])
                 ->set_attribute('type', 'number'),
-            Field::make('text', 'pt_speed_short', 'Скорость ≤50 км')
-                ->set_default_value('50')
+            Field::make('text', 'pt_speed_short', 'Скорость короткого маршрута')
+                ->set_default_value((string) $calc_defaults['speed_short'])
                 ->set_attribute('type', 'number'),
-            Field::make('text', 'pt_speed_mid', 'Скорость 50–150 км')
-                ->set_default_value('68')
+            Field::make('text', 'pt_speed_mid', 'Скорость среднего маршрута')
+                ->set_default_value((string) $calc_defaults['speed_mid'])
                 ->set_attribute('type', 'number'),
-            Field::make('text', 'pt_speed_long', 'Скорость >150 км')
-                ->set_default_value('82')
+            Field::make('text', 'pt_speed_long', 'Скорость длинного маршрута')
+                ->set_default_value((string) $calc_defaults['speed_long'])
                 ->set_attribute('type', 'number'),
+            Field::make('text', 'pt_speed_mid_threshold', 'Граница короткого маршрута, км')->set_default_value((string) $calc_defaults['speed_mid_threshold'])->set_attribute('type', 'number')->set_attribute('min', '0'),
+            Field::make('text', 'pt_speed_long_threshold', 'Граница длинного маршрута, км')->set_default_value((string) $calc_defaults['speed_long_threshold'])->set_attribute('type', 'number')->set_attribute('min', '0'),
             Field::make('text', 'pt_time_buffer', 'Надбавка времени, мин')
-                ->set_default_value('10')
+                ->set_default_value((string) $calc_defaults['time_buffer'])
                 ->set_attribute('type', 'number'),
             Field::make('text', 'pt_time_round', 'Округление времени, мин')
-                ->set_default_value('5')
+                ->set_default_value((string) $calc_defaults['time_round'])
                 ->set_attribute('type', 'number'),
             Field::make('text', 'pt_round_trip_factor', 'Коэффициент туда-обратно')
-                ->set_default_value('1.9')
+                ->set_default_value((string) $calc_defaults['round_trip_factor'])
                 ->set_attribute('type', 'number')
                 ->set_attribute('step', '0.01'),
             Field::make('text', 'pt_extra_stop_price', 'Доп. остановка, ₽')
-                ->set_default_value('500')
+                ->set_default_value((string) $calc_defaults['extra_stop_price'])
                 ->set_attribute('type', 'number'),
             Field::make('text', 'pt_price_round', 'Округление цены')
-                ->set_default_value('10')
+                ->set_default_value((string) $calc_defaults['price_round'])
                 ->set_attribute('type', 'number'),
-            Field::make('checkbox', 'pt_child_seat_free', 'Детское кресло бесплатно')
-                ->set_default_value(true),
+            Field::make('text', 'pt_child_seat_price', 'Детское кресло, ₽ (0 — бесплатно)')->set_default_value((string) $calc_defaults['child_seat_price'])->set_attribute('type', 'number')->set_attribute('min', '0'),
         ]);
 
+    $route_tariffs = [];
+    foreach (get_posts(['post_type' => 'pt_tariff', 'post_status' => 'publish', 'numberposts' => -1, 'orderby' => 'menu_order title', 'order' => 'ASC']) as $tariff) {
+        $route_tariffs[$tariff->post_name] = $tariff->post_title;
+    }
     Container::make('theme_options', 'Маршруты')
         ->set_page_parent('edit.php?post_type=pt_point')
         ->set_page_file('pt-routes')
         ->add_fields([
+            Field::make('select', 'pt_popular_tariff', 'Тариф для цен популярных направлений')->add_options($route_tariffs),
             Field::make('complex', 'pt_popular_routes', 'Популярные направления')
                 ->add_fields([
                     Field::make('text', 'from_slug', 'Откуда (slug)')->set_width(50),

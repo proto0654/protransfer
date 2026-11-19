@@ -10,6 +10,8 @@ import routesJson from '../data/routes.json'
 import reviewsJson from '../data/reviews.json'
 import faqJson from '../data/faq.json'
 
+import { normalizeSite } from './content.js'
+
 const API_BOOTSTRAP = '/wp-json/pt/v1/bootstrap'
 
 function normalizeTariffs(list) {
@@ -23,7 +25,7 @@ function normalizeTariffs(list) {
 
 export async function loadSiteData() {
   const fallback = {
-    site: siteJson,
+    site: normalizeSite(siteJson),
     points: pointsJson,
     tariffs: tariffsJson,
     routes: routesJson,
@@ -37,19 +39,25 @@ export async function loadSiteData() {
   }
 
   try {
-    const res = await fetch(API_BOOTSTRAP, { headers: { Accept: 'application/json' } })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
+    const embedded = document.getElementById('pt-bootstrap')
+    let data
+    if (embedded) {
+      data = JSON.parse(embedded.textContent)
+    } else {
+      const res = await fetch(API_BOOTSTRAP, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      data = await res.json()
+    }
     if (!data?.points?.length || !data?.tariffs?.length) {
       throw new Error('empty bootstrap')
     }
     return {
-      site: data.site || siteJson,
+      site: normalizeSite(data.site || siteJson),
       points: data.points,
       tariffs: normalizeTariffs(data.tariffs),
       routes: data.routes || routesJson,
-      reviews: data.reviews?.length ? data.reviews : reviewsJson,
-      faq: data.faq?.length ? data.faq : faqJson,
+      reviews: Array.isArray(data.reviews) ? data.reviews : reviewsJson,
+      faq: Array.isArray(data.faq) ? data.faq : faqJson,
       calc: data.calc,
       source: 'wp',
     }

@@ -1,5 +1,6 @@
 import {
   buildOverrides,
+  calculatorSettings,
   estimateKm,
   estimateMinutes,
   formatDuration,
@@ -39,11 +40,14 @@ export default function app(data) {
   const faq = data.faq
   const routesData = data.routes
   const overrides = buildOverrides(routesData.overrides || [])
-  const extraStopPrice = Number(data.calc?.extra_stop_price ?? 500)
-  const roundTripFactor = Number(data.calc?.round_trip_factor ?? 1.9)
+  const calc = calculatorSettings(data.calc)
+  const initialRoute = routesData.popular?.[0]
+  const initialFrom = points.find((point) => point.id === initialRoute?.from) || points[0]
+  const initialTo = points.find((point) => point.id === initialRoute?.to) || points.find((point) => point.id !== initialFrom?.id)
 
   return {
     site,
+    calc,
     points,
     tariffs,
     reviews,
@@ -51,15 +55,15 @@ export default function app(data) {
     routes: routesData,
     dataSource: data.source || 'json',
 
-    fromName: 'Аэропорт Симферополь',
-    toName: 'Ялта',
+    fromName: initialFrom?.name || '',
+    toName: initialTo?.name || '',
     date: todayISO(),
     time: defaultPickupTime(),
     passengers: 2,
     roundTrip: false,
     childSeat: false,
     extraStop: false,
-    tariffId: 'standard',
+    tariffId: tariffs[0]?.id || '',
 
     name: '',
     phone: '',
@@ -265,7 +269,7 @@ export default function app(data) {
 
         return {
           km: Math.max(1, Math.round(active.getLength() / 1000)),
-          minutes: Math.max(5, Math.round(active.getTime() / 60 / 5) * 5),
+          minutes: Math.max(calc.time_round, Math.round(active.getTime() / 60 / calc.time_round) * calc.time_round),
           coords,
           source: 'yandex',
         }
@@ -290,7 +294,7 @@ export default function app(data) {
 
         return {
           km: Math.max(1, Math.round(route.distance / 1000)),
-          minutes: Math.max(5, Math.round(route.duration / 60 / 5) * 5),
+          minutes: Math.max(calc.time_round, Math.round(route.duration / 60 / calc.time_round) * calc.time_round),
           coords: route.geometry.coordinates.map((coord) => [coord[1], coord[0]]),
           source: 'osrm',
         }
@@ -302,11 +306,11 @@ export default function app(data) {
     },
 
     estimateRoute(from, to) {
-      const km = estimateKm(from, to, overrides)
+      const km = estimateKm(from, to, overrides, calc)
       if (!km) return null
       return {
         km,
-        minutes: estimateMinutes(km),
+        minutes: estimateMinutes(km, calc),
         coords: [
           [from.lat, from.lon],
           [to.lat, to.lon],
@@ -540,7 +544,7 @@ export default function app(data) {
     kmBetween(fromId, toId) {
       const a = this.points.find((p) => p.id === fromId)
       const b = this.points.find((p) => p.id === toId)
-      return estimateKm(a, b, overrides)
+      return estimateKm(a, b, overrides, calc)
     },
 
     get fromPoint() {
@@ -566,8 +570,8 @@ export default function app(data) {
         }
       }
 
-      const km = estimateKm(from, to, overrides)
-      const minutes = estimateMinutes(km)
+      const km = estimateKm(from, to, overrides, calc)
+      const minutes = estimateMinutes(km, calc)
       return { km, minutes, duration: formatDuration(minutes), exact: false }
     },
 
@@ -584,16 +588,17 @@ export default function app(data) {
     },
 
     get selectedTariff() {
-      return this.tariffs.find((t) => t.id === this.tariffId) || this.tariffs[1]
+      return this.tariffs.find((t) => t.id === this.tariffId) || this.tariffs[0]
     },
 
     priceFor(tariff) {
       const info = this.routeInfo
       if (!info || !tariff || tariff.onRequest) return null
       let price = Math.max(tariff.minPrice, tariff.base + tariff.perKm * info.km)
-      if (this.roundTrip) price *= roundTripFactor
-      if (this.extraStop) price += extraStopPrice
-      return roundPrice(price)
+      if (this.roundTrip) price *= calc.round_trip_factor
+      if (this.extraStop) price += calc.extra_stop_price
+      if (this.childSeat) price += calc.child_seat_price
+      return roundPrice(price, calc)
     },
 
     get tariffOptions() {
@@ -621,16 +626,17 @@ export default function app(data) {
     },
 
     get popularRoutes() {
-      const economy = this.tariffs.find((t) => t.id === 'economy')
+      const economy = this.tariffs.find((t) => t.id === this.routes.tariff) || this.tariffs[0]
+      if (!economy) return []
       return this.routes.popular
         .map((r) => {
           const from = this.points.find((p) => p.id === r.from)
           const to = this.points.find((p) => p.id === r.to)
           if (!from || !to) return null
-          const km = estimateKm(from, to, overrides)
-          const minutes = estimateMinutes(km)
-          const price = roundPrice(Math.max(economy.minPrice, economy.base + economy.perKm * km))
-          return { from, to, km, duration: formatDuration(minutes), price }
+          const km = estimateKm(from, to, overrides, calc)
+          const minutes = estimateMinutes(km, calc)
+          const price = roundPrice(Math.max(economy.minPrice, economy.base + economy.perKm * km), calc)
+          return { from, to, km, duration: formatDuration(minutes), price: economy.onRequest ? null : price, tariffName: economy.name }
         })
         .filter(Boolean)
     },
@@ -651,8 +657,12 @@ export default function app(data) {
       this.toName = from
     },
 
+    get maxPassengers() {
+      return Math.max(1, ...this.tariffs.map((tariff) => Number(tariff.seats) || 0))
+    },
+
     stepPax(delta) {
-      const next = Math.min(50, Math.max(1, this.passengers + delta))
+      const next = Math.min(this.maxPassengers, Math.max(1, this.passengers + delta))
       this.passengers = next
       const current = this.selectedTariff
       if (current && current.seats < next) {

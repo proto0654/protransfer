@@ -24,6 +24,7 @@ add_action('after_setup_theme', function () {
 
 require_once PT_CORE_PATH . 'includes/content.php';
 require_once PT_CORE_PATH . 'includes/calc.php';
+require_once PT_CORE_PATH . 'includes/landing-content.php';
 require_once PT_CORE_PATH . 'includes/fields.php';
 require_once PT_CORE_PATH . 'includes/rest.php';
 require_once PT_CORE_PATH . 'includes/admin-debug.php';

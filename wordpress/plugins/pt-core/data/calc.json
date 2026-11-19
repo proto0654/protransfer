@@ -1,0 +1,15 @@
+{
+  "road_factor": 1.35,
+  "km_round": 5,
+  "speed_short": 50,
+  "speed_mid": 68,
+  "speed_long": 82,
+  "speed_mid_threshold": 50,
+  "speed_long_threshold": 150,
+  "time_buffer": 10,
+  "time_round": 5,
+  "round_trip_factor": 1.9,
+  "extra_stop_price": 500,
+  "price_round": 10,
+  "child_seat_price": 0
+}

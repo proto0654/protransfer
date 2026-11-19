@@ -345,7 +345,9 @@ class PT_CLI_Command
         $this->set_theme('pt_round_trip_factor', (string) $defaults['round_trip_factor'], $force);
         $this->set_theme('pt_extra_stop_price', (string) $defaults['extra_stop_price'], $force);
         $this->set_theme('pt_price_round', (string) $defaults['price_round'], $force);
-        $this->set_theme('pt_child_seat_free', $defaults['child_seat_free'], $force);
+        $this->set_theme('pt_speed_mid_threshold', (string) $defaults['speed_mid_threshold'], $force);
+        $this->set_theme('pt_speed_long_threshold', (string) $defaults['speed_long_threshold'], $force);
+        $this->set_theme('pt_child_seat_price', (string) $defaults['child_seat_price'], $force);
         WP_CLI::log('calc defaults seeded');
     }
 }

@@ -45,10 +45,10 @@
     >
       <div class="container-x flex h-16 items-center justify-between gap-4 lg:h-20">
         <a href="#" class="flex items-center gap-2.5 text-white" aria-label="Про Трансфер — на главную">
-          <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-sm font-extrabold text-white">ПТ</span>
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-sm font-extrabold text-white"><span data-pt-copy="brand_initials" x-text="site.copy.brand_initials">ПТ</span></span>
           <span class="leading-tight">
-            <span class="block text-[14px] font-extrabold uppercase tracking-[0.12em]">Про Трансфер</span>
-            <span class="block text-[10px] uppercase tracking-[0.16em] text-white/45">Крым · Юг России</span>
+            <span class="block text-[14px] font-extrabold uppercase tracking-[0.12em]" data-pt-site="brand" x-text="site.brand">Про Трансфер</span>
+            <span class="block text-[10px] uppercase tracking-[0.16em] text-white/45"><span data-pt-copy="brand_region" x-text="site.copy.brand_region">Крым · Юг России</span></span>
           </span>
         </a>
 
@@ -92,7 +92,7 @@
       aria-label="Меню"
     >
       <div class="container-x flex h-16 items-center justify-between">
-        <span class="text-[14px] font-extrabold uppercase tracking-[0.12em]">Про Трансфер</span>
+        <span class="text-[14px] font-extrabold uppercase tracking-[0.12em]" data-pt-site="brand" x-text="site.brand">Про Трансфер</span>
         <button
           type="button"
           class="grid h-10 w-10 place-items-center rounded-xl border border-white/15"
@@ -124,7 +124,7 @@
 
     <main>
       <!-- ============ HERO ============ -->
-      <section class="hero-bg relative overflow-hidden pb-32 pt-28 sm:pb-36 sm:pt-32 lg:pb-44 lg:pt-40">
+      <section :style="site.heroImage ? { '--pt-hero-image': 'url(' + JSON.stringify(site.heroImage) + ')' } : {}" class="hero-bg relative overflow-hidden pb-32 pt-28 sm:pb-36 sm:pt-32 lg:pb-44 lg:pt-40">
         <div class="hero-grid pointer-events-none absolute inset-0"></div>
         <div class="hero-routes pointer-events-none absolute inset-0" aria-hidden="true">
           <svg class="h-full w-full" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" fill="none">
@@ -226,38 +226,38 @@
           <div class="max-w-3xl rise">
             <p class="eyebrow-light">
               <span class="h-px w-7 bg-accent"></span>
-              Трансферы по Крыму и Югу России
+              <span data-pt-copy="hero_eyebrow" x-text="site.copy.hero_eyebrow">Трансферы по Крыму и Югу России</span>
             </p>
             <h1 class="mt-5 text-[38px] font-extrabold leading-[1.05] tracking-[-0.02em] text-white sm:text-5xl lg:text-[64px]">
-              Трансфер, который<br />
+              <span data-pt-copy="hero_title" x-text="site.copy.hero_title">Трансфер, который</span><br />
               <span class="relative inline-block">
-                <span class="text-accent">просто</span>
+                <span class="text-accent"><span data-pt-copy="hero_accent" x-text="site.copy.hero_accent">просто</span></span>
                 <svg class="absolute -bottom-2 left-0 h-3 w-full text-accent/70" viewBox="0 0 200 12" fill="none" aria-hidden="true">
                   <path d="M3 8c40-5 90-6 194-3" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
                 </svg>
               </span>
-              заказать
+              <span data-pt-copy="hero_ending" x-text="site.copy.hero_ending">заказать</span>
             </h1>
-            <p class="mt-6 max-w-xl text-[15px] leading-relaxed text-white/60 sm:text-base">
+            <p class="mt-6 max-w-xl text-[15px] leading-relaxed text-white/60 sm:text-base"><span data-pt-copy="hero_description" x-text="site.copy.hero_description">
               От аэропорта до двери отеля — без переплат и сюрпризов. Укажите маршрут, выберите автомобиль
               и узнайте точную цену за минуту.
-            </p>
+            </span></p>
             <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-[13px] font-semibold text-white/70">
               <li class="flex items-center gap-2">
                 <svg class="icon h-4 w-4 text-accent" aria-hidden="true"><use href="#i-check" /></svg>
-                Фиксированная цена
+                <span data-pt-copy="hero_benefit_1" x-text="site.copy.hero_benefit_1">Фиксированная цена</span>
               </li>
               <li class="flex items-center gap-2">
                 <svg class="icon h-4 w-4 text-accent" aria-hidden="true"><use href="#i-check" /></svg>
-                Без предоплаты
+                <span data-pt-copy="hero_benefit_2" x-text="site.copy.hero_benefit_2">Без предоплаты</span>
               </li>
               <li class="flex items-center gap-2">
                 <svg class="icon h-4 w-4 text-accent" aria-hidden="true"><use href="#i-check" /></svg>
-                Встреча с табличкой
+                <span data-pt-copy="hero_benefit_3" x-text="site.copy.hero_benefit_3">Встреча с табличкой</span>
               </li>
               <li class="flex items-center gap-2">
                 <svg class="icon h-4 w-4 text-accent" aria-hidden="true"><use href="#i-check" /></svg>
-                Работаем 24/7
+                <span data-pt-copy="hero_benefit_4" x-text="site.copy.hero_benefit_4">Работаем 24/7</span>
               </li>
             </ul>
           </div>
@@ -511,7 +511,7 @@
                       <button
                         type="button"
                         @click="stepPax(1)"
-                        :disabled="passengers >= 50"
+                        :disabled="passengers >= maxPassengers"
                         class="grid h-8 w-8 place-items-center rounded-lg border border-ink/10 bg-paper text-ink transition hover:bg-sand disabled:opacity-30"
                         aria-label="Больше пассажиров"
                       >
@@ -523,7 +523,7 @@
                   <label class="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-ink/15 px-3 py-2">
                     <span class="flex items-center gap-2 text-[13px] font-semibold text-ink/75">
                       Туда и обратно
-                      <span class="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-700">−5%</span>
+                      <span class="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-700" x-text="`×${calc.round_trip_factor}`"></span>
                     </span>
                     <span class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition" :class="roundTrip ? 'bg-ink' : 'bg-ink/15'">
                       <span class="absolute h-5 w-5 rounded-full bg-white shadow transition" :class="roundTrip ? 'translate-x-[22px]' : 'translate-x-0.5'"></span>
@@ -535,11 +535,11 @@
                 <div class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-ink/60">
                   <label class="flex cursor-pointer items-center gap-2">
                     <input type="checkbox" class="h-4 w-4 rounded accent-ink" x-model="childSeat" />
-                    Детское кресло <span class="text-ink/35">бесплатно</span>
+                    Детское кресло <span class="text-ink/35" x-text="calc.child_seat_price ? `+${money(calc.child_seat_price)}` : 'бесплатно'"></span>
                   </label>
                   <label class="flex cursor-pointer items-center gap-2">
                     <input type="checkbox" class="h-4 w-4 rounded accent-ink" x-model="extraStop" />
-                    Доп. остановка <span class="text-ink/35">+500 ₽</span>
+                    Доп. остановка <span class="text-ink/35" x-text="`+${money(calc.extra_stop_price)}`"></span>
                   </label>
                 </div>
 
@@ -656,11 +656,15 @@
                     </div>
                     <div x-show="roundTrip" x-cloak class="flex items-center justify-between gap-3 text-ink/50">
                       <span>Туда и обратно</span>
-                      <span class="font-semibold text-emerald-700">−5%</span>
+                      <span class="font-semibold text-emerald-700" x-text="`×${calc.round_trip_factor}`"></span>
+                    </div>
+                    <div x-show="childSeat" x-cloak class="flex items-center justify-between gap-3 text-ink/50">
+                      <span>Детское кресло</span>
+                      <span class="font-semibold text-ink" x-text="calc.child_seat_price ? `+${money(calc.child_seat_price)}` : 'бесплатно'"></span>
                     </div>
                     <div x-show="extraStop" x-cloak class="flex items-center justify-between gap-3 text-ink/50">
                       <span>Доп. остановка</span>
-                      <span class="font-semibold text-ink">+500 ₽</span>
+                      <span class="font-semibold text-ink" x-text="`+${money(calc.extra_stop_price)}`"></span>
                     </div>
                   </div>
 
@@ -695,12 +699,9 @@
       <section class="py-16 sm:py-24">
         <div class="container-x">
           <div class="max-w-2xl">
-            <p class="eyebrow"><span class="h-px w-6 bg-accent"></span>Почему нас выбирают</p>
-            <h2 class="h2 mt-3">Спокойная дорога начинается с понятных условий</h2>
-            <p class="lead mt-4">
-              Никаких доплат «на месте», очередей на стойке и поиска водителя в толпе. Всё, что нужно, — в одном
-              звонке или заявке.
-            </p>
+            <p class="eyebrow"><span class="h-px w-6 bg-accent"></span><span data-pt-copy="advantages_label_1" x-text="site.copy.advantages_label_1">Почему нас выбирают</span></p>
+            <h2 class="h2 mt-3" data-pt-copy="advantages_title_1" x-text="site.copy.advantages_title_1">Спокойная дорога начинается с понятных условий</h2>
+            <p class="lead mt-4" data-pt-copy="advantages_text_1" x-text="site.copy.advantages_text_1">Никаких доплат «на месте», очередей на стойке и поиска водителя в толпе. Всё, что нужно, — в одном звонке или заявке.</p>
           </div>
 
           <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -724,12 +725,9 @@
         <div class="container-x">
           <div class="flex flex-wrap items-end justify-between gap-6">
             <div class="max-w-2xl">
-              <p class="eyebrow"><span class="h-px w-6 bg-accent"></span>Автопарк и тарифы</p>
-              <h2 class="h2 mt-3">11 классов — от эконома до автобуса</h2>
-              <p class="lead mt-4">
-                Все автомобили с кондиционером, детскими креслами по запросу и водителями, которые знают дороги
-                Крыма и Юга России.
-              </p>
+              <p class="eyebrow"><span class="h-px w-6 bg-accent"></span><span data-pt-copy="tariffs_label_1" x-text="site.copy.tariffs_label_1">Автопарк и тарифы</span></p>
+              <h2 class="h2 mt-3" data-pt-copy="tariffs_title_1" x-text="site.copy.tariffs_title_1">Автомобили для вашей поездки</h2>
+              <p class="lead mt-4" data-pt-copy="tariffs_text_1" x-text="site.copy.tariffs_text_1">Все автомобили с кондиционером, детскими креслами по запросу и водителями, которые знают дороги Крыма и Юга России.</p>
             </div>
             <a href="#calculator" class="btn btn-ink">
               Рассчитать поездку
@@ -801,10 +799,8 @@
                 <span class="grid h-11 w-11 place-items-center rounded-2xl bg-accent text-white">
                   <svg class="icon h-5 w-5" aria-hidden="true"><use href="#i-sign" /></svg>
                 </span>
-                <h3 class="mt-4 text-lg font-extrabold leading-tight">Не уверены, какой тариф нужен?</h3>
-                <p class="mt-2 text-[13px] leading-relaxed text-white/55">
-                  Расскажите про багаж, детей и маршрут — диспетчер подберёт автомобиль и назовёт точную цену.
-                </p>
+                <h3 class="mt-4 text-lg font-extrabold leading-tight" data-pt-copy="tariffs_title_2" x-text="site.copy.tariffs_title_2">Не уверены, какой тариф нужен?</h3>
+                <p class="mt-2 text-[13px] leading-relaxed text-white/55" data-pt-copy="tariffs_text_2" x-text="site.copy.tariffs_text_2">Расскажите про багаж, детей и маршрут — диспетчер подберёт автомобиль и назовёт точную цену.</p>
               </div>
               <div class="relative mt-5 space-y-2">
                 <a :href="'tel:' + site.phoneHref" class="btn btn-accent w-full">
@@ -826,12 +822,9 @@
         <div class="container-x">
           <div class="flex flex-wrap items-end justify-between gap-6">
             <div class="max-w-2xl">
-              <p class="eyebrow"><span class="h-px w-6 bg-accent"></span>Популярные направления</p>
-              <h2 class="h2 mt-3">Куда чаще всего едут</h2>
-              <p class="lead mt-4">
-                Цены — за автомобиль класса «Эконом» в одну сторону. Нажмите на направление, и калькулятор
-                подставит маршрут.
-              </p>
+              <p class="eyebrow"><span class="h-px w-6 bg-accent"></span><span data-pt-copy="popular_routes_label_1" x-text="site.copy.popular_routes_label_1">Популярные направления</span></p>
+              <h2 class="h2 mt-3" data-pt-copy="popular_routes_title_1" x-text="site.copy.popular_routes_title_1">Куда чаще всего едут</h2>
+              <p class="lead mt-4" data-pt-copy="popular_routes_text_1" x-text="site.copy.popular_routes_text_1">Цены за автомобиль выбранного тарифа в одну сторону. Нажмите на направление, и калькулятор подставит маршрут.</p>
             </div>
             <a :href="'tel:' + site.phoneHref" class="btn btn-outline">
               <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-phone" /></svg>
@@ -860,8 +853,8 @@
                 </div>
                 <div class="mt-5 flex items-end justify-between gap-3">
                   <div>
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-ink/35">Эконом · в одну сторону</div>
-                    <div class="mt-0.5 text-xl font-extrabold" x-text="'от ' + money(r.price)"></div>
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-ink/35" x-text="r.tariffName + ' · в одну сторону'"></div>
+                    <div class="mt-0.5 text-xl font-extrabold" x-text="r.price === null ? 'По запросу' : 'от ' + money(r.price)"></div>
                   </div>
                   <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-white transition group-hover:bg-accent group-hover:text-white">
                     <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-arrow-up-right" /></svg>
@@ -877,11 +870,9 @@
       <section id="how" class="bg-ink py-16 text-white sm:py-24">
         <div class="container-x">
           <div class="max-w-2xl">
-            <p class="eyebrow-light"><span class="h-px w-6 bg-accent"></span>Как это работает</p>
-            <h2 class="h2 mt-3">Четыре шага до поездки</h2>
-            <p class="mt-4 text-[15px] leading-relaxed text-white/55">
-              Можно оформить онлайн, а можно просто позвонить — диспетчер всё сделает за вас.
-            </p>
+            <p class="eyebrow-light"><span class="h-px w-6 bg-accent"></span><span data-pt-copy="how_it_works_label_1" x-text="site.copy.how_it_works_label_1">Как это работает</span></p>
+            <h2 class="h2 mt-3" data-pt-copy="how_it_works_title_1" x-text="site.copy.how_it_works_title_1">Четыре шага до поездки</h2>
+            <p class="mt-4 text-[15px] leading-relaxed text-white/55" data-pt-copy="how_it_works_text_1" x-text="site.copy.how_it_works_text_1">Можно оформить онлайн, а можно просто позвонить — диспетчер всё сделает за вас.</p>
           </div>
 
           <div class="relative mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
@@ -904,7 +895,7 @@
               <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-phone" /></svg>
               <span x-text="site.phone"></span>
             </a>
-            <span class="text-[12px] text-white/40">Или напишите в мессенджер — ответим за пару минут</span>
+            <span class="text-[12px] text-white/40" data-pt-copy="messenger_hint" x-text="site.copy.messenger_hint">Или напишите в мессенджер — ответим за пару минут</span>
           </div>
         </div>
       </section>
@@ -913,12 +904,9 @@
       <section class="py-16 sm:py-24">
         <div class="container-x">
           <div class="max-w-2xl">
-            <p class="eyebrow"><span class="h-px w-6 bg-accent"></span>Услуги</p>
-            <h2 class="h2 mt-3">Не только аэропорт</h2>
-            <p class="lead mt-4">
-              Возим на отдых, по делам, на свадьбы и корпоративы. Для каждой поездки подберём подходящий
-              автомобиль.
-            </p>
+            <p class="eyebrow"><span class="h-px w-6 bg-accent"></span><span data-pt-copy="services_label_1" x-text="site.copy.services_label_1">Услуги</span></p>
+            <h2 class="h2 mt-3" data-pt-copy="services_title_1" x-text="site.copy.services_title_1">Не только аэропорт</h2>
+            <p class="lead mt-4" data-pt-copy="services_text_1" x-text="site.copy.services_text_1">Возим на отдых, по делам, на свадьбы и корпоративы. Для каждой поездки подберём подходящий автомобиль.</p>
           </div>
 
           <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -940,7 +928,7 @@
             <template x-for="payment in site.payments" :key="payment">
               <span class="chip bg-white" x-text="payment"></span>
             </template>
-            <span class="ml-auto text-[12px] text-ink/40">Предоплата не нужна</span>
+            <span class="ml-auto text-[12px] text-ink/40" data-pt-copy="payment_hint" x-text="site.copy.payment_hint">Предоплата не нужна</span>
           </div>
         </div>
       </section>
@@ -954,8 +942,8 @@
         <div class="container-x relative">
           <div class="flex flex-wrap items-end justify-between gap-6">
             <div class="max-w-2xl">
-              <p class="eyebrow-light"><span class="h-px w-6 bg-accent"></span>Отзывы</p>
-              <h2 class="h2 mt-3">Нас рекомендуют друзьям</h2>
+              <p class="eyebrow-light"><span class="h-px w-6 bg-accent"></span><span data-pt-copy="reviews_label_1" x-text="site.copy.reviews_label_1">Отзывы</span></p>
+              <h2 class="h2 mt-3" data-pt-copy="reviews_title_1" x-text="site.copy.reviews_title_1">Нас рекомендуют друзьям</h2>
               <p class="mt-4 text-[15px] leading-relaxed text-white/50">
                 Средняя оценка <strong class="text-white" x-text="site.rating"></strong> из 5 по
                 <strong class="text-white" x-text="site.reviewsCount"></strong> отзывам клиентов.
@@ -1004,13 +992,13 @@
         <div class="container-x grid gap-10 lg:grid-cols-12 lg:gap-12">
           <div class="lg:col-span-4">
             <div class="lg:sticky lg:top-28">
-              <p class="eyebrow"><span class="h-px w-6 bg-accent"></span>Вопросы и ответы</p>
-              <h2 class="h2 mt-3">Отвечаем заранее</h2>
-              <p class="lead mt-4">Собрали то, что чаще всего спрашивают перед первой поездкой.</p>
+              <p class="eyebrow"><span class="h-px w-6 bg-accent"></span><span data-pt-copy="faq_label_1" x-text="site.copy.faq_label_1">Вопросы и ответы</span></p>
+              <h2 class="h2 mt-3" data-pt-copy="faq_title_1" x-text="site.copy.faq_title_1">Отвечаем заранее</h2>
+              <p class="lead mt-4" data-pt-copy="faq_text_1" x-text="site.copy.faq_text_1">Собрали то, что чаще всего спрашивают перед первой поездкой.</p>
 
               <div class="card mt-6 p-5">
-                <p class="text-[13px] font-extrabold">Не нашли ответ?</p>
-                <p class="mt-1.5 text-[12px] leading-relaxed text-ink/50">Позвоните или напишите — отвечаем круглосуточно.</p>
+                <p class="text-[13px] font-extrabold" data-pt-copy="faq_text_2" x-text="site.copy.faq_text_2">Не нашли ответ?</p>
+                <p class="mt-1.5 text-[12px] leading-relaxed text-ink/50" data-pt-copy="faq_text_3" x-text="site.copy.faq_text_3">Позвоните или напишите — отвечаем круглосуточно.</p>
                 <a :href="'tel:' + site.phoneHref" class="btn btn-ink mt-4 w-full">
                   <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-phone" /></svg>
                   <span x-text="site.phone"></span>
@@ -1116,11 +1104,8 @@
             <div class="relative grid gap-10 lg:grid-cols-2 lg:gap-14">
               <div>
                 <p class="eyebrow-light"><span class="h-px w-6 bg-accent"></span>Контакты</p>
-                <h2 class="h2 mt-3">Поездка начинается<br />с одного звонка</h2>
-                <p class="mt-4 max-w-md text-[14px] leading-relaxed text-white/55">
-                  Диспетчер на связи круглосуточно. Подберём машину, посчитаем маршрут и подтвердим бронь —
-                  без предоплаты.
-                </p>
+                <h2 class="h2 mt-3" data-pt-copy="contacts_/_cta_title_1" x-text="site.copy.contacts_/_cta_title_1">Поездка начинается с одного звонка</h2>
+                <p class="mt-4 max-w-md text-[14px] leading-relaxed text-white/55" data-pt-copy="contacts_/_cta_text_1" x-text="site.copy.contacts_/_cta_text_1">Диспетчер на связи круглосуточно. Подберём машину, посчитаем маршрут и подтвердим бронь — без предоплаты.</p>
 
                 <a :href="'tel:' + site.phoneHref" class="mt-7 inline-flex items-center gap-3 text-2xl font-extrabold tracking-tight transition hover:text-accent sm:text-3xl">
                   <span class="grid h-11 w-11 place-items-center rounded-full bg-accent text-white">
@@ -1164,7 +1149,7 @@
                 </div>
                 <div class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:col-span-2">
                   <span class="text-[10px] font-bold uppercase tracking-wider text-white/35">Зона работы</span>
-                  <span class="mt-1 block text-[13px] font-bold">Крым · Краснодарский край · Ростов-на-Дону · Кавказские Минеральные Воды</span>
+                  <span class="mt-1 block text-[13px] font-bold"><span data-pt-copy="service_area" x-text="site.copy.service_area">Крым · Краснодарский край · Ростов-на-Дону · Кавказские Минеральные Воды</span></span>
                 </div>
               </div>
             </div>
@@ -1179,20 +1164,17 @@
         <div class="grid gap-10 lg:grid-cols-12">
           <div class="lg:col-span-4">
             <a href="#" class="flex items-center gap-2.5 text-white">
-              <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-sm font-extrabold text-white">ПТ</span>
+              <span class="grid h-9 w-9 place-items-center rounded-xl bg-accent text-sm font-extrabold text-white"><span data-pt-copy="brand_initials" x-text="site.copy.brand_initials">ПТ</span></span>
               <span class="leading-tight">
-                <span class="block text-[14px] font-extrabold uppercase tracking-[0.12em]">Про Трансфер</span>
-                <span class="block text-[10px] uppercase tracking-[0.16em] text-white/40">Крым · Юг России</span>
+                <span class="block text-[14px] font-extrabold uppercase tracking-[0.12em]" data-pt-site="brand" x-text="site.brand">Про Трансфер</span>
+                <span class="block text-[10px] uppercase tracking-[0.16em] text-white/40"><span data-pt-copy="brand_region" x-text="site.copy.brand_region">Крым · Юг России</span></span>
               </span>
             </a>
-            <p class="mt-4 max-w-xs text-[12px] leading-relaxed">
-              Трансферы из аэропортов и на вокзалах, межгород и экскурсии с водителем. Фиксированная цена,
-              оплата после поездки.
-            </p>
+            <p class="mt-4 max-w-xs text-[12px] leading-relaxed" data-pt-copy="footer_text_1" x-text="site.copy.footer_text_1">Трансферы из аэропортов и на вокзалах, межгород и экскурсии с водителем. Фиксированная цена, оплата после поездки.</p>
           </div>
 
           <div class="lg:col-span-2">
-            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/30">Сервис</p>
+            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/30" data-pt-copy="footer_text_2" x-text="site.copy.footer_text_2">Сервис</p>
             <nav class="mt-3 flex flex-col gap-2 text-[12px]">
               <a href="#calculator" class="transition hover:text-white">Калькулятор</a>
               <a href="#tariffs" class="transition hover:text-white">Тарифы</a>
@@ -1202,7 +1184,7 @@
           </div>
 
           <div class="lg:col-span-2">
-            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/30">Помощь</p>
+            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/30" data-pt-copy="footer_text_3" x-text="site.copy.footer_text_3">Помощь</p>
             <nav class="mt-3 flex flex-col gap-2 text-[12px]">
               <a href="#faq" class="transition hover:text-white">Вопросы и ответы</a>
               <a href="#contacts" class="transition hover:text-white">Контакты</a>
@@ -1212,21 +1194,19 @@
           </div>
 
           <div class="lg:col-span-4">
-            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/30">Документы</p>
+            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/30" data-pt-copy="footer_text_4" x-text="site.copy.footer_text_4">Документы</p>
             <nav class="mt-3 flex flex-col gap-2 text-[12px]">
               <a href="legal.html#privacy" class="transition hover:text-white">Политика конфиденциальности</a>
               <a href="legal.html#consent" class="transition hover:text-white">Согласие на обработку данных</a>
               <a href="legal.html#offer" class="transition hover:text-white">Публичная оферта</a>
             </nav>
-            <p class="mt-4 text-[11px] leading-relaxed text-white/25">
-              Информация на сайте не является публичной офертой. Итоговую стоимость подтверждает менеджер.
-            </p>
+            <p class="mt-4 text-[11px] leading-relaxed text-white/25" data-pt-copy="footer_text_5" x-text="site.copy.footer_text_5">Информация на сайте не является публичной офертой. Итоговую стоимость подтверждает менеджер.</p>
           </div>
         </div>
 
         <div class="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-[11px] sm:flex-row sm:items-center sm:justify-between">
-          <p>© <span x-text="new Date().getFullYear()"></span> Про Трансфер. Все права защищены.</p>
-          <p class="text-white/25">Сделано с заботой о пассажирах</p>
+          <p>© <span x-text="new Date().getFullYear()"></span> <span data-pt-site="brand" x-text="site.brand">Про Трансфер</span>. Все права защищены.</p>
+          <p class="text-white/25" data-pt-copy="footer_text_6" x-text="site.copy.footer_text_6" data-pt-copy="footer_signature" x-text="site.copy.footer_signature">Сделано с заботой о пассажирах</p>
         </div>
       </div>
     </footer>

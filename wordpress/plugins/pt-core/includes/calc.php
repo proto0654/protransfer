@@ -5,46 +5,29 @@ if (!defined('ABSPATH')) {
 
 function pt_calc_defaults(): array
 {
-    return [
-        'road_factor' => 1.35,
-        'km_round' => 5,
-        'speed_short' => 50,
-        'speed_mid' => 68,
-        'speed_long' => 82,
-        'time_buffer' => 10,
-        'time_round' => 5,
-        'round_trip_factor' => 1.9,
-        'extra_stop_price' => 500,
-        'price_round' => 10,
-        'child_seat_free' => true,
-    ];
+    $data = json_decode((string) file_get_contents(PT_CORE_PATH . 'data/calc.json'), true);
+    return is_array($data) ? $data : [];
 }
 
-function pt_calc_settings(): array
+function pt_calc_settings(array $overrides = []): array
 {
-    $defaults = pt_calc_defaults();
+    $settings = pt_calc_defaults();
     if (!function_exists('carbon_get_theme_option')) {
-        return $defaults;
+        return $settings;
     }
-
-    $get = static function (string $key, $fallback) {
-        $value = carbon_get_theme_option($key);
-        return ($value === '' || $value === null) ? $fallback : $value;
-    };
-
-    return [
-        'road_factor' => (float) $get('pt_road_factor', $defaults['road_factor']),
-        'km_round' => (int) $get('pt_km_round', $defaults['km_round']),
-        'speed_short' => (float) $get('pt_speed_short', $defaults['speed_short']),
-        'speed_mid' => (float) $get('pt_speed_mid', $defaults['speed_mid']),
-        'speed_long' => (float) $get('pt_speed_long', $defaults['speed_long']),
-        'time_buffer' => (int) $get('pt_time_buffer', $defaults['time_buffer']),
-        'time_round' => (int) $get('pt_time_round', $defaults['time_round']),
-        'round_trip_factor' => (float) $get('pt_round_trip_factor', $defaults['round_trip_factor']),
-        'extra_stop_price' => (int) $get('pt_extra_stop_price', $defaults['extra_stop_price']),
-        'price_round' => (int) $get('pt_price_round', $defaults['price_round']),
-        'child_seat_free' => (bool) $get('pt_child_seat_free', $defaults['child_seat_free']),
-    ];
+    $positive = ['road_factor', 'km_round', 'speed_short', 'speed_mid', 'speed_long', 'time_round', 'price_round'];
+    $integer_steps = ['km_round', 'time_round', 'price_round'];
+    foreach ($settings as $key => $fallback) {
+        $value = array_key_exists($key, $overrides) ? $overrides[$key] : carbon_get_theme_option('pt_' . $key);
+        if ($value === '' || $value === null || !is_numeric($value)) {
+            continue;
+        }
+        $number = (float) $value;
+        if (is_finite($number) && (in_array($key, $positive, true) ? $number > 0 : $number >= 0) && (!in_array($key, $integer_steps, true) || floor($number) === $number)) {
+            $settings[$key] = $number;
+        }
+    }
+    return $settings;
 }
 
 function pt_route_overrides_map(): array
@@ -94,7 +77,7 @@ function pt_estimate_minutes(float $km, array $settings): int
     if ($km <= 0) {
         return 0;
     }
-    $speed = $km > 150 ? $settings['speed_long'] : ($km > 50 ? $settings['speed_mid'] : $settings['speed_short']);
+    $speed = $km > $settings['speed_long_threshold'] ? $settings['speed_long'] : ($km > $settings['speed_mid_threshold'] ? $settings['speed_mid'] : $settings['speed_short']);
     $minutes = ($km / $speed) * 60 + $settings['time_buffer'];
     return (int) pt_round_step($minutes, (int) $settings['time_round']);
 }
@@ -107,10 +90,11 @@ function pt_estimate_minutes(float $km, array $settings): int
  */
 function pt_calculate_quote(array $from, array $to, array $tariff, array $options = []): array
 {
-    $settings = pt_calc_settings();
+    $settings = pt_calc_settings($options['settings'] ?? []);
     $overrides = pt_route_overrides_map();
     $round_trip = !empty($options['round_trip']);
     $extra_stop = !empty($options['extra_stop']);
+    $child_seat = !empty($options['child_seat']);
 
     $from_id = (string) ($from['id'] ?? '');
     $to_id = (string) ($to['id'] ?? '');
@@ -120,7 +104,10 @@ function pt_calculate_quote(array $from, array $to, array $tariff, array $option
     $km = null;
 
     $exact = $overrides["{$from_id}|{$to_id}"] ?? null;
-    if ($exact !== null) {
+    if (isset($options['distance_km']) && is_numeric($options['distance_km']) && (float) $options['distance_km'] > 0) {
+        $source = 'manual';
+        $raw_km = $km = (float) $options['distance_km'];
+    } elseif ($exact !== null) {
         $source = 'override';
         $raw_km = (float) $exact;
         $km = (float) $exact;
@@ -150,6 +137,9 @@ function pt_calculate_quote(array $from, array $to, array $tariff, array $option
     if ($extra_stop) {
         $price += $settings['extra_stop_price'];
     }
+    if ($child_seat) {
+        $price += $settings['child_seat_price'];
+    }
     $total = (int) pt_round_step($price, (int) $settings['price_round']);
 
     return [
@@ -171,6 +161,8 @@ function pt_calculate_quote(array $from, array $to, array $tariff, array $option
         'round_trip_factor' => $settings['round_trip_factor'],
         'extra_stop' => $extra_stop,
         'extra_stop_price' => $settings['extra_stop_price'],
+        'child_seat' => $child_seat,
+        'child_seat_price' => $settings['child_seat_price'],
         'total' => $on_request ? null : $total,
         'total_label' => $on_request ? 'По запросу' : (number_format($total, 0, '', ' ') . ' ₽'),
         'settings' => $settings,

@@ -1,4 +1,13 @@
-const roadFactor = 1.35
+import defaults from '../../wordpress/plugins/pt-core/data/calc.json' with { type: 'json' }
+
+export function calculatorSettings(settings = {}) {
+  return Object.fromEntries(Object.entries(defaults).map(([key, fallback]) => {
+    const value = Number(settings[key] ?? fallback)
+    const positive = ['road_factor', 'km_round', 'speed_short', 'speed_mid', 'speed_long', 'time_round', 'price_round'].includes(key)
+    const integerStep = ['km_round', 'time_round', 'price_round'].includes(key)
+    return [key, Number.isFinite(value) && (positive ? value > 0 : value >= 0) && (!integerStep || Number.isInteger(value)) ? value : fallback]
+  }))
+}
 
 export function routeKey(a, b) {
   return [a, b].sort().join('|')
@@ -26,19 +35,19 @@ export function haversineKm(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h))
 }
 
-export function estimateKm(from, to, overrides = {}) {
+export function estimateKm(from, to, overrides = {}, settings = defaults) {
   if (!from || !to || from.id === to.id) return null
   const exact = overrides[`${from.id}|${to.id}`]
   if (exact) return exact
-  const raw = haversineKm(from, to) * roadFactor
-  return Math.max(5, Math.round(raw / 5) * 5)
+  const raw = haversineKm(from, to) * settings.road_factor
+  return Math.max(settings.km_round, Math.round(raw / settings.km_round) * settings.km_round)
 }
 
-export function estimateMinutes(km) {
+export function estimateMinutes(km, settings = defaults) {
   if (!km) return 0
-  const speed = km > 150 ? 82 : km > 50 ? 68 : 50
-  const minutes = (km / speed) * 60 + 10
-  return Math.round(minutes / 5) * 5
+  const speed = km > settings.speed_long_threshold ? settings.speed_long : km > settings.speed_mid_threshold ? settings.speed_mid : settings.speed_short
+  const minutes = (km / speed) * 60 + settings.time_buffer
+  return Math.round(minutes / settings.time_round) * settings.time_round
 }
 
 export function formatDuration(minutes) {
@@ -50,8 +59,8 @@ export function formatDuration(minutes) {
   return `${h} ч ${m} мин`
 }
 
-export function roundPrice(value) {
-  return Math.round(value / 10) * 10
+export function roundPrice(value, settings = defaults) {
+  return Math.round(value / settings.price_round) * settings.price_round
 }
 
 export function money(value) {

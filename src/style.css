@@ -148,7 +148,7 @@
       radial-gradient(1250px 720px at 8% -18%, #22456e 0%, rgba(34, 69, 110, 0.35) 42%, transparent 66%),
       radial-gradient(1700px 1050px at 88% 2%, rgba(217, 59, 49, 0.32) 0%, rgba(217, 59, 49, 0.13) 38%, transparent 70%),
       radial-gradient(1100px 720px at 106% 112%, rgba(217, 59, 49, 0.2) 0%, transparent 66%),
-      url('./assets/hero.jpg');
+      var(--pt-hero-image, url('./assets/hero.jpg'));
     background-size: auto, auto, auto, auto, auto, cover;
     background-position: center, center, center, center, center, center 46%;
     background-repeat: no-repeat;

@@ -20,6 +20,7 @@ add_action('rest_api_init', function () {
             'tariff' => ['required' => true, 'type' => 'string'],
             'round_trip' => ['required' => false, 'type' => 'boolean', 'default' => false],
             'extra_stop' => ['required' => false, 'type' => 'boolean', 'default' => false],
+            'child_seat' => ['required' => false, 'type' => 'boolean', 'default' => false],
         ],
     ]);
 });
@@ -152,10 +153,15 @@ function pt_rest_bootstrap(): WP_REST_Response
     }
 
     return new WP_REST_Response([
-        'site' => $site,
+        'site' => array_merge($site, [
+            'copy' => pt_landing_copy($settings_id),
+            'seo' => pt_landing_seo($settings_id),
+            'heroImage' => function_exists('carbon_get_post_meta') ? (wp_get_attachment_image_url((int) carbon_get_post_meta($settings_id, 'pt_hero_image'), 'full') ?: '') : '',
+        ]),
         'points' => $points,
         'tariffs' => $tariffs,
         'routes' => [
+            'tariff' => function_exists('carbon_get_theme_option') ? (string) carbon_get_theme_option('pt_popular_tariff') : '',
             'popular' => $popular,
             'overrides' => $overrides,
         ],
@@ -182,6 +188,7 @@ function pt_rest_quote(WP_REST_Request $request): WP_REST_Response|WP_Error
         [
             'round_trip' => (bool) $request['round_trip'],
             'extra_stop' => (bool) $request['extra_stop'],
+            'child_seat' => (bool) $request['child_seat'],
         ]
     );
 

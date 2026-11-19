@@ -34,6 +34,10 @@ function pt_register_types(): void
             'map_meta_cap' => true,
         ];
 
+        if ($type === 'pt_tariff') {
+            $args['supports'] = ['title', 'thumbnail', 'page-attributes', 'custom-fields'];
+        }
+
         if ($type === 'pt_settings') {
             $args['capabilities'] = ['create_posts' => 'do_not_allow'];
             $args['supports'] = ['title', 'custom-fields'];

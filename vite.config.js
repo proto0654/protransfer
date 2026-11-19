@@ -38,10 +38,12 @@ export default defineConfig(({ mode }) => {
         input:
           mode === 'weblaba'
             ? {
+                // На стенде homepage = preview.html (отдаёт front-page.php)
                 preview: 'preview.html',
                 legal: 'legal.html',
               }
             : {
+                // GitHub Pages: лендинг на корне
                 main: 'index.html',
                 preview: 'preview.html',
                 legal: 'legal.html',

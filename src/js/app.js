@@ -275,12 +275,14 @@ export default function app(data) {
     },
 
     async routeFromOsrm(from, to) {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 5000)
       try {
         const url =
           'https://router.project-osrm.org/route/v1/driving/' +
           `${from.lon},${from.lat};${to.lon},${to.lat}` +
           '?overview=simplified&geometries=geojson'
-        const response = await fetch(url)
+        const response = await fetch(url, { signal: controller.signal })
         if (!response.ok) throw new Error(`osrm ${response.status}`)
         const data = await response.json()
         const route = data.routes && data.routes[0]
@@ -294,6 +296,22 @@ export default function app(data) {
         }
       } catch (error) {
         return null
+      } finally {
+        clearTimeout(timer)
+      }
+    },
+
+    estimateRoute(from, to) {
+      const km = estimateKm(from, to, overrides)
+      if (!km) return null
+      return {
+        km,
+        minutes: estimateMinutes(km),
+        coords: [
+          [from.lat, from.lon],
+          [to.lat, to.lon],
+        ],
+        source: overrides[`${from.id}|${to.id}`] != null ? 'override' : 'haversine',
       }
     },
 
@@ -317,14 +335,22 @@ export default function app(data) {
         return
       }
 
-      if (this.geo && this.geo.key === key) {
+      if (this.geo && this.geo.key === key && this.geo.source && this.geo.source !== 'override' && this.geo.source !== 'haversine') {
         this.refreshMap()
         return
       }
 
+      // Сразу показываем км из override/оценки, линию А→Б; геометрию дорог дотягиваем фоном.
+      const fallback = this.estimateRoute(from, to)
+      if (fallback) {
+        fallback.key = key
+        this.geo = fallback
+        this.refreshMap()
+      }
+
       this.routeLoading = true
       try {
-        // Яндекс (если в site.json прописан ключ) → публичный OSRM → расчёт по координатам
+        // Яндекс (нужен apiKey) → публичный OSRM (5с) → оставляем fallback
         let result = await this.routeFromYandex(from, to)
         if (!result) result = await this.routeFromOsrm(from, to)
 
@@ -332,6 +358,9 @@ export default function app(data) {
           result.key = key
           routeCache.set(key, result)
           this.geo = result
+        } else if (fallback) {
+          routeCache.set(key, fallback)
+          this.geo = fallback
         } else {
           this.geo = null
         }

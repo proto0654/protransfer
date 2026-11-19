@@ -69,6 +69,16 @@ writeFileSync(
   'Options -Indexes\n<IfModule mod_headers.c>\nHeader set Cache-Control "public, max-age=3600"\n</IfModule>\n'
 )
 
+// Fleet photos for WP Media seed (featured image on pt_tariff)
+const fleetSrc = join(root, 'public/fleet')
+const fleetDst = join(root, 'wordpress/plugins/pt-core/data/fleet')
+if (existsSync(fleetSrc)) {
+  rmSync(fleetDst, { recursive: true, force: true })
+  mkdirSync(fleetDst, { recursive: true })
+  cpSync(fleetSrc, fleetDst, { recursive: true })
+  console.log('Copied fleet photos into pt-core/data/fleet')
+}
+
 const docroot =
   process.env.PT_DOCROOT || sshCapture('printf %s "$HOME/www/protransfer.weblaba.ru"')
 const share = sshCapture('printf %s "$HOME/.local/share/protransfer"')

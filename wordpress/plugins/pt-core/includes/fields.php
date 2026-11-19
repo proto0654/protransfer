@@ -27,7 +27,8 @@ add_action('carbon_fields_register_fields', function () {
     Container::make('post_meta', 'Тариф')
         ->where('post_type', '=', 'pt_tariff')
         ->add_fields([
-            Field::make('image', 'pt_photo', 'Фото'),
+            Field::make('image', 'pt_photo', 'Фото авто')
+                ->set_help_text('Или задайте «Изображение записи» (featured image) слева — оно приоритетнее.'),
             Field::make('text', 'pt_seats', 'Мест')->set_attribute('type', 'number'),
             Field::make('text', 'pt_bags', 'Багаж')->set_attribute('type', 'number'),
             Field::make('text', 'pt_cars', 'Примеры авто'),

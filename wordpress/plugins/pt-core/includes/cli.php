@@ -148,6 +148,7 @@ class PT_CLI_Command
     private function seed_tariffs(array $rows, bool $force): void
     {
         $i = 0;
+        $photos = 0;
         foreach ($rows as $row) {
             $id = $this->upsert_cpt('pt_tariff', $row['id'], $row['name'], $i++);
             update_post_meta($id, '_pt_source_id', $row['id']);
@@ -160,8 +161,96 @@ class PT_CLI_Command
             $this->set_meta($id, 'pt_min_price', (string) ($row['minPrice'] ?? 0), $force);
             $this->set_meta($id, 'pt_tag', $row['tag'] ?? '', $force);
             $this->set_meta($id, 'pt_on_request', !empty($row['onRequest']), $force);
+
+            if ($this->attach_tariff_photo($id, $row['photo'] ?? '', $row['name'] ?? '', $force)) {
+                $photos++;
+            }
         }
-        WP_CLI::log('tariffs: ' . count($rows));
+        WP_CLI::log('tariffs: ' . count($rows) . " (photos: {$photos})");
+    }
+
+    private function fleet_source_path(string $photo_rel): string
+    {
+        $base = basename(str_replace('\\', '/', $photo_rel));
+        if ($base === '' || $base === '.' || $base === '..') {
+            return '';
+        }
+        $candidates = [
+            PT_CORE_PATH . 'data/fleet/' . $base,
+            get_stylesheet_directory() . '/landing/fleet/' . $base,
+        ];
+        foreach ($candidates as $path) {
+            if (is_readable($path)) {
+                return $path;
+            }
+        }
+        return '';
+    }
+
+    private function ensure_fleet_attachment(string $path, string $title): int
+    {
+        $source = basename($path);
+        $existing = get_posts([
+            'post_type' => 'attachment',
+            'post_status' => 'inherit',
+            'numberposts' => 1,
+            'fields' => 'ids',
+            'meta_key' => '_pt_fleet_source',
+            'meta_value' => $source,
+        ]);
+        if ($existing) {
+            return (int) $existing[0];
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+
+        $tmp = wp_tempnam($source);
+        if (!$tmp || !copy($path, $tmp)) {
+            return 0;
+        }
+
+        $file_array = [
+            'name' => $source,
+            'tmp_name' => $tmp,
+        ];
+        $attachment_id = media_handle_sideload($file_array, 0, $title);
+        if (is_wp_error($attachment_id)) {
+            @unlink($tmp);
+            WP_CLI::warning('media: ' . $attachment_id->get_error_message() . " ({$source})");
+            return 0;
+        }
+
+        update_post_meta((int) $attachment_id, '_pt_fleet_source', $source);
+        return (int) $attachment_id;
+    }
+
+    private function attach_tariff_photo(int $post_id, string $photo_rel, string $title, bool $force): bool
+    {
+        if ($photo_rel === '') {
+            return false;
+        }
+        if (!$force && get_post_thumbnail_id($post_id)) {
+            return true;
+        }
+
+        $path = $this->fleet_source_path($photo_rel);
+        if ($path === '') {
+            WP_CLI::warning("fleet file missing for {$photo_rel}");
+            return false;
+        }
+
+        $attachment_id = $this->ensure_fleet_attachment($path, $title);
+        if (!$attachment_id) {
+            return false;
+        }
+
+        set_post_thumbnail($post_id, $attachment_id);
+        if (function_exists('carbon_set_post_meta')) {
+            carbon_set_post_meta($post_id, 'pt_photo', (string) $attachment_id);
+        }
+        return true;
     }
 
     private function seed_routes(array $data, bool $force): void

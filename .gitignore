@@ -4,6 +4,7 @@ dist
 *.local
 .sites-runtime/
 wordpress/plugins/pt-core/vendor/
+wordpress/plugins/pt-core/data/fleet/
 wordpress/themes/protransfer/landing/
 docs/.vector-index/
 .env

@@ -7,12 +7,11 @@
 
 ## Демо
 
-Корневая страница временно показывает заглушку технических работ. Рабочая версия сохранена по адресу
-**https://proto0654.github.io/protransfer/preview.html**. Чтобы вернуть её на главную, восстановите
-`preview.html` как `index.html` и удалите дополнительный `preview` entry из `vite.config.js`.
+Публичное превью: **https://proto0654.github.io/protransfer/** (лендинг на корне).
+Дубль: `preview.html`. Стейджинг с WP: **https://protransfer.weblaba.ru/**.
 
-Деплой — автоматически из ветки `main` через GitHub Actions (`.github/workflows/deploy.yml`,
-Pages → Source: **GitHub Actions**): пуш в `main` → сборка → публикация.
+Деплой Pages — из ветки `main` через GitHub Actions (`.github/workflows/deploy.yml`):
+пуш в `main` → сборка → публикация. Weblaba: `npm run deploy:weblaba` / workflow `deploy-weblaba.yml`.
 
 Резервный способ (если Actions лежит) — публикация готового `dist` в ветку `gh-pages`:
 

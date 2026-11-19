@@ -201,13 +201,25 @@ function pt_point_payload(WP_Post $post): array
     ];
 }
 
+function pt_tariff_photo_url(WP_Post $post): string
+{
+    $photo_id = (int) get_post_thumbnail_id($post);
+    if (!$photo_id && function_exists('carbon_get_post_meta')) {
+        $photo_id = (int) carbon_get_post_meta($post->ID, 'pt_photo');
+    }
+    if (!$photo_id) {
+        return '';
+    }
+    $src = wp_get_attachment_image_url($photo_id, 'large');
+    return $src ?: (string) wp_get_attachment_url($photo_id);
+}
+
 function pt_tariff_payload(WP_Post $post): array
 {
-    $photo_id = function_exists('carbon_get_post_meta') ? (int) carbon_get_post_meta($post->ID, 'pt_photo') : 0;
     return [
         'id' => $post->post_name,
         'name' => $post->post_title,
-        'photo' => $photo_id ? wp_get_attachment_url($photo_id) : '',
+        'photo' => pt_tariff_photo_url($post),
         'seats' => function_exists('carbon_get_post_meta') ? (int) carbon_get_post_meta($post->ID, 'pt_seats') : 0,
         'bags' => function_exists('carbon_get_post_meta') ? (int) carbon_get_post_meta($post->ID, 'pt_bags') : 0,
         'cars' => function_exists('carbon_get_post_meta') ? (string) carbon_get_post_meta($post->ID, 'pt_cars') : '',

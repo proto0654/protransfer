@@ -18,7 +18,7 @@ on:
 
 concurrency:
   group: deploy-weblaba
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:

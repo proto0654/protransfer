@@ -26,12 +26,14 @@ function run(cmd, args, opts = {}) {
   return res
 }
 
+function shellQuote(value) {
+  return "'" + String(value).replaceAll("'", "'\\''") + "'"
+}
+
 function sshCapture(remoteCmd) {
-  const res = spawnSync(
-    'ssh',
-    [...sshBase, remote, `bash -lc ${JSON.stringify(remoteCmd)}`],
-    { encoding: 'utf8' }
-  )
+  const res = spawnSync('ssh', [...sshBase, remote, 'bash -s'], {
+    input: `set -euo pipefail\n${remoteCmd}\n`, encoding: 'utf8',
+  })
   if (res.status !== 0) {
     process.stderr.write(res.stderr || '')
     process.exit(res.status ?? 1)
@@ -40,7 +42,9 @@ function sshCapture(remoteCmd) {
 }
 
 function ssh(remoteCmd) {
-  run('ssh', [...sshBase, remote, `bash -lc ${JSON.stringify(remoteCmd)}`])
+  run('ssh', [...sshBase, remote, 'bash -s'], {
+    input: `set -euo pipefail\n${remoteCmd}\n`, stdio: ['pipe', 'inherit', 'inherit'],
+  })
 }
 
 if (!existsSync(key)) {
@@ -83,6 +87,29 @@ const docroot =
   process.env.PT_DOCROOT || sshCapture('printf %s "$HOME/www/protransfer.weblaba.ru"')
 const share = sshCapture('printf %s "$HOME/.local/share/protransfer"')
 console.log('Docroot:', docroot)
+const expectedDocroot = sshCapture('printf %s "$HOME/www/protransfer.weblaba.ru"')
+if (docroot !== expectedDocroot) {
+  throw new Error('Deployment target must be the documented Protransfer staging docroot')
+}
+const commit = run('git', ['rev-parse', 'HEAD'], { encoding: 'utf8', stdio: 'pipe' }).stdout.trim()
+const releaseId = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, 14) + '-' + commit.slice(0, 7)
+const backup = `${share}/backups/${releaseId}`
+const wp = `php ${shellQuote(share + '/tools/wp-cli.phar')} --path=${shellQuote(docroot)}`
+const composer = `php ${shellQuote(share + '/tools/composer.phar')}`
+console.log('Creating verified rollback backup:', backup)
+ssh(`umask 077
+mkdir -p ${shellQuote(backup)}
+${wp} core is-installed
+${wp} db export ${shellQuote(backup + '/database.sql')} --single-transaction --skip-lock-tables --no-tablespaces --column-statistics=0
+ gzip ${shellQuote(backup + '/database.sql')}
+gzip -t ${shellQuote(backup + '/database.sql.gz')}
+cd ${shellQuote(docroot)}
+paths=(wp-content wp-config.php)
+if [ -f .htaccess ]; then paths+=(.htaccess); fi
+tar -czf ${shellQuote(backup + '/site.tgz')} "\${paths[@]}"
+tar -tzf ${shellQuote(backup + '/site.tgz')} > /dev/null
+printf '%s\n' ${shellQuote(commit)} > ${shellQuote(backup + '/target-commit')}`)
+
 
 ssh(
   `mkdir -p "${docroot}/wp-content/plugins" "${docroot}/wp-content/themes" "${docroot}/wp-content/mu-plugins"`
@@ -104,8 +131,6 @@ if (existsSync(favicon)) {
   run('scp', [...scpBase, favicon, `${remote}:${docroot}/favicon.svg`])
 }
 
-const wp = `php "${share}/tools/wp-cli.phar" --path="${docroot}"`
-const composer = `php "${share}/tools/composer.phar"`
 
 ssh(
   `test -f "${docroot}/.htaccess" || cat > "${docroot}/.htaccess" <<'EOF'
@@ -133,9 +158,9 @@ ssh(
     `${composer} install --no-dev --prefer-dist --no-interaction`,
     `${wp} plugin activate pt-core`,
     `${wp} theme activate protransfer`,
-    `${wp} rewrite structure '/%postname%/' --hard || true`,
-    `${wp} pt seed || true`,
+    `${wp} core is-installed`,
+    `printf '%s\\n' ${shellQuote(commit)} > ${shellQuote(share + '/deployed-commit')}`,
   ].join(' && ')
 )
 
-console.log('Deploy OK → https://protransfer.weblaba.ru/')
+console.log('Deploy OK → https://protransfer.weblaba.ru/', commit, 'Rollback:', backup)

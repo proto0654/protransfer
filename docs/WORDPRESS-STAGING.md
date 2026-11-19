@@ -32,9 +32,9 @@ Target: **https://protransfer.weblaba.ru/** (пока единственный �
 
 GitHub Actions: [`.github/workflows/deploy-weblaba.yml`](../.github/workflows/deploy-weblaba.yml) — push to `main` (frontend + wordpress paths) or `workflow_dispatch`.
 
-Pipeline: `npm ci` → `vite build --mode weblaba` → upload landing into child theme `landing/` + `pt-core` + MU → composer/activate/seed. Homepage (`front-page.php`) отдаёт `landing/preview.html`.
+Pipeline: `npm ci` → `vite build --mode weblaba` → verified current-site database/code backup → upload landing into child theme `landing/` + `pt-core` + MU → Composer install from lockfile / activate / verify WordPress. Routine deployments do not rerun seed or rewrite permalinks. Homepage (`front-page.php`) отдаёт `landing/preview.html`.
 
-Required GitHub repo secret: **`WEBLABA_SSH_PRIVATE_KEY`** — PEM of `%USERPROFILE%\.ssh\weblaba_deploy`.
+GitHub repository secret **`WEBLABA_SSH_PRIVATE_KEY`** is configured from the existing `%USERPROFILE%\.ssh\weblaba_deploy` identity. Never place the key material in Git or logs.
 
 Local:
 
@@ -72,3 +72,11 @@ The child theme renders the built landing through WordPress, applies escaped con
 Legal documents are edited in the site's **Документы** content group and filtered through `wp_kses_post`. On WordPress, links use `/?pt_legal=1#privacy`, `#consent` and `#offer`; the same theme serves the built legal page. Static builds continue using `legal.html`. Existing legal copy is only an initial template and still needs the business owner's approval before publication.
 
 Additional verification: `node --test scripts/content.test.js` and `php scripts/landing-content.test.php`. These check field coverage, fallback behavior and escaped server rendering without a full WordPress runtime. A browser check against WordPress with Carbon Fields 3.6.11 is still required before publishing.
+
+## Deployment backups and rollback
+
+The same server identity and preservation rules as the Znak Vechnosti staging deployment apply. The script accepts only the documented Protransfer docroot. Before any upload it exports the current database, compresses and verifies it, and archives `wp-content`, `wp-config.php` and an existing `.htaccess` into the private `~/.local/share/protransfer/backups/<UTC timestamp>-<commit>/` directory. The backup directory records the target commit; successful publication records `~/.local/share/protransfer/deployed-commit`.
+
+GitHub deployments are serialized without cancelling an in-progress upload. SSH scripts are sent through stdin to Bash so shell variables and multiline commands reach the server intact. Failed backups and Composer commands stop deployment. Existing uploads, configuration and editor data are preserved; seed remains a separate, explicit first-install/content-import operation.
+
+For rollback, restore the matching code archive from that backup. Restore its database only when required and explicitly authorized; do not use the older pre-WordPress database dump for ordinary rollback. Inspect the backup manifest and archive contents before restoring. Deployment is currently an in-place upload, so review the run log and public responses if a transfer fails midway.

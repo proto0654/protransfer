@@ -7,9 +7,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:weblaba": "vite build --mode weblaba",
     "preview": "vite preview",
     "deploy": "npm run build && gh-pages -d dist --dotfiles -m \"deploy: сборка dist\"",
-    "deploy:weblaba": "node scripts/deploy-weblaba.mjs"
+    "deploy:weblaba": "npm run build:weblaba && node scripts/deploy-weblaba.mjs"
   },
   "dependencies": {
     "alpinejs": "^3.17.4"

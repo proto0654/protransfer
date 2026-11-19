@@ -1,10 +1,17 @@
-name: Deploy WordPress to Weblaba
+name: Deploy to Weblaba staging
 
 on:
   push:
     branches: [main]
     paths:
       - 'wordpress/**'
+      - 'src/**'
+      - 'public/**'
+      - 'preview.html'
+      - 'legal.html'
+      - 'vite.config.js'
+      - 'package.json'
+      - 'package-lock.json'
       - 'scripts/deploy-weblaba.mjs'
       - '.github/workflows/deploy-weblaba.yml'
   workflow_dispatch:
@@ -22,6 +29,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install SSH key
         env:
@@ -33,12 +41,12 @@ jobs:
           chmod 600 ~/.ssh/weblaba_deploy
           ssh-keyscan -H server199.hosting.reg.ru >> ~/.ssh/known_hosts
 
-      - name: Deploy plugin/theme/MU
+      - name: Build landing + deploy to protransfer.weblaba.ru
         env:
           PT_SSH_HOST: server199.hosting.reg.ru
           PT_SSH_USER: u1396397
-          PT_SSH_KEY: ${{ github.workspace }}/../.ssh-placeholder
+          PT_SSH_KEY: ${{ runner.temp }}/unused
         run: |
-          # deploy script reads PT_SSH_KEY; point it at the installed key
           export PT_SSH_KEY="$HOME/.ssh/weblaba_deploy"
-          node scripts/deploy-weblaba.mjs
+          npm ci
+          npm run deploy:weblaba

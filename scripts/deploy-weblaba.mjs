@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /**
- * Deploy WordPress plugin + child theme + MU plugin to Weblaba staging.
- * Uses SSH key (~/.ssh/weblaba_deploy by default). Never uploads wp-config or uploads.
+ * Deploy to protransfer.weblaba.ru staging:
+ * 1) Vite landing → child theme /landing (preview.html as homepage)
+ * 2) pt-core plugin + child theme + MU plugin
+ *
+ * SSH key: ~/.ssh/weblaba_deploy (or PT_SSH_KEY). Never uploads wp-config/uploads.
  */
 import { spawnSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -12,18 +15,14 @@ import { fileURLToPath } from 'node:url'
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
 const host = process.env.PT_SSH_HOST || 'server199.hosting.reg.ru'
 const user = process.env.PT_SSH_USER || 'u1396397'
-const key =
-  process.env.PT_SSH_KEY ||
-  join(homedir(), '.ssh', 'weblaba_deploy')
+const key = process.env.PT_SSH_KEY || join(homedir(), '.ssh', 'weblaba_deploy')
 const remote = `${user}@${host}`
 const sshBase = ['-i', key, '-o', 'IdentitiesOnly=yes', '-o', 'StrictHostKeyChecking=accept-new']
 
 function run(cmd, args, opts = {}) {
   console.log('>', cmd, args.join(' '))
   const res = spawnSync(cmd, args, { stdio: 'inherit', shell: false, ...opts })
-  if (res.status !== 0) {
-    process.exit(res.status ?? 1)
-  }
+  if (res.status !== 0) process.exit(res.status ?? 1)
   return res
 }
 
@@ -49,25 +48,32 @@ if (!existsSync(key)) {
   process.exit(1)
 }
 
+const dist = join(root, 'dist')
+const landing = join(root, 'wordpress/themes/protransfer/landing')
 const localPlugin = join(root, 'wordpress/plugins/pt-core')
 const localTheme = join(root, 'wordpress/themes/protransfer')
 const localMu = join(root, 'wordpress/mu-plugins/pt-staging.php')
+const favicon = join(root, 'public/favicon.svg')
 
-for (const p of [localPlugin, localTheme, localMu]) {
-  if (!existsSync(p)) {
-    console.error(`Missing ${p}`)
-    process.exit(1)
-  }
+if (!existsSync(join(dist, 'preview.html'))) {
+  console.error('Missing dist/preview.html — run npm run build:weblaba first (or npm run deploy:weblaba).')
+  process.exit(1)
 }
 
-const docroot =
-  process.env.PT_DOCROOT ||
-  sshCapture('printf %s "$HOME/www/protransfer.weblaba.ru"')
-const share = sshCapture('printf %s "$HOME/.local/share/protransfer"')
+console.log('Preparing theme landing from dist…')
+rmSync(landing, { recursive: true, force: true })
+mkdirSync(landing, { recursive: true })
+cpSync(dist, landing, { recursive: true })
+writeFileSync(
+  join(landing, '.htaccess'),
+  'Options -Indexes\n<IfModule mod_headers.c>\nHeader set Cache-Control "public, max-age=3600"\n</IfModule>\n'
+)
 
+const docroot =
+  process.env.PT_DOCROOT || sshCapture('printf %s "$HOME/www/protransfer.weblaba.ru"')
+const share = sshCapture('printf %s "$HOME/.local/share/protransfer"')
 console.log('Docroot:', docroot)
 
-console.log('Ensuring remote paths…')
 ssh(
   `mkdir -p "${docroot}/wp-content/plugins" "${docroot}/wp-content/themes" "${docroot}/wp-content/mu-plugins"`
 )
@@ -77,16 +83,20 @@ const scpBase = [...sshBase]
 console.log('Uploading pt-core…')
 run('scp', [...scpBase, '-r', localPlugin, `${remote}:${docroot}/wp-content/plugins/`])
 
-console.log('Uploading child theme…')
+console.log('Uploading child theme (+ landing)…')
 run('scp', [...scpBase, '-r', localTheme, `${remote}:${docroot}/wp-content/themes/`])
 
 console.log('Uploading MU plugin…')
 run('scp', [...scpBase, localMu, `${remote}:${docroot}/wp-content/mu-plugins/pt-staging.php`])
 
+if (existsSync(favicon)) {
+  console.log('Uploading favicon…')
+  run('scp', [...scpBase, favicon, `${remote}:${docroot}/favicon.svg`])
+}
+
 const wp = `php "${share}/tools/wp-cli.phar" --path="${docroot}"`
 const composer = `php "${share}/tools/composer.phar"`
 
-console.log('Ensuring .htaccess rewrite…')
 ssh(
   `test -f "${docroot}/.htaccess" || cat > "${docroot}/.htaccess" <<'EOF'
 Options -Indexes

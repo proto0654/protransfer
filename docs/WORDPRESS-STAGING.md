@@ -26,23 +26,23 @@ The landing loads `/wp-json/pt/v1/bootstrap` first; if WP is down, falls back to
 
 Same idea as weblaba-nuxt (`/api/wp/**` → api.weblaba.ru) and eastagro (localhost → stage).
 
-## Deploy from `main`
+## Deploy from `main` → this staging stand
 
-GitHub Actions: [`.github/workflows/deploy-weblaba.yml`](../.github/workflows/deploy-weblaba.yml)
+Target: **https://protransfer.weblaba.ru/** (пока единственный деплой-стенд).
 
-Triggers on push to `main` when `wordpress/**` (or the deploy script/workflow) changes, plus `workflow_dispatch`.
+GitHub Actions: [`.github/workflows/deploy-weblaba.yml`](../.github/workflows/deploy-weblaba.yml) — push to `main` (frontend + wordpress paths) or `workflow_dispatch`.
 
-Required GitHub repo secret: **`WEBLABA_SSH_PRIVATE_KEY`** — PEM contents of `%USERPROFILE%\.ssh\weblaba_deploy` (Settings → Secrets and variables → Actions). Without it the Weblaba workflow fails; local `npm run deploy:weblaba` still works with the key file.
+Pipeline: `npm ci` → `vite build --mode weblaba` → upload landing into child theme `landing/` + `pt-core` + MU → composer/activate/seed. Homepage (`front-page.php`) отдаёт `landing/preview.html`.
 
-Local deploy:
+Required GitHub repo secret: **`WEBLABA_SSH_PRIVATE_KEY`** — PEM of `%USERPROFILE%\.ssh\weblaba_deploy`.
+
+Local:
 
 ```bash
 npm run deploy:weblaba
 ```
 
-Uploads only `pt-core`, child theme and MU plugin; runs `composer install`, activates plugin/theme, `wp pt seed`.
-
-Existing GitHub Pages workflow (`deploy.yml`) is unchanged for the static Vite demo.
+GitHub Pages workflow (`deploy.yml`) остаётся отдельным резервом для статического demo.
 
 ## Seed / debug
 

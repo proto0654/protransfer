@@ -7,9 +7,13 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const wpOrigin = env.VITE_WP_ORIGIN || WP_ORIGIN
 
+  // weblaba: абсолютный base под child theme; иначе относительный (Pages / локальный preview)
+  const base =
+    env.VITE_BASE ||
+    (mode === 'weblaba' ? '/wp-content/themes/protransfer/landing/' : './')
+
   return {
-    // относительные пути к ассетам — сборка работает и локально, и на GitHub Pages (/protransfer/)
-    base: './',
+    base,
     plugins: [tailwindcss()],
     server: {
       port: 5173,
@@ -29,12 +33,19 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
+      emptyOutDir: true,
       rollupOptions: {
-        input: {
-          main: 'index.html',
-          preview: 'preview.html',
-          legal: 'legal.html',
-        },
+        input:
+          mode === 'weblaba'
+            ? {
+                preview: 'preview.html',
+                legal: 'legal.html',
+              }
+            : {
+                main: 'index.html',
+                preview: 'preview.html',
+                legal: 'legal.html',
+              },
       },
     },
   }

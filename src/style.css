@@ -140,6 +140,16 @@
 }
 
 @layer utilities {
+  body:has(#wpadminbar) > header {
+    top: 32px;
+  }
+
+  @media (max-width: 782px) {
+    body:has(#wpadminbar) > header {
+      top: 46px;
+    }
+  }
+
   .hero-bg {
     background-color: var(--color-ink);
     background-image:

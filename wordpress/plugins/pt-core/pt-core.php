@@ -23,6 +23,7 @@ add_action('after_setup_theme', function () {
 }, 5);
 
 require_once PT_CORE_PATH . 'includes/content.php';
+require_once PT_CORE_PATH . 'includes/point-editor.php';
 require_once PT_CORE_PATH . 'includes/calc.php';
 require_once PT_CORE_PATH . 'includes/landing-content.php';
 require_once PT_CORE_PATH . 'includes/fields.php';

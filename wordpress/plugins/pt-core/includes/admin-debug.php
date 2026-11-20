@@ -21,7 +21,7 @@ add_action('wp_ajax_pt_calc_debug', function () {
     check_ajax_referer('pt_calc_debug');
     $result = pt_debug_quote($_POST);
     if (isset($result['error'])) {
-        wp_send_json_error($result['error'], 400);
+        wp_send_json_error($result, 400);
     }
     wp_send_json_success($result);
 });
@@ -72,34 +72,33 @@ add_action('wp_ajax_pt_save_calc_settings', function () {
 
 function pt_debug_quote(array $input): array
 {
+    $settings = isset($input['calc']) ? pt_debug_settings(wp_unslash($input['calc'])) : pt_calc_settings();
+    if (isset($settings['error'])) {
+        return $settings;
+    }
+
     $from = sanitize_title(wp_unslash($input['from'] ?? ''));
     $to = sanitize_title(wp_unslash($input['to'] ?? ''));
     $tariff = sanitize_title(wp_unslash($input['tariff'] ?? ''));
     $distance = sanitize_text_field(wp_unslash($input['distance_km'] ?? ''));
     if ($from === $to) {
-        return ['error' => 'Выберите разные точки маршрута.'];
+        return ['error' => 'Выберите разные точки маршрута.', 'settings' => $settings];
     }
     if ($distance !== '' && (!is_numeric($distance) || !is_finite((float) $distance) || (float) $distance <= 0)) {
-        return ['error' => 'Расстояние должно быть положительным числом.'];
+        return ['error' => 'Расстояние должно быть положительным числом.', 'settings' => $settings];
     }
     $from_post = pt_point_by_slug($from);
     $to_post = pt_point_by_slug($to);
     $tariff_post = pt_tariff_by_slug($tariff);
     if (!$from_post || !$to_post || !$tariff_post) {
-        return ['error' => 'Точка или тариф не найдены.'];
+        return ['error' => 'Точка или тариф не найдены.', 'settings' => $settings];
     }
     $options = [
         'round_trip' => !empty($input['round_trip']),
         'extra_stop' => !empty($input['extra_stop']),
         'child_seat' => !empty($input['child_seat']),
+        'settings' => $settings,
     ];
-    if (isset($input['calc'])) {
-        $settings = pt_debug_settings(wp_unslash($input['calc']));
-        if (isset($settings['error'])) {
-            return $settings;
-        }
-        $options['settings'] = $settings;
-    }
     if ($distance !== '') {
         $options['distance_km'] = (float) $distance;
     }
@@ -149,7 +148,12 @@ function pt_render_calc_debug_page(): void
     ?>
     <div class="wrap">
       <h1>Отладка калькулятора</h1>
-      <p>Проверка использует сохранённые настройки, тарифы и точки. Сайт сначала запрашивает Яндекс или OSRM; чтобы сравнить цену, введите километраж с сайта вручную.</p>
+      <h2>Калькулятор сайта</h2>
+      <p>Это тот же калькулятор, что на сайте. Выберите маршрут и тариф: ниже синхронизируются параметры серверной проверки. Настройки справа применяются к пробному расчёту до сохранения.</p>
+      <iframe id="pt-calc-frontend" title="Калькулятор сайта для проверки" src="<?php echo esc_url(add_query_arg('pt_calc_debug', '1', home_url('/'))); ?>" style="width:100%;height:1150px;border:1px solid #ccd0d4;background:white" loading="lazy"></iframe>
+      <h2>Серверная проверка и настройки</h2>
+
+      <p>Серверная проверка использует тарифы и точки. Сайт сначала запрашивает Яндекс или OSRM; чтобы сравнить цену, введите километраж с сайта вручную.</p>
       <p><a href="<?php echo esc_url(admin_url('edit.php?post_type=pt_tariff&page=pt-calculator')); ?>">Настройки расчёта</a> · <a href="<?php echo esc_url(admin_url('edit.php?post_type=pt_point&page=pt-routes')); ?>">Маршруты и ручные расстояния</a> · <a href="<?php echo esc_url(admin_url('edit.php?post_type=pt_tariff')); ?>">Тарифы</a></p>
       <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
       <div style="flex:1 1 420px;min-width:0">

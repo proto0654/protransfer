@@ -51,13 +51,15 @@ wp pt seed
 wp pt seed --force
 ```
 
-Seed is an explicit initial/import operation; `--force` overwrites saved values and is not part of deployment. Admin **Тарифы → Отладка** tests published points/tariffs with a server-side quote breakdown.
+Seed is an explicit initial/import operation; `--force` overwrites saved values and is not part of deployment.
+
+For editor-facing section descriptions and examples, see [WordPress admin: sections and workflows](WORDPRESS-ADMIN.md).
 
 ## Calculator settings and testing
 
-Calculator defaults are shared by PHP and the static frontend through `wordpress/plugins/pt-core/data/calc.json`. In WordPress, edit the saved values under **Тарифы → Калькулятор** and each tariff in **Тарифы**. **Тарифы → Отладка** provides route, tariff and options selectors, a live server-side breakdown and editable settings alongside it. Edits immediately update the preview without changing the site; press **Сохранить настройки** to apply them. Invalid non-positive divisors and speeds fall back to defaults.
+Calculator defaults are shared by PHP and the static frontend through `wordpress/plugins/pt-core/data/calc.json`. In WordPress, edit the saved values under **Тарифы → Калькулятор** and each tariff in **Тарифы**. **Тарифы → Отладка** embeds the real frontend calculator, a client-side formula breakdown, a synchronized server comparison and editable settings alongside it. The laboratory response is available only to users with `manage_options`; unsaved settings are sent to the same-origin iframe for preview and do not change stored values. Edits immediately update the preview without changing the site; press **Сохранить настройки** to apply them. Invalid non-positive divisors and speeds fall back to defaults.
 
-The website requests Yandex and OSRM before falling back to manual route distances and a coordinate estimate. The server debugger does not call those services. Enter the distance shown on the website in its distance field to compare prices; the displayed server time remains an estimate. The debugger does not submit an order. The landing calculates prices in the browser, and the existing quote endpoint is not an order or payment integration.
+The website requests Yandex and OSRM before falling back to manual route distances and a coordinate estimate. The server debugger does not call those services. The embedded calculator synchronizes its displayed distance to the server comparison; it can also be entered manually; the displayed server time remains an estimate. The debugger does not submit an order. The landing calculates prices in the browser, and the existing quote endpoint is not an order or payment integration.
 
 Run `node --test scripts/calculator.test.js` with PHP and Node installed to compare the client and server formulas. Landing copy and legal text are managed through the site settings fields described below.
 
@@ -88,3 +90,11 @@ The installed WP-CLI needs `--no-tablespaces=true` when exporting with `--column
 For each publication, inspect the Actions conclusion and the private `deployed-commit` file, then check the homepage, `/?pt_legal=1`, bootstrap API and admin/login response. Verify built JS/CSS responses and MIME types, valid content identifiers and public `noindex` headers. Local `/wp-json/pt/v1/bootstrap` must reach the same staging backend. These read-only checks do not verify logging in or saving content.
 
 The calculator still uses provider distances in the browser and estimated/manual distances in admin. Orders remain a localStorage/messenger demo; neither the quote endpoint nor the registered order post type provides server-side order intake. Some UI strings and template content remain code; do not treat marker coverage as a complete inventory of all editorial values.
+
+## Point relationship migration
+
+A point can link to an existing published `city` or `resort` point by ID; the public `city` string is derived from that parent while it is available. Existing `_pt_city` text is retained and used for unlinked or unavailable parents. Explicitly choosing no parent is distinct from an unlinked legacy record. The selector rejects self-links and cycles. The Yandex map in the point editor writes to the existing Carbon latitude/longitude fields; manual entry remains available if the map is unavailable.
+
+After deploying the updated plugin, run `wp pt migrate-points` for a read-only preview. It reports unambiguous links, default type labels and unmatched point slugs. `wp pt migrate-points --apply` stores a non-autoloaded rollback record, creates only unique links and translates unchanged default term names while keeping their slugs. It leaves ambiguous and unmatched names intact. Inspect the preview and make a current database backup before applying. `wp pt migrate-points --rollback` reverts only values still matching the migration and retains rollback entries for later editor changes. Routine deployments never invoke this migration.
+
+Verify `php scripts/point-editor.test.php`, `php scripts/point-migration.test.php`, `node --test scripts/point-map.test.js` and `php scripts/calculator-lab.test.php`, in addition to the existing calculator tests. These tests do not replace an authenticated WordPress browser check of the actual map, Carbon Fields persistence and lab iframe.

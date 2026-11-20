@@ -185,7 +185,7 @@ function pt_point_payload(WP_Post $post): array
     return [
         'id' => $post->post_name,
         'name' => $post->post_title,
-        'city' => function_exists('carbon_get_post_meta') ? (string) carbon_get_post_meta($post->ID, 'pt_city') : '',
+        'city' => pt_point_city_name($post),
         'type' => $type_terms[0] ?? 'city',
         'lat' => function_exists('carbon_get_post_meta') ? (float) carbon_get_post_meta($post->ID, 'pt_lat') : 0.0,
         'lon' => function_exists('carbon_get_post_meta') ? (float) carbon_get_post_meta($post->ID, 'pt_lon') : 0.0,

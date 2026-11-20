@@ -1,6 +1,7 @@
 import {
   buildOverrides,
   calculatorSettings,
+  priceBreakdown,
   estimateKm,
   estimateMinutes,
   formatDuration,
@@ -13,7 +14,6 @@ import {
 } from './calc.js'
 
 const ORDERS_KEY = 'protransfer_orders'
-const routeCache = new Map()
 
 // карта Яндекса: ключ задаётся в site.map.apiKey (JSON или WP)
 const MAP = {
@@ -33,6 +33,8 @@ const typeLabels = {
 }
 
 export default function app(data) {
+  const routeCache = new Map()
+  let routeRevision = 0
   const site = data.site
   const points = data.points
   const tariffs = data.tariffs
@@ -54,6 +56,7 @@ export default function app(data) {
     faq,
     routes: routesData,
     dataSource: data.source || 'json',
+    labMode: false,
 
     fromName: initialFrom?.name || '',
     toName: initialTo?.name || '',
@@ -94,6 +97,7 @@ export default function app(data) {
         this.showBar = window.scrollY > 720
       }
       window.addEventListener('scroll', this.onScroll, { passive: true })
+      if (window.ptCalculatorLab) this.initCalculatorLab()
       this.onScroll()
 
       this.$watch('fromName', () => this.loadRoute())
@@ -102,6 +106,29 @@ export default function app(data) {
       this.$nextTick(() => {
         this.setupMapLazy()
         this.loadRoute()
+      })
+    },
+
+    initCalculatorLab() {
+      this.labMode = true
+      let lastReport
+      const report = () => {
+        const info = this.routeInfo
+        const state = { type: 'pt-calculator-state', from: this.fromPoint?.id || '',
+          to: this.toPoint?.id || '', tariff: this.tariffId, roundTrip: this.roundTrip,
+          childSeat: this.childSeat, extraStop: this.extraStop, km: info?.km ?? null }
+        const snapshot = JSON.stringify(state)
+        if (lastReport === snapshot) return
+        lastReport = snapshot
+        window.parent.postMessage(state, window.location.origin)
+      }
+      for (const field of ['fromName', 'toName', 'tariffId', 'roundTrip', 'childSeat', 'extraStop', 'geo']) this.$watch(field, report)
+      this.$nextTick(report)
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin || event.source !== window.parent || event.data?.type !== 'pt-calculator-preview') return
+        if (!event.data.settings || typeof event.data.settings !== 'object') return
+        Object.assign(this.calc, calculatorSettings(event.data.settings))
+        report()
       })
     },
 
@@ -269,7 +296,7 @@ export default function app(data) {
 
         return {
           km: Math.max(1, Math.round(active.getLength() / 1000)),
-          minutes: Math.max(calc.time_round, Math.round(active.getTime() / 60 / calc.time_round) * calc.time_round),
+          rawMinutes: active.getTime() / 60,
           coords,
           source: 'yandex',
         }
@@ -294,7 +321,7 @@ export default function app(data) {
 
         return {
           km: Math.max(1, Math.round(route.distance / 1000)),
-          minutes: Math.max(calc.time_round, Math.round(route.duration / 60 / calc.time_round) * calc.time_round),
+          rawMinutes: route.duration / 60,
           coords: route.geometry.coordinates.map((coord) => [coord[1], coord[0]]),
           source: 'osrm',
         }
@@ -306,11 +333,11 @@ export default function app(data) {
     },
 
     estimateRoute(from, to) {
-      const km = estimateKm(from, to, overrides, calc)
+      const km = estimateKm(from, to, overrides, this.calc)
       if (!km) return null
       return {
         km,
-        minutes: estimateMinutes(km, calc),
+        minutes: estimateMinutes(km, this.calc),
         coords: [
           [from.lat, from.lon],
           [to.lat, to.lon],
@@ -320,6 +347,7 @@ export default function app(data) {
     },
 
     async loadRoute() {
+      const revision = ++routeRevision
       const from = this.fromPoint
       const to = this.toPoint
 
@@ -356,7 +384,9 @@ export default function app(data) {
       try {
         // Яндекс (нужен apiKey) → публичный OSRM (5с) → оставляем fallback
         let result = await this.routeFromYandex(from, to)
+        if (revision !== routeRevision) return
         if (!result) result = await this.routeFromOsrm(from, to)
+        if (revision !== routeRevision) return
 
         if (result) {
           result.key = key
@@ -369,8 +399,10 @@ export default function app(data) {
           this.geo = null
         }
       } finally {
-        this.routeLoading = false
-        this.refreshMap()
+        if (revision === routeRevision) {
+          this.routeLoading = false
+          this.refreshMap()
+        }
       }
     },
 
@@ -528,7 +560,8 @@ export default function app(data) {
 
     pointLabel(point) {
       if (!point) return ''
-      return point.type === 'city' ? 'город' : `${this.typeLabel(point.type)} · ${point.city}`
+      const label = this.typeLabel(point.type)
+      return point.type === 'city' || !point.city ? label : `${label} · ${point.city}`
     },
 
     seatsLabel(n) {
@@ -544,7 +577,7 @@ export default function app(data) {
     kmBetween(fromId, toId) {
       const a = this.points.find((p) => p.id === fromId)
       const b = this.points.find((p) => p.id === toId)
-      return estimateKm(a, b, overrides, calc)
+      return estimateKm(a, b, overrides, this.calc)
     },
 
     get fromPoint() {
@@ -561,18 +594,21 @@ export default function app(data) {
       if (!from || !to || from.id === to.id) return null
 
       const key = `${from.id}|${to.id}`
-      if (this.geo && this.geo.key === key) {
+      if (this.geo?.key === key && Number.isFinite(this.geo.rawMinutes)) {
+        const step = this.calc.time_round
+        const minutes = Math.max(step, Math.round(this.geo.rawMinutes / step) * step)
         return {
           km: this.geo.km,
-          minutes: this.geo.minutes,
-          duration: formatDuration(this.geo.minutes),
+          minutes,
+          duration: formatDuration(minutes),
           exact: true,
+          source: this.geo.source,
         }
       }
 
-      const km = estimateKm(from, to, overrides, calc)
-      const minutes = estimateMinutes(km, calc)
-      return { km, minutes, duration: formatDuration(minutes), exact: false }
+      const km = estimateKm(from, to, overrides, this.calc)
+      const minutes = estimateMinutes(km, this.calc)
+      return { km, minutes, duration: formatDuration(minutes), exact: false, source: overrides[`${from.id}|${to.id}`] != null ? 'override' : 'haversine' }
     },
 
     get durationLabel() {
@@ -592,13 +628,22 @@ export default function app(data) {
     },
 
     priceFor(tariff) {
-      const info = this.routeInfo
-      if (!info || !tariff || tariff.onRequest) return null
-      let price = Math.max(tariff.minPrice, tariff.base + tariff.perKm * info.km)
-      if (this.roundTrip) price *= calc.round_trip_factor
-      if (this.extraStop) price += calc.extra_stop_price
-      if (this.childSeat) price += calc.child_seat_price
-      return roundPrice(price, calc)
+      return this.breakdownFor(tariff)?.total ?? null
+    },
+
+    breakdownFor(tariff) {
+      return priceBreakdown(tariff, this.routeInfo?.km, {
+        roundTrip: this.roundTrip, extraStop: this.extraStop, childSeat: this.childSeat,
+      }, this.calc)
+    },
+
+    get labBreakdown() {
+      return this.breakdownFor(this.selectedTariff)
+    },
+
+    get labDistanceSource() {
+      const labels = { yandex: 'Яндекс', osrm: 'OSRM', override: 'Ручной маршрут', haversine: 'Оценка по координатам' }
+      return labels[this.routeInfo?.source] || 'Маршрут не выбран'
     },
 
     get tariffOptions() {
@@ -620,7 +665,7 @@ export default function app(data) {
     },
 
     get canBook() {
-      if (!this.routeInfo || !this.selectedTariff) return false
+      if (this.labMode || !this.routeInfo || !this.selectedTariff) return false
       if (this.selectedTariff.onRequest) return true
       return Boolean(this.total) && this.passengers <= this.selectedTariff.seats
     },
@@ -633,9 +678,9 @@ export default function app(data) {
           const from = this.points.find((p) => p.id === r.from)
           const to = this.points.find((p) => p.id === r.to)
           if (!from || !to) return null
-          const km = estimateKm(from, to, overrides, calc)
-          const minutes = estimateMinutes(km, calc)
-          const price = roundPrice(Math.max(economy.minPrice, economy.base + economy.perKm * km), calc)
+          const km = estimateKm(from, to, overrides, this.calc)
+          const minutes = estimateMinutes(km, this.calc)
+          const price = roundPrice(Math.max(economy.minPrice, economy.base + economy.perKm * km), this.calc)
           return { from, to, km, duration: formatDuration(minutes), price: economy.onRequest ? null : price, tariffName: economy.name }
         })
         .filter(Boolean)
@@ -747,6 +792,7 @@ export default function app(data) {
     },
 
     submitBooking() {
+      if (this.labMode) return
       if (!this.validateBooking() || !this.selectedTariff || !this.fromPoint || !this.toPoint) return
 
       const tariff = this.selectedTariff

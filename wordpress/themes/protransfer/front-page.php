@@ -6,7 +6,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$is_legal = isset($_GET['pt_legal']);
+$is_lab = isset($_GET['pt_calc_debug']);
+if ($is_lab && !current_user_can('manage_options')) {
+    wp_die('Недостаточно прав для просмотра отладки калькулятора.', '', ['response' => 403]);
+}
+if ($is_lab) {
+    nocache_headers();
+}
+$is_legal = !$is_lab && isset($_GET['pt_legal']);
 $landing = __DIR__ . ($is_legal ? '/landing/legal.html' : '/landing/preview.html');
 if (is_readable($landing)) {
     status_header(200);
@@ -32,6 +39,18 @@ if (is_readable($landing)) {
             $bootstrap .= '<script type="application/ld+json">' . wp_json_encode($structured, $json_flags) . '</script>';
         }
         $html = str_replace('</head>', $bootstrap . '</head>', $html);
+    }
+    if ($is_lab) {
+        $lab = __DIR__ . '/calculator-lab.php';
+        if (!is_readable($lab)) {
+            wp_die('Страница проверки калькулятора недоступна.', '', ['response' => 503]);
+        }
+        ob_start();
+        require $lab;
+        $diagnostics = ob_get_clean();
+        $html = str_replace('</main>', $diagnostics . '</main>', $html);
+        $html = preg_replace('~<body\b~', '<body class="pt-calculator-lab"', $html, 1);
+        $html = str_replace('</head>', '<script>window.ptCalculatorLab = true;</script><style>body.pt-calculator-lab>header,body.pt-calculator-lab>footer,body.pt-calculator-lab #wpadminbar,body.pt-calculator-lab main>section:not(#calculator){display:none!important}body.pt-calculator-lab #calculator{margin:0!important;padding:20px 0}body.pt-calculator-lab{background:#f4f5f7}</style></head>', $html);
     }
     $html = str_replace('href="legal.html', 'href="' . esc_url(add_query_arg('pt_legal', '1', home_url('/'))), $html);
     $html = str_replace(['href="index.html"', 'href="preview.html"'], 'href="' . esc_url(home_url('/')) . '"', $html);

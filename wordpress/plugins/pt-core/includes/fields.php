@@ -14,12 +14,14 @@ add_action('carbon_fields_register_fields', function () {
     Container::make('post_meta', 'Точка')
         ->where('post_type', '=', 'pt_point')
         ->add_fields([
-            Field::make('text', 'pt_city', 'Город'),
-            Field::make('text', 'pt_lat', 'Широта')->set_attribute('type', 'number')->set_attribute('step', 'any'),
-            Field::make('text', 'pt_lon', 'Долгота')->set_attribute('type', 'number')->set_attribute('step', 'any'),
-            Field::make('complex', 'pt_aliases', 'Алиасы поиска')
+            Field::make('hidden', 'pt_city'),
+            Field::make('text', 'pt_lat', 'Широта')->set_attribute('type', 'number')->set_attribute('step', 'any')
+                ->set_attribute('min', '-90')->set_attribute('max', '90'),
+            Field::make('text', 'pt_lon', 'Долгота')->set_attribute('type', 'number')->set_attribute('step', 'any')
+                ->set_attribute('min', '-180')->set_attribute('max', '180'),
+            Field::make('complex', 'pt_aliases', 'Варианты поиска')
                 ->add_fields([
-                    Field::make('text', 'alias', 'Алиас')->set_width(100),
+                    Field::make('text', 'alias', 'Вариант названия')->set_width(100),
                 ])
                 ->set_header_template('<%- alias %>'),
         ]);
@@ -128,7 +130,7 @@ add_action('carbon_fields_register_fields', function () {
     $group_labels = [
         'advantages' => 'Преимущества', 'tariffs' => 'Автопарк', 'popular_routes' => 'Направления',
         'how_it_works' => 'Как это работает', 'services' => 'Услуги', 'reviews' => 'Отзывы',
-        'faq' => 'Вопросы и ответы', 'contacts' => 'Контакты', 'footer' => 'Подвал',
+        'faq' => 'Вопросы и ответы', 'contacts' => 'Контакты', 'contacts_/_cta' => 'Контакты и связь', 'footer' => 'Подвал',
     ];
     foreach (pt_landing_schema() as $key => $definition) {
         $group = $group_labels[$definition['group']] ?? $definition['group'];
@@ -153,7 +155,7 @@ add_action('carbon_fields_register_fields', function () {
         ->set_page_parent('edit.php?post_type=pt_tariff')
         ->set_page_file('pt-calculator')
         ->add_fields([
-            Field::make('text', 'pt_road_factor', 'Коэффициент дороги (haversine)')
+            Field::make('text', 'pt_road_factor', 'Коэффициент дороги для оценки по координатам')
                 ->set_default_value((string) $calc_defaults['road_factor'])
                 ->set_attribute('type', 'number')
                 ->set_attribute('step', '0.01'),

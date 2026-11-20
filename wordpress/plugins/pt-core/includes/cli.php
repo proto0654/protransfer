@@ -37,6 +37,118 @@ class PT_CLI_Command
         WP_CLI::success('Seed completed');
     }
 
+    /**
+     * Link unambiguous legacy city names and translate default point types.
+     *
+     * [--apply]
+     * : Apply the changes after previewing them. Creates a rollback record.
+     *
+     * [--rollback]
+     * : Revert unchanged values from the recorded migration.
+     *
+     * @subcommand migrate-points
+     * @when after_wp_load
+     */
+    public function migrate_points($args, $assoc_args): void
+    {
+        $backup_key = 'pt_point_migration_backup';
+        $apply = !empty($assoc_args['apply']);
+        $rollback = !empty($assoc_args['rollback']);
+        if ($apply && $rollback) {
+            WP_CLI::error('Choose either --apply or --rollback.');
+        }
+        if ($rollback) {
+            $backup = get_option($backup_key, null);
+            if (!is_array($backup)) {
+                WP_CLI::error('No point migration rollback record exists.');
+            }
+            $remaining = ['links' => [], 'terms' => []];
+            foreach ($backup['links'] as $id => $parent_id) {
+                if (!metadata_exists('post', (int) $id, PT_PARENT_POINT_META)) continue;
+                if ((string) get_post_meta((int) $id, PT_PARENT_POINT_META, true) === (string) $parent_id
+                    && delete_post_meta((int) $id, PT_PARENT_POINT_META, $parent_id)) {
+                    continue;
+                }
+                $remaining['links'][$id] = $parent_id;
+                WP_CLI::warning("Point {$id} could not be safely reverted.");
+            }
+            foreach ($backup['terms'] as $id => $names) {
+                $term = get_term((int) $id, 'pt_point_type');
+                if ($term && !is_wp_error($term) && $term->name === $names['old']) continue;
+                if ($term && !is_wp_error($term) && $term->name === $names['new']) {
+                    if ($this->set_point_type_name((int) $id, $names['old'])) continue;
+                }
+                $remaining['terms'][$id] = $names;
+                WP_CLI::warning("Point type {$id} could not be safely reverted.");
+            }
+            if ($remaining['links'] || $remaining['terms']) {
+                update_option($backup_key, $remaining, false);
+                WP_CLI::error('Rollback was partial. Review the remaining entries before retrying.');
+            }
+            if (!delete_option($backup_key) && get_option($backup_key, null) !== null) {
+                WP_CLI::error('Values were restored, but the rollback record could not be cleared. Retry --rollback.');
+            }
+            WP_CLI::success('Rollback finished.');
+            return;
+        }
+        $settlements = pt_settlement_points();
+        $points = get_posts(['post_type' => 'pt_point', 'post_status' => 'any', 'numberposts' => -1]);
+        $changes = ['links' => [], 'terms' => []];
+        $unmatched = [];
+        foreach ($points as $point) {
+            if (metadata_exists('post', $point->ID, PT_PARENT_POINT_META)) continue;
+            $legacy = (string) carbon_get_post_meta($point->ID, 'pt_city');
+            if ($legacy === '' || trim($legacy) === trim($point->post_title)) continue;
+            $parent_id = pt_unique_settlement_id($legacy, (int) $point->ID, $settlements);
+            if ($parent_id) $changes['links'][$point->ID] = $parent_id;
+            else $unmatched[] = (string) $point->post_name;
+        }
+        $planned_links = $changes['links'];
+        foreach ($planned_links as $id => $parent_id) {
+            if (pt_parent_would_cycle((int) $id, (int) $parent_id, $planned_links)) {
+                unset($changes['links'][$id]);
+                $unmatched[] = 'id:' . $id . ' (cyclic relationship)';
+            }
+        }
+        foreach (pt_point_type_labels() as $slug => $label) {
+            $term = get_term_by('slug', $slug, 'pt_point_type');
+            if ($term && $term->name === ucfirst($slug)) {
+                $changes['terms'][$term->term_id] = ['old' => $term->name, 'new' => $label];
+            }
+        }
+        WP_CLI::log('Links: ' . count($changes['links']) . '; type labels: ' . count($changes['terms']) . '; unmatched: ' . count($unmatched));
+        if ($unmatched) WP_CLI::warning('Review unmatched point slugs: ' . implode(', ', $unmatched));
+        if (!$apply || (!$changes['links'] && !$changes['terms'])) return;
+        if (!add_option($backup_key, $changes, '', false)) {
+            WP_CLI::error('Rollback record already exists; inspect or roll back before applying another migration.');
+        }
+        foreach ($changes['links'] as $id => $parent_id) {
+            if (!add_post_meta((int) $id, PT_PARENT_POINT_META, $parent_id, true)) {
+                WP_CLI::error("Could not link point {$id}. Review the changes or use --rollback before retrying.");
+            }
+        }
+        foreach ($changes['terms'] as $id => $names) {
+            $term = get_term((int) $id, 'pt_point_type');
+            if (!$term || is_wp_error($term) || $term->name !== $names['old']) {
+                WP_CLI::error("Point type {$id} changed during migration. Review the changes or use --rollback before retrying.");
+            }
+            if (!$this->set_point_type_name((int) $id, $names['new'])) {
+                WP_CLI::error("Could not rename point type {$id}. Use --rollback before retrying.");
+            }
+        }
+        WP_CLI::success('Migration finished; legacy city text remains available for rollback.');
+    }
+
+    private function set_point_type_name(int $id, string $name): bool
+    {
+        $result = wp_update_term($id, 'pt_point_type', ['name' => $name]);
+        if (is_wp_error($result)) {
+            return false;
+        }
+        $term = get_term($id, 'pt_point_type');
+        return $term && !is_wp_error($term) && $term->name === $name;
+    }
+
     private function read_json(string $path)
     {
         if (!file_exists($path)) {
@@ -51,9 +163,9 @@ class PT_CLI_Command
 
     private function seed_point_types(): void
     {
-        foreach (['city', 'airport', 'rail', 'port', 'resort'] as $slug) {
+        foreach (pt_point_type_labels() as $slug => $label) {
             if (!term_exists($slug, 'pt_point_type')) {
-                wp_insert_term(ucfirst($slug), 'pt_point_type', ['slug' => $slug]);
+                wp_insert_term($label, 'pt_point_type', ['slug' => $slug]);
             }
         }
     }

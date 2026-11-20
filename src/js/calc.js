@@ -63,6 +63,20 @@ export function roundPrice(value, settings = defaults) {
   return Math.round(value / settings.price_round) * settings.price_round
 }
 
+export function priceBreakdown(tariff, km, options, settings = defaults) {
+  if (!tariff || !Number.isFinite(km) || km <= 0) return null
+  const formula = Number(tariff.base) + Number(tariff.perKm) * km
+  const minimum = Number(tariff.minPrice)
+  const basePrice = Math.max(minimum, formula)
+  const multiplier = options.roundTrip ? settings.round_trip_factor : 1
+  const extraStop = options.extraStop ? settings.extra_stop_price : 0
+  const childSeat = options.childSeat ? settings.child_seat_price : 0
+  const beforeRounding = basePrice * multiplier + extraStop + childSeat
+  return { km, formula, minimum, basePrice, multiplier, extraStop, childSeat, beforeRounding,
+    roundStep: settings.price_round, onRequest: Boolean(tariff.onRequest),
+    total: tariff.onRequest ? null : roundPrice(beforeRounding, settings) }
+}
+
 export function money(value) {
   return `${new Intl.NumberFormat('ru-RU').format(value)} ₽`
 }

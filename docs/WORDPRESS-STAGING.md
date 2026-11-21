@@ -87,13 +87,13 @@ The installed WP-CLI needs `--no-tablespaces=true` when exporting with `--column
 
 ## Order notifications on staging
 
-`wordpress/mu-plugins/pt-staging.php` adds `add_filter('pt_order_notify_enabled', '__return_false')` when `wp_get_environment_type()` is `staging`. No Telegram request leaves the staging stand, even if the bot token and chat id are filled in «Контакты и контент». Orders are still validated, priced and stored; the notification attempt is recorded as skipped and the «Уведомление» column stays empty.
+`wordpress/mu-plugins/pt-staging.php` registers `pt_order_notify_enabled` and returns the value of the `pt_tg_notify_staging` option, so notifications are off on the stand by default: no Telegram request leaves staging even when the bot token and chat id are filled in «Контакты и контент». Orders are still validated, priced and stored; the attempt is recorded as skipped and the «Уведомление» column stays empty.
 
 Safe testing:
 - use a dedicated test bot and a private test chat, never the real business chat;
-- run the delivery test on a local WordPress or a throwaway copy whose environment type is not `staging`, or temporarily remove the MU filter only in that local copy;
-- fill the token and chat id on that copy, submit a test booking, and check the chat plus the order's «Уведомление» column;
-- remove the test values afterwards. Do not put production Telegram credentials into staging or Git.
+- fill «Telegram: токен бота» and «Telegram: chat id» on the stand, then run `wp option update pt_tg_notify_staging 1`;
+- submit a test booking and check the chat plus the order's «Уведомление» column;
+- run `wp option update pt_tg_notify_staging 0` afterwards to return the stand to silent mode. Do not put production Telegram credentials into staging or Git.
 
 Expected failures such as a missing token or a wrong chat id appear in the order's notification meta and in the «Уведомление» column. The order itself is never rolled back by a failed notification.
 
@@ -108,5 +108,7 @@ The calculator still uses provider distances in the browser and estimated/manual
 A point can link to an existing published `city` or `resort` point by ID; the public `city` string is derived from that parent while it is available. Existing `_pt_city` text is retained and used for unlinked or unavailable parents. Explicitly choosing no parent is distinct from an unlinked legacy record. The selector rejects self-links and cycles. The Yandex map in the point editor writes to the existing Carbon latitude/longitude fields; manual entry remains available if the map is unavailable.
 
 After deploying the updated plugin, run `wp pt migrate-points` for a read-only preview. It reports unambiguous links, default type labels and unmatched point slugs. `wp pt migrate-points --apply` stores a non-autoloaded rollback record, creates only unique links and translates unchanged default term names while keeping their slugs. It leaves ambiguous and unmatched names intact. Inspect the preview and make a current database backup before applying. `wp pt migrate-points --rollback` reverts only values still matching the migration and retains rollback entries for later editor changes. Routine deployments never invoke this migration.
+
+This stand has already been migrated: 13 point-to-settlement links exist, all five type labels are Russian, and three slugs (`dzhubga`, `min-vody-air`, `nikolaevka`) stay unlinked because the demo seed has no matching settlement point for them. The pre-migration database export is kept under `~/.local/share/protransfer/backups/`, and `wp pt migrate-points --rollback` still reverts the applied values.
 
 Verify `php scripts/point-editor.test.php`, `php scripts/point-migration.test.php`, `node --test scripts/point-map.test.js` and `php scripts/calculator-lab.test.php`, in addition to the existing calculator tests. These tests do not replace an authenticated WordPress browser check of the actual map, Carbon Fields persistence and lab iframe.

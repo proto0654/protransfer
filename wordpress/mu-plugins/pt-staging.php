@@ -13,6 +13,9 @@ if (wp_get_environment_type() !== 'staging') {
 
 add_filter('pre_wp_mail', '__return_false');
 add_filter('wp_speculation_rules_configuration', '__return_null');
+// Notifications stay off on staging unless the site owner explicitly enables
+// them with `wp option update pt_tg_notify_staging 1` for an end-to-end test.
+add_filter('pt_order_notify_enabled', static fn () => (bool) get_option('pt_tg_notify_staging', false));
 
 add_filter('wp_robots', function ($robots) {
     $robots['noindex'] = true;

@@ -2,7 +2,7 @@
 
 This is an operator guide to the current Protransfer staging site. The quoted labels below are the Russian labels in the admin interface. Use the [staging site](https://protransfer.weblaba.ru/) and its [WordPress admin](https://protransfer.weblaba.ru/wp-admin/). Credentials are stored outside Git as described in [staging operations](WORDPRESS-STAGING.md).
 
-**Current boundary:** the site is a staging/demo environment. Prices, contacts, reviews and legal documents need business approval. Saving an editor change affects the staging site and the data used by the local frontend; Git deployment updates code, while editor content and media are stored on the staging server. A form submission on the site does **not** create an order in WordPress or send it automatically.
+**Current boundary:** the site is a staging/demo environment. Prices, contacts, reviews and legal documents need business approval. Saving an editor change affects the staging site and the data used by the local frontend; Git deployment updates code, while editor content and media are stored on the staging server. A form submission on the site creates a «Заявка» in WordPress and, on production, sends a Telegram notification when the bot settings are filled. Staging stores orders but suppresses notifications (see [staging operations](WORDPRESS-STAGING.md)).
 
 ## Find the right section
 
@@ -16,7 +16,7 @@ This is an operator guide to the current Protransfer staging site. The quoted la
 | «Тарифы» → «Отладка» | Interactive quote preview and global settings | Test a route and understand the formula |
 | «Вопросы и ответы» | Question titles and answers | Add or edit a question |
 | «Отзывы» | Review author and review fields | Edit a review |
-| «Заявки» | Manual order records and statuses | Inspect or enter a record manually; the public form is not connected |
+| «Заявки» | Incoming orders, their prices, statuses and notification state | Inspect a new booking, confirm or cancel it, diagnose a Telegram failure |
 | «Медиафайлы» | WordPress media library | Upload and reuse images |
 
 Standard WordPress items such as «Записи», «Страницы», «Комментарии», «Внешний вид», «Плагины», «Пользователи» and «Настройки» also appear. They are WordPress administration areas; the landing's main editor is the project-specific menu above, not the default sample post or page. Do not change themes, plugin activation, users, permalinks or indexing settings as part of ordinary content editing.
@@ -35,6 +35,8 @@ Only published points, tariffs, FAQs and reviews are read into the public data. 
 ## «Общие данные» → «Настройки сайта»
 
 Open the single existing record «Настройки сайта». Its «Контакты и контент» box contains the brand, tagline, display phone, phone link, WhatsApp, Telegram, MAX, email, address, hours, Yandex Maps key, review rating and review count. The display phone and «Телефон (ссылка)» are separate fields: update both when the number changes. The map key field is «Ключ API Яндекс Карт», and the MAX field is «Ссылка MAX». WhatsApp is used as a number in a `wa.me` link; Telegram is a handle, and MAX is a URL. Check each link on the site after editing.
+
+The same box contains the two order-notification fields «Telegram: токен бота» and «Telegram: chat id». They are used by «Заявки»; see the notification instructions in that section. Leave them empty to keep orders in WordPress without Telegram delivery.
 
 The same box holds repeatable «Статистика», «Преимущества», «Шаги», «Услуги» and «Оплата» rows. Their text and order feed the corresponding homepage lists. Icon fields contain icon identifiers used by the existing site icon set, not arbitrary image uploads; keep an existing working identifier when changing only text.
 
@@ -125,11 +127,35 @@ For «Отзывы», the title is the author/name. Edit city, route, rating, da
 
 Use «Медиафайлы» to upload/select images. Changing a media library item or choosing a different hero/tariff image requires checking the affected public card or hero after saving. For tariffs, remember the featured-image priority above.
 
-## «Заявки»: present but not connected
+## «Заявки»: incoming orders
 
-The section has fields for phone, route, tariff, price, date/time, a JSON snapshot and status («Новая», «Подтверждена», «Выполнена», «Отменена»). These are fields on a WordPress record, not evidence of an incoming-order pipeline.
+The public booking form posts to `POST /wp-json/pt/v1/order`. WordPress validates the request, resolves the selected points and tariff, recalculates the price on the server, stores a published `pt_order` record and then tries to notify the configured Telegram chat. The browser shows «Заявка принята» only after the endpoint returns `201`. A validation or server error leaves the booking form open with the server's Russian message; a browser-only/static build or an unavailable backend falls back to the offline draft and the messenger handoff.
 
-Currently, submitting the landing form validates it, saves a copy in the visitor's browser localStorage where available, and displays a prepared message/call options. A visitor must use the offered action to contact the business; WordPress does not automatically receive that submission. Do not use an empty «Заявки» list as proof that no customers submitted the form. A server-side intake, validation, trusted price calculation and notification channel still need implementation and acceptance.
+Each order stores:
+- a title in the form `Имя · Откуда → Куда · ГГГГ-ММ-ДД ЧЧ:ММ`;
+- «Телефон» (normalised to 11 digits), «Откуда», «Куда», «Тариф», «Цена», «Дата/время» and «Снимок данных заявки» with the validated request and the distance source;
+- status «Новая»;
+- the server-calculated price. If the browser supplied the kilometres it displayed, the server uses that distance so the stored price matches the quote the customer saw; otherwise it uses «Ручные км» or the coordinate estimate from «Маршруты». A differing client-declared total is kept in a hidden record for comparison.
+
+The «Заявки» list shows «Дата и время», «Телефон» as a clickable `tel:` link, «Маршрут», «Цена», «Статус» and «Уведомление». The date column is sortable, and the status filter above the list narrows the view. The edit screen still contains «Телефон», «Откуда», «Куда», «Тариф», «Цена», «Дата/время», «Снимок данных заявки» and «Статус».
+
+Statuses are «Новая», «Подтверждена», «Выполнена» and «Отменена». They are maintained manually; the public form always creates a «Новая» record. An empty list now means that no order reached WordPress (or that the current filter hides it), not that the form is disconnected. The visitor's browser keeps a local draft as a convenience only; WordPress is the source of truth.
+
+### Notification settings and failures
+
+Enter both fields in «Общие данные» → «Настройки сайта» → «Контакты и контент»:
+- «Telegram: токен бота» — the token from Telegram's BotFather;
+- «Telegram: chat id» — the personal, group or channel chat identifier (group IDs are usually negative). Add the bot to that chat first.
+
+When both fields are filled, each new order sends one HTML message to `https://api.telegram.org/bot<token>/sendMessage` with the order number, route, date/time, tariff, passengers, price, name, phone, options and comment. Values are escaped before sending. A missing setting or a Telegram/network error never deletes the order: the «Уведомление» column shows «Ошибка: …», and the full text is stored with the order. Check the column after a test booking.
+
+When Telegram fails:
+1. Open the order and read the «Уведомление» error. «chat not found» or «bot was blocked» usually means a wrong «Telegram: chat id» or that the bot is not a member of the chat.
+2. Correct the token/chat id in «Контакты и контент», save, and make another test booking. There is no retry button for an already stored order.
+3. Contact the customer from the stored phone even if the notification failed. Never rely on the «Уведомление» column alone: an order with no notification settings is still a real order.
+4. Staging deliberately suppresses notifications even when the fields are filled; see [staging operations](WORDPRESS-STAGING.md).
+
+Do not add a second external service for notifications without an approved business decision. The code dispatches to channels through a filter so a future MAX channel can be added, but only Telegram is implemented today.
 
 ## Common checks and escalation
 
@@ -137,6 +163,8 @@ Currently, submitting the landing form validates it, saves a copy in the visitor
 - **Price differs from the debugger:** compare the distance source and enter the site's kilometres in the debugger. Check tariff amounts, selected options, the round-trip factor and price rounding. Time can still differ.
 - **A field or icon is missing on the landing:** some template text is not editable yet, and an unknown icon identifier may not exist. Record the exact section and field for development rather than changing unrelated WordPress settings.
 - **A route card is missing:** check both exact slugs and that both points are published. A manual kilometre row is a fallback and does not guarantee the provider's result.
+- **A form submission failed:** read the Russian message under the form. The visitor's data stays in place, so the message can be reported without asking for it again. A repeated failure on every submission may mean the order endpoint is unavailable, the nonce-free route is blocked by a security plugin, or the rate limit was reached.
+- **An order arrived without a Telegram message:** open «Заявки» and compare «Уведомление». Fix the two Telegram fields and test with a new booking; the stored order is not lost and must still be handled from its record.
 - **Need an initial import, deployment, rollback or access recovery:** use the operations instructions in [WordPress staging](WORDPRESS-STAGING.md). Normal editing does not require running seed, especially `--force`.
 
 The menu labels and debugger layout were inspected on the staging admin. This guide also reflects source-level behavior; it is not a completed field-by-field save/reload acceptance test.

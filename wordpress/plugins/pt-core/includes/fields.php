@@ -91,6 +91,8 @@ add_action('carbon_fields_register_fields', function () {
             Field::make('text', 'pt_address', 'Адрес'),
             Field::make('text', 'pt_hours', 'Часы работы'),
             Field::make('text', 'pt_map_api_key', 'Ключ API Яндекс Карт'),
+            Field::make('text', 'pt_tg_bot_token', 'Telegram: токен бота'),
+            Field::make('text', 'pt_tg_chat_id', 'Telegram: chat id'),
             Field::make('text', 'pt_rating', 'Рейтинг'),
             Field::make('text', 'pt_reviews_count', 'Число отзывов'),
             Field::make('complex', 'pt_stats', 'Статистика')

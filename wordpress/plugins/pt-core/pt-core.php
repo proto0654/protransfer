@@ -28,6 +28,7 @@ require_once PT_CORE_PATH . 'includes/point-editor.php';
 require_once PT_CORE_PATH . 'includes/calc.php';
 require_once PT_CORE_PATH . 'includes/landing-content.php';
 require_once PT_CORE_PATH . 'includes/fields.php';
+require_once PT_CORE_PATH . 'includes/order.php';
 require_once PT_CORE_PATH . 'includes/rest.php';
 require_once PT_CORE_PATH . 'includes/admin-debug.php';
 require_once PT_CORE_PATH . 'includes/admin-settings-nav.php';

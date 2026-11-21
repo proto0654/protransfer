@@ -23,6 +23,12 @@ add_action('rest_api_init', function () {
             'child_seat' => ['required' => false, 'type' => 'boolean', 'default' => false],
         ],
     ]);
+
+    register_rest_route('pt/v1', '/order', [
+        'methods' => 'POST',
+        'permission_callback' => '__return_true',
+        'callback' => 'pt_rest_order',
+    ]);
 });
 
 function pt_rest_bootstrap(): WP_REST_Response
@@ -193,4 +199,26 @@ function pt_rest_quote(WP_REST_Request $request): WP_REST_Response|WP_Error
     );
 
     return new WP_REST_Response($quote, 200);
+}
+
+function pt_rest_order(WP_REST_Request $request): WP_REST_Response|WP_Error
+{
+    $input = $request->get_json_params();
+    if (!is_array($input)) {
+        $input = $request->get_params();
+    }
+    if (!is_array($input)) {
+        return new WP_Error('pt_order_invalid', 'Не удалось прочитать данные заявки', ['status' => 400]);
+    }
+
+    $order = pt_create_order($input);
+    if (is_wp_error($order)) {
+        return $order;
+    }
+
+    return new WP_REST_Response([
+        'id' => $order['id'],
+        'number' => $order['number'],
+        'total_label' => $order['total_label'],
+    ], 201);
 }

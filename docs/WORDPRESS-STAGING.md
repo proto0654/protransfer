@@ -13,7 +13,7 @@
 
 Pre-WordPress dump of the previous site: `~/.local/share/protransfer/backups/wp545-before-wordpress-*.sql.gz`.
 
-Stack: WordPress (ru), GeneratePress parent + `protransfer` child, Carbon Fields via Composer in `pt-core`, MU `pt-staging.php` (noindex, no mail).
+Stack: WordPress (ru), GeneratePress parent + `protransfer` child, Carbon Fields via Composer in `pt-core`, MU `pt-staging.php` (noindex, no mail, order notifications suppressed).
 
 ## Local Vite → WP proxy
 
@@ -59,7 +59,7 @@ For editor-facing section descriptions and examples, see [WordPress admin: secti
 
 Calculator defaults are shared by PHP and the static frontend through `wordpress/plugins/pt-core/data/calc.json`. In WordPress, edit the saved values under **Тарифы → Калькулятор** and each tariff in **Тарифы**. **Тарифы → Отладка** embeds the real frontend calculator, a client-side formula breakdown, a synchronized server comparison and editable settings alongside it. The laboratory response is available only to users with `manage_options`; unsaved settings are sent to the same-origin iframe for preview and do not change stored values. Edits immediately update the preview without changing the site; press **Сохранить настройки** to apply them. Invalid non-positive divisors and speeds fall back to defaults.
 
-The website requests Yandex and OSRM before falling back to manual route distances and a coordinate estimate. The server debugger does not call those services. The embedded calculator synchronizes its displayed distance to the server comparison; it can also be entered manually; the displayed server time remains an estimate. The debugger does not submit an order. The landing calculates prices in the browser, and the existing quote endpoint is not an order or payment integration.
+The website requests Yandex and OSRM before falling back to manual route distances and a coordinate estimate. The server debugger does not call those services. The embedded calculator synchronizes its displayed distance to the server comparison; it can also be entered manually; the displayed server time remains an estimate. The debugger does not submit an order. The landing posts real orders to `pt/v1/order`; WordPress validates them, recalculates the price and stores a `pt_order`. The order endpoint is not a payment integration.
 
 Run `node --test scripts/calculator.test.js` with PHP and Node installed to compare the client and server formulas. Landing copy and legal text are managed through the site settings fields described below.
 
@@ -85,11 +85,23 @@ For rollback, restore the matching code archive from that backup. Restore its da
 
 The installed WP-CLI needs `--no-tablespaces=true` when exporting with `--column-statistics=0`; the bare `--no-tablespaces` flag was converted to an unsupported `tablespaces=` option. The deployment script uses the explicit form and verifies the compressed result before uploading.
 
+## Order notifications on staging
+
+`wordpress/mu-plugins/pt-staging.php` adds `add_filter('pt_order_notify_enabled', '__return_false')` when `wp_get_environment_type()` is `staging`. No Telegram request leaves the staging stand, even if the bot token and chat id are filled in «Контакты и контент». Orders are still validated, priced and stored; the notification attempt is recorded as skipped and the «Уведомление» column stays empty.
+
+Safe testing:
+- use a dedicated test bot and a private test chat, never the real business chat;
+- run the delivery test on a local WordPress or a throwaway copy whose environment type is not `staging`, or temporarily remove the MU filter only in that local copy;
+- fill the token and chat id on that copy, submit a test booking, and check the chat plus the order's «Уведомление» column;
+- remove the test values afterwards. Do not put production Telegram credentials into staging or Git.
+
+Expected failures such as a missing token or a wrong chat id appear in the order's notification meta and in the «Уведомление» column. The order itself is never rolled back by a failed notification.
+
 ## Verification boundary
 
 For each publication, inspect the Actions conclusion and the private `deployed-commit` file, then check the homepage, `/?pt_legal=1`, bootstrap API and admin/login response. Verify built JS/CSS responses and MIME types, valid content identifiers and public `noindex` headers. Local `/wp-json/pt/v1/bootstrap` must reach the same staging backend. These read-only checks do not verify logging in or saving content.
 
-The calculator still uses provider distances in the browser and estimated/manual distances in admin. Orders remain a localStorage/messenger demo; neither the quote endpoint nor the registered order post type provides server-side order intake. Some UI strings and template content remain code; do not treat marker coverage as a complete inventory of all editorial values.
+The calculator still uses provider distances in the browser and estimated/manual distances in admin. Orders now use server-side intake: the public form creates a `pt_order`, the price is recalculated on the server, and Telegram delivery is attempted only where notifications are enabled. Some UI strings and template content remain code; do not treat marker coverage as a complete inventory of all editorial values.
 
 ## Point relationship migration
 

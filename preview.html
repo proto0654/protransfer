@@ -1278,7 +1278,18 @@
             </div>
           </div>
 
-          <form class="mt-5 space-y-4" @submit.prevent="submitBooking()">
+          <form class="mt-5 space-y-4" @submit.prevent="submitBooking()" @input="submitError = ''">
+            <div class="absolute -left-[9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+              <label for="booking-company">Компания</label>
+              <input
+                id="booking-company"
+                type="text"
+                tabindex="-1"
+                autocomplete="off"
+                x-model="company"
+              />
+            </div>
+
             <div>
               <label class="label" for="booking-name">Имя</label>
               <input
@@ -1331,8 +1342,10 @@
             </label>
             <p x-show="errors.consent" x-cloak class="-mt-2 text-[11px] font-semibold text-red-600" x-text="errors.consent"></p>
 
-            <button type="submit" class="btn btn-accent btn-lg w-full">
-              Отправить заявку
+            <p x-show="submitError" x-cloak role="alert" aria-live="polite" class="text-[12px] font-semibold leading-relaxed text-red-600" x-text="submitError"></p>
+
+            <button type="submit" class="btn btn-accent btn-lg w-full disabled:cursor-not-allowed disabled:opacity-60" :disabled="submitting">
+              <span x-text="submitting ? 'Отправляем…' : 'Отправить заявку'"></span>
               <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-arrow-right" /></svg>
             </button>
             <p class="text-center text-[10px] text-ink/35">Предоплата не нужна. Оплата водителю после поездки.</p>
@@ -1367,8 +1380,12 @@
             </button>
           </div>
 
-          <h2 id="success-title" class="mt-4 text-2xl font-extrabold tracking-tight">Заявка сформирована</h2>
-          <p class="mt-1.5 text-[13px] leading-relaxed text-ink/50">
+          <h2 id="success-title" class="mt-4 text-2xl font-extrabold tracking-tight" x-text="order && order.delivered ? 'Заявка принята' : 'Заявка сформирована'">Заявка сформирована</h2>
+          <p x-show="order && order.delivered" class="mt-1.5 text-[13px] leading-relaxed text-ink/50">
+            Номер <strong class="text-ink" x-text="order ? order.id : ''"></strong>. Мы получили заявку — менеджер
+            перезвонит в течение 10 минут и подтвердит бронирование.
+          </p>
+          <p x-show="!order || !order.delivered" class="mt-1.5 text-[13px] leading-relaxed text-ink/50">
             Номер <strong class="text-ink" x-text="order ? order.id : ''"></strong>. Отправьте её нам в удобном
             мессенджере — менеджер подтвердит бронирование в течение 10 минут.
           </p>
@@ -1381,7 +1398,7 @@
             </div>
           </div>
 
-          <div class="mt-4 space-y-2">
+          <div class="mt-4 space-y-2" x-show="!order || !order.delivered">
             <a :href="waHref" target="_blank" rel="noopener" class="btn btn-accent w-full">
               <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-whatsapp" /></svg>
               Отправить в WhatsApp

@@ -72,6 +72,9 @@ export default function app(data) {
     phone: '',
     comment: '',
     consent: false,
+    company: '',
+    submitting: false,
+    submitError: '',
 
     mobileOpen: false,
     scrolled: false,
@@ -742,6 +745,7 @@ export default function app(data) {
     openBooking() {
       if (!this.canBook) return
       this.errors = {}
+      this.submitError = ''
       this.bookingOpen = true
       this.successOpen = false
       document.body.style.overflow = 'hidden'
@@ -783,24 +787,52 @@ export default function app(data) {
       } else if (this.date === todayISO()) {
         const [h, m] = this.time.split(':').map(Number)
         const now = new Date()
-        if (h * 60 + m < now.getHours() * 60 + now.getMinutes()) {
-          errors.time = 'Это время уже прошло'
+        if (h * 60 + m <= now.getHours() * 60 + now.getMinutes() + 30) {
+          errors.time = 'Выберите время не раньше чем через 30 минут'
         }
       }
       this.errors = errors
       return Object.keys(errors).length === 0
     },
 
-    submitBooking() {
-      if (this.labMode) return
+    async submitBooking() {
+      if (this.labMode || this.submitting) return
       if (!this.validateBooking() || !this.selectedTariff || !this.fromPoint || !this.toPoint) return
 
-      const tariff = this.selectedTariff
+      const order = this.buildOrder(this.selectedTariff)
+      this.submitting = true
+      this.submitError = ''
+      try {
+        const result = await this.sendOrder(order)
+        if (result.delivered) {
+          order.delivered = true
+          if (result.number) order.id = result.number
+          if (result.totalLabel) order.price = result.totalLabel
+        }
+        this.saveOrder(order)
+        this.order = order
+        this.bookingOpen = false
+        this.successOpen = true
+        this.copied = false
+      } catch (error) {
+        this.submitError = error?.message || 'Не удалось отправить заявку. Попробуйте ещё раз или позвоните нам.'
+        if (error?.fieldErrors && typeof error.fieldErrors === 'object') {
+          this.errors = { ...this.errors, ...error.fieldErrors }
+        }
+      } finally {
+        this.submitting = false
+      }
+    },
+
+    buildOrder(tariff) {
       const isRequest = Boolean(tariff.onRequest)
-      this.order = {
+      return {
         id: `PT-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
+        delivered: false,
         from: this.fromPoint.name,
         to: this.toPoint.name,
+        fromSlug: this.fromPoint.id,
+        toSlug: this.toPoint.id,
         date: this.date,
         time: this.time,
         passengers: this.passengers,
@@ -808,18 +840,82 @@ export default function app(data) {
         childSeat: this.childSeat,
         extraStop: this.extraStop,
         tariff: tariff.name,
+        tariffSlug: tariff.id,
         cars: tariff.cars,
         km: this.routeInfo ? this.routeInfo.km : null,
+        clientTotal: isRequest ? null : this.total,
         price: isRequest ? 'по запросу' : money(this.total),
         name: this.name.trim(),
         phone: this.phone,
         comment: this.comment.trim(),
       }
+    },
 
-      this.saveOrder(this.order)
-      this.bookingOpen = false
-      this.successOpen = true
-      this.copied = false
+    orderPayload(order) {
+      return {
+        name: order.name,
+        phone: order.phone,
+        comment: order.comment,
+        from: order.fromSlug,
+        to: order.toSlug,
+        tariff: order.tariffSlug,
+        date: order.date,
+        time: order.time,
+        passengers: order.passengers,
+        round_trip: order.roundTrip,
+        extra_stop: order.extraStop,
+        child_seat: order.childSeat,
+        distance_km: order.km,
+        total: order.clientTotal,
+        consent: this.consent,
+        company: this.company,
+      }
+    },
+
+    /**
+     * Sends the order to WordPress. A missing backend (static build, unavailable
+     * API) returns a non-delivered result so the dialog falls back to the
+     * messenger flow; a server error with a Russian message is rethrown.
+     */
+    async sendOrder(order) {
+      const base = typeof window !== 'undefined' && typeof window.ptApiBase === 'string'
+        ? window.ptApiBase.replace(/\/+$/, '')
+        : ''
+      const endpoint = /\/wp-json$/.test(base) ? `${base}/pt/v1/order` : `${base}/wp-json/pt/v1/order`
+
+      let response
+      try {
+        response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.orderPayload(order)),
+        })
+      } catch (error) {
+        return { delivered: false }
+      }
+
+      if (response.status === 404 || response.status === 405) return { delivered: false }
+
+      let data = null
+      try {
+        data = await response.json()
+      } catch (error) {
+        data = null
+      }
+
+      // Static hosting may answer with an HTML page and a success status.
+      if (!data && response.ok) return { delivered: false }
+
+      if (response.status === 201) {
+        return { delivered: true, number: data?.number, totalLabel: data?.total_label }
+      }
+
+      const message = typeof data?.message === 'string' && data.message.trim()
+        ? data.message
+        : 'Не удалось отправить заявку. Попробуйте ещё раз или позвоните нам.'
+      const error = new Error(message)
+      error.fieldErrors = data?.data?.errors && typeof data.data.errors === 'object' ? data.data.errors : {}
+      throw error
     },
 
     saveOrder(order) {
@@ -840,6 +936,8 @@ export default function app(data) {
       this.phone = ''
       this.comment = ''
       this.consent = false
+      this.company = ''
+      this.submitError = ''
       this.errors = {}
     },
 

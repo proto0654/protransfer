@@ -30,6 +30,7 @@ require_once PT_CORE_PATH . 'includes/landing-content.php';
 require_once PT_CORE_PATH . 'includes/fields.php';
 require_once PT_CORE_PATH . 'includes/rest.php';
 require_once PT_CORE_PATH . 'includes/admin-debug.php';
+require_once PT_CORE_PATH . 'includes/admin-settings-nav.php';
 
 if (defined('WP_CLI') && WP_CLI) {
     require_once PT_CORE_PATH . 'includes/cli.php';

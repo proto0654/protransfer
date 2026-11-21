@@ -44,6 +44,16 @@ Boxes named «Лендинг: …» contain selected headings and paragraphs by 
 
 For supported landing-copy fields, an unset field uses initial text; an explicitly saved empty field can be empty on the site. Verify the visible result after saving. The static demo uses bundled initial content rather than the WordPress editor.
 
+### Navigating the settings screen
+
+A sticky strip of tabs sits above the first project box. It has one entry per project box; the label is the box heading without the «Лендинг: » prefix, so «Первый экран» opens «Лендинг: Первый экран», while «Контакты и контент» and «Поисковые системы и обложка» keep their full headings. Selecting a tab shows only that box and hides the other project boxes. The standard WordPress panels, including «Опубликовать», «Ярлык» and «Настройки экрана», remain visible and are not part of the tab set.
+
+The active tab is highlighted. Its identifier is stored in the URL hash, for example `#pt-settings-pervyy-ekran`, so a link can open one group directly, and the last opened group is also remembered in the browser's local storage for the current WordPress user. A reload therefore returns to the same group. Use the arrow keys to move between tabs and Enter or Space to open the focused tab.
+
+A red dot on a tab means that the group contains edits whose current values differ from the values loaded with the page; the same mark appears if a repeatable row is removed or duplicated. If any group still has such edits, leaving the page triggers the browser's standard unsaved-changes prompt. «Обновить» or «Опубликовать» saves and clears the marks. Do not use the prompt as a substitute for saving: it only warns, and it does not keep a copy of the draft.
+
+On wide screens, plain single-line text, number and checkbox fields in a project box are arranged two per row to shorten the group. Text areas, images and repeatable/complex rows keep their full width and existing field proportions.
+
 ### Scenario: change contacts
 
 1. Open «Общие данные» → «Настройки сайта» → «Контакты и контент».

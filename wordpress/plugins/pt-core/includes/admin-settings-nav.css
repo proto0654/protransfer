@@ -1,0 +1,120 @@
+/*
+ * Section navigation and compact field layout for «Общие данные → Настройки сайта».
+ * Visibility is toggled with a class so Carbon's DOM stays mounted and its
+ * sortable, media and rich-text components keep working.
+ */
+body.post-type-pt_settings .pt-settings-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 6px;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+body.admin-bar.post-type-pt_settings .pt-settings-nav {
+  top: 32px;
+}
+
+@media screen and (max-width: 782px) {
+  body.admin-bar.post-type-pt_settings .pt-settings-nav {
+    top: 46px;
+  }
+}
+
+body.post-type-pt_settings .pt-settings-nav__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+body.post-type-pt_settings .pt-settings-nav__tab {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: #2271b1;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+
+body.post-type-pt_settings .pt-settings-nav__tab:hover {
+  background: #f0f0f1;
+}
+
+body.post-type-pt_settings .pt-settings-nav__tab[aria-selected="true"] {
+  border-color: #2271b1;
+  background: #2271b1;
+  color: #fff;
+  font-weight: 600;
+}
+
+body.post-type-pt_settings .pt-settings-nav__tab:focus {
+  outline: 2px solid #2271b1;
+  outline-offset: 1px;
+}
+
+body.post-type-pt_settings .pt-settings-nav__tab[aria-selected="true"]:focus {
+  outline-color: #72aee6;
+}
+
+body.post-type-pt_settings .pt-settings-nav__tab[data-dirty="true"]::after {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: #d63638;
+  vertical-align: middle;
+}
+
+body.post-type-pt_settings .pt-settings-nav__tab[aria-selected="true"][data-dirty="true"]::after {
+  background: #f0c33c;
+}
+
+body.post-type-pt_settings .pt-settings-box-hidden {
+  display: none !important;
+}
+
+body.post-type-pt_settings .carbon-box {
+  scroll-margin-top: 48px;
+}
+
+body.admin-bar.post-type-pt_settings .carbon-box {
+  scroll-margin-top: 120px;
+}
+
+/*
+ * Two short fields per row on wide screens. Only top-level single-line text and
+ * checkbox fields are affected; textareas, images and every complex/repeatable
+ * field keep the full width and their internal field widths.
+ */
+@media screen and (min-width: 1200px) {
+  body.post-type-pt_settings #normal-sortables .carbon-box .cf-container__fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 20px;
+    align-items: start;
+  }
+
+  body.post-type-pt_settings #normal-sortables .carbon-box .cf-container__fields > .cf-field {
+    grid-column: 1 / -1;
+  }
+
+  body.post-type-pt_settings #normal-sortables .carbon-box .cf-container__fields > .cf-field.cf-text:not(.cf-field--has-width),
+  body.post-type-pt_settings #normal-sortables .carbon-box .cf-container__fields > .cf-field.cf-checkbox:not(.cf-field--has-width) {
+    grid-column: auto / span 1;
+  }
+}

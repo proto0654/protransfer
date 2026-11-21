@@ -114,6 +114,9 @@ function pt_route_point_options(array $rows = []): array
  * Read stored complex rows without formatting child values: formatted values
  * would drop a slug that is not among the current select options.
  *
+ * Carbon's value tree wraps every child value as a list of `['value' => …]`
+ * nodes, so unwrap it here and also tolerate a plain string.
+ *
  * @return array<int,array<string,string>>
  */
 function pt_route_saved_rows(string $option): array
@@ -126,14 +129,25 @@ function pt_route_saved_rows(string $option): array
         return [];
     }
 
+    $read = static function ($node): string {
+        if (is_array($node)) {
+            $first = reset($node);
+            if (is_array($first)) {
+                return is_scalar($first['value'] ?? null) ? (string) $first['value'] : '';
+            }
+            return is_scalar($first) ? (string) $first : '';
+        }
+        return is_scalar($node) ? (string) $node : '';
+    };
+
     $field->load();
     $rows = [];
     foreach ((array) $field->get_value_tree() as $row) {
         if (is_array($row)) {
             $rows[] = [
-                'from_slug' => (string) ($row['from_slug'] ?? ''),
-                'to_slug' => (string) ($row['to_slug'] ?? ''),
-                'km' => (string) ($row['km'] ?? ''),
+                'from_slug' => $read($row['from_slug'] ?? null),
+                'to_slug' => $read($row['to_slug'] ?? null),
+                'km' => $read($row['km'] ?? null),
             ];
         }
     }

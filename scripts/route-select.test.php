@@ -95,15 +95,17 @@ namespace {
     expect(!isset($choices['draft-point']), 'Draft points must be excluded');
 
     $GLOBALS['route_field'] = new Route_Field_Stub();
+    // Carbon returns each child value wrapped as a list of ['value' => …] nodes;
+    // the plain string in the second row checks the tolerant path.
     $GLOBALS['route_field_tree'] = [
-        ['from_slug' => 'sip-air', 'to_slug' => 'ghost', 'km' => '50'],
-        ['from_slug' => 'ghost', 'to_slug' => 'yalta', 'km' => '10'],
+        ['from_slug' => [['value' => 'sip-air']], 'to_slug' => [['value' => 'ghost']], 'km' => [['value' => '50']], 'value' => '_'],
+        ['from_slug' => 'ghost', 'to_slug' => [['value' => 'yalta']], 'km' => [['value' => '10']], 'value' => '_'],
     ];
     $stored = pt_route_saved_rows('pt_route_overrides');
     expect($stored === [
         ['from_slug' => 'sip-air', 'to_slug' => 'ghost', 'km' => '50'],
         ['from_slug' => 'ghost', 'to_slug' => 'yalta', 'km' => '10'],
-    ], 'Stored rows must be read without dropping unknown slugs');
+    ], 'Stored rows must unwrap Carbon value nodes without dropping unknown slugs');
 
     $options = pt_route_point_options($stored);
     expect($options[''] === '— выберите точку —', 'The empty «not chosen» option must come first');

@@ -6,6 +6,141 @@ if (!defined('ABSPATH')) {
 use Carbon_Fields\Container;
 use Carbon_Fields\Field;
 
+/**
+ * Published points as route choices: slug => «Title — type».
+ * Ordered by the canonical point-type order, then by title.
+ *
+ * @return array<string,string>
+ */
+function pt_route_point_choices(): array
+{
+    static $choices = null;
+    if ($choices !== null) {
+        return $choices;
+    }
+
+    $posts = get_posts([
+        'post_type' => 'pt_point',
+        'post_status' => 'publish',
+        'numberposts' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+    ]);
+
+    $type_labels = pt_point_type_labels();
+    $type_order = array_flip(array_keys($type_labels));
+    $unknown_type_order = count($type_order);
+    $lower = static function (string $value): string {
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
+    };
+
+    $items = [];
+    foreach (is_array($posts) ? $posts : [] as $post) {
+        if (!($post instanceof WP_Post) || $post->post_type !== 'pt_point' || $post->post_status !== 'publish') {
+            continue;
+        }
+
+        $slug = (string) $post->post_name;
+        $title = trim((string) $post->post_title);
+        if ($slug === '' || $title === '') {
+            continue;
+        }
+
+        $type_slug = '';
+        $type_label = '';
+        $terms = wp_get_post_terms((int) $post->ID, 'pt_point_type');
+        if (is_array($terms) && $terms && is_object($terms[0])) {
+            $type_slug = isset($terms[0]->slug) ? (string) $terms[0]->slug : '';
+            $type_label = isset($terms[0]->name) ? trim((string) $terms[0]->name) : '';
+        }
+        if ($type_label === '' && isset($type_labels[$type_slug])) {
+            $type_label = $type_labels[$type_slug];
+        }
+
+        $type_label = $lower($type_label);
+        $items[] = [
+            'slug' => $slug,
+            'label' => $type_label === '' ? $title : $title . ' — ' . $type_label,
+            'sort' => [
+                $type_order[$type_slug] ?? $unknown_type_order,
+                $type_label,
+                $lower($title),
+                $title,
+            ],
+        ];
+    }
+
+    usort($items, static fn (array $a, array $b): int => $a['sort'] <=> $b['sort']);
+
+    $options = [];
+    foreach ($items as $item) {
+        $options[$item['slug']] = $item['label'];
+    }
+
+    return $choices = $options;
+}
+
+/**
+ * Select options for route rows. Keeps a stored slug that no published point
+ * matches so opening and saving the screen does not silently erase a route.
+ *
+ * @param array<int,array<string,mixed>> $rows Stored complex rows.
+ * @return array<string,string>
+ */
+function pt_route_point_options(array $rows = []): array
+{
+    $options = ['' => '— выберите точку —'];
+    foreach (pt_route_point_choices() as $slug => $label) {
+        $options[$slug] = $label;
+    }
+
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        foreach (['from_slug', 'to_slug'] as $key) {
+            $slug = trim((string) ($row[$key] ?? ''));
+            if ($slug === '' || isset($options[$slug])) {
+                continue;
+            }
+            $options[$slug] = $slug . ' — точка не найдена';
+        }
+    }
+
+    return $options;
+}
+
+/**
+ * Read stored complex rows without formatting child values: formatted values
+ * would drop a slug that is not among the current select options.
+ *
+ * @return array<int,array<string,string>>
+ */
+function pt_route_saved_rows(string $option): array
+{
+    if (!class_exists(\Carbon_Fields\Helper\Helper::class)) {
+        return [];
+    }
+    $field = \Carbon_Fields\Helper\Helper::get_field_clone(null, 'theme_options', '', $option);
+    if (!$field || !method_exists($field, 'get_value_tree')) {
+        return [];
+    }
+
+    $field->load();
+    $rows = [];
+    foreach ((array) $field->get_value_tree() as $row) {
+        if (is_array($row)) {
+            $rows[] = [
+                'from_slug' => (string) ($row['from_slug'] ?? ''),
+                'to_slug' => (string) ($row['to_slug'] ?? ''),
+                'km' => (string) ($row['km'] ?? ''),
+            ];
+        }
+    }
+
+    return $rows;
+}
+
 add_action('carbon_fields_register_fields', function () {
     if (!class_exists(Container::class)) {
         return;
@@ -204,6 +339,14 @@ add_action('carbon_fields_register_fields', function () {
     foreach (get_posts(['post_type' => 'pt_tariff', 'post_status' => 'publish', 'numberposts' => -1, 'orderby' => 'menu_order title', 'order' => 'ASC']) as $tariff) {
         $route_tariffs[$tariff->post_name] = $tariff->post_title;
     }
+
+    // Options are resolved when the field renders, after all fields are registered,
+    // so stored rows can be read through Carbon's own datastore.
+    $route_options = static function (string $option): callable {
+        return static fn (): array => pt_route_point_options(pt_route_saved_rows($option));
+    };
+    $route_help = 'Переименование точки не меняет её код, поэтому маршрут продолжит работать. Если изменить код (slug) точки, сохранённые маршруты сломаются. «точка не найдена» — сохранённый код без опубликованной точки.';
+
     Container::make('theme_options', 'Маршруты')
         ->set_page_parent('edit.php?post_type=pt_point')
         ->set_page_file('pt-routes')
@@ -212,15 +355,19 @@ add_action('carbon_fields_register_fields', function () {
             Field::make('complex', 'pt_popular_routes', 'Популярные направления')
                 ->setup_labels(['singular_name' => 'направление', 'plural_name' => 'направления'])
                 ->add_fields([
-                    Field::make('text', 'from_slug', 'Откуда (код точки)')->set_width(50),
-                    Field::make('text', 'to_slug', 'Куда (код точки)')->set_width(50),
+                    Field::make('select', 'from_slug', 'Откуда')->add_options($route_options('pt_popular_routes'))
+                        ->set_width(50)->set_help_text($route_help),
+                    Field::make('select', 'to_slug', 'Куда')->add_options($route_options('pt_popular_routes'))
+                        ->set_width(50)->set_help_text($route_help),
                 ])
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>'),
             Field::make('complex', 'pt_route_overrides', 'Ручные км')
                 ->setup_labels(['singular_name' => 'маршрут', 'plural_name' => 'маршруты'])
                 ->add_fields([
-                    Field::make('text', 'from_slug', 'Откуда (код точки)')->set_width(35),
-                    Field::make('text', 'to_slug', 'Куда (код точки)')->set_width(35),
+                    Field::make('select', 'from_slug', 'Откуда')->add_options($route_options('pt_route_overrides'))
+                        ->set_width(35)->set_help_text($route_help),
+                    Field::make('select', 'to_slug', 'Куда')->add_options($route_options('pt_route_overrides'))
+                        ->set_width(35)->set_help_text($route_help),
                     Field::make('text', 'km', 'км')->set_width(30)->set_attribute('type', 'number'),
                 ])
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>: <%- km %> км'),

@@ -82,15 +82,17 @@ Parent choices are published points with the «Город» or «Курорт и
 ## «Точки» → «Маршруты»
 
 - «Тариф для цен популярных направлений» chooses the tariff whose one-way estimate appears on popular-route cards. If the selected tariff is unavailable, the frontend falls back to the first available tariff.
-- «Популярные направления» stores pairs of point codes (slugs). Each pair must refer to two published points. Cards whose points cannot be found are omitted.
-- «Ручные км» stores a positive distance for a pair of codes. The same distance is used in both directions. This is a **fallback distance**, not a fixed route price and not a guaranteed override of live routing.
+- «Популярные направления» stores pairs of points. Choose the departure and destination from the «Откуда» and «Куда» lists instead of typing codes; the lists show published points as «Название — тип». Each row still stores the point code (slug), and both points must be published. Cards whose points cannot be found are omitted.
+- «Ручные км» stores a positive distance for a route pair chosen in the same way from «Откуда» and «Куда». The same distance is used in both directions. This is a **fallback distance**, not a fixed route price and not a guaranteed override of live routing.
 
 ### Scenario: add a popular route
 
-1. Find the two published point slugs in «Точки».
-2. In «Маршруты», add a row to «Популярные направления», enter the exact departure and destination codes (the «Откуда (код точки)» and «Куда (код точки)» fields) and save.
+1. In «Маршруты», add a row to «Популярные направления».
+2. Choose the departure and destination points in «Откуда» and «Куда» and save. The row keeps the point codes, so normal editing only needs the readable lists.
 3. If needed, add the same pair with a positive value under «Ручные км» and save.
 4. Refresh the site, open the route card and verify the calculator. The cards use an estimate; the calculator may later receive a different road distance from a routing provider.
+
+Both route groups start with «— выберите точку —». If a saved row refers to a code that no longer matches a published point, that group gets an extra option such as `sip-air — точка не найдена`; keep it selected to preserve the route, or replace it deliberately. Renaming a point's title is safe because its code does not change. Changing a point's code (slug) still breaks saved route rows; if it cannot be avoided, re-select both points in every affected row. The same warning appears in the help text of the «Откуда» and «Куда» fields.
 
 For the website calculator, routing is attempted through Yandex when configured, then OSRM; the manual distance or a coordinate-based estimate is the fallback. A successful provider response can replace the initial fallback. The admin debugger instead uses manual route distance or coordinate estimation unless a distance is entered explicitly. The estimated travel time can also differ from a provider's time.
 

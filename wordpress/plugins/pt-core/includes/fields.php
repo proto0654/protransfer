@@ -138,6 +138,7 @@ add_action('carbon_fields_register_fields', function () {
         'advantages' => 'Преимущества', 'tariffs' => 'Автопарк', 'popular_routes' => 'Направления',
         'how_it_works' => 'Как это работает', 'services' => 'Услуги', 'reviews' => 'Отзывы',
         'faq' => 'Вопросы и ответы', 'contacts' => 'Контакты', 'contacts_/_cta' => 'Контакты и связь', 'footer' => 'Подвал',
+        'navigation' => 'Навигация', 'calculator' => 'Калькулятор', 'booking' => 'Бронирование',
     ];
     foreach (pt_landing_schema() as $key => $definition) {
         $group = $group_labels[$definition['group']] ?? $definition['group'];

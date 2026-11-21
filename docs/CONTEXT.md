@@ -4,7 +4,7 @@ Protransfer is a transfer booking landing with WordPress content management. Vit
 
 The original static snapshot is preserved in [mvp/README.md](../mvp/README.md); it is historical and is not the source of the WordPress landing. Current fallback JSON remains in `src/data`; calculator defaults shared by PHP and JavaScript are in `wordpress/plugins/pt-core/data/calc.json`.
 
-Landing copy defaults and editor labels are shared in `wordpress/plugins/pt-core/data/content.json`. The theme renders escaped text and SEO on the server and embeds public bootstrap data. Legal documents are served by the theme through `/?pt_legal=1`.
+Landing copy defaults and editor labels are shared in `wordpress/plugins/pt-core/data/content.json`. The schema covers the static visible landing copy, including navigation, calculator labels, booking-form labels and input placeholders; values assembled from live records and captions inside repeated Alpine card templates stay in code. The theme renders escaped text and SEO on the server and embeds public bootstrap data. Legal documents are served by the theme through `/?pt_legal=1`.
 
 Staging owns CMS records and uploaded media. Local Vite proxies its API/media paths; a push to the configured main-branch paths builds and publishes through GitHub Actions/SSH. Routine deployments back up the current database and code, preserve editor data, and do not rerun seed. See the deployment domain document for access locations and rollback.
 

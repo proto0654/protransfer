@@ -256,5 +256,445 @@
     "label": "Подпись в подвале",
     "group": "Подвал",
     "default": "Сделано с заботой о пассажирах"
+  },
+  "nav_tariffs": {
+    "label": "Меню: Тарифы",
+    "group": "navigation",
+    "default": "Тарифы"
+  },
+  "nav_routes": {
+    "label": "Меню: Направления",
+    "group": "navigation",
+    "default": "Направления"
+  },
+  "nav_how": {
+    "label": "Меню: Как это работает",
+    "group": "navigation",
+    "default": "Как это работает"
+  },
+  "nav_reviews": {
+    "label": "Меню: Отзывы",
+    "group": "navigation",
+    "default": "Отзывы"
+  },
+  "nav_faq_short": {
+    "label": "Меню: Вопросы",
+    "group": "navigation",
+    "default": "Вопросы"
+  },
+  "nav_faq": {
+    "label": "Меню: Вопросы и ответы",
+    "group": "navigation",
+    "default": "Вопросы и ответы"
+  },
+  "nav_calculate": {
+    "label": "Меню: Рассчитать поездку",
+    "group": "navigation",
+    "default": "Рассчитать поездку"
+  },
+  "nav_contacts": {
+    "label": "Меню: Контакты",
+    "group": "navigation",
+    "default": "Контакты"
+  },
+  "nav_calculator": {
+    "label": "Меню: Калькулятор",
+    "group": "navigation",
+    "default": "Калькулятор"
+  },
+  "header_cta": {
+    "label": "Шапка: кнопка «Заказать»",
+    "group": "navigation",
+    "default": "Заказать"
+  },
+  "calc_eyebrow": {
+    "label": "Калькулятор: надзаголовок",
+    "group": "calculator",
+    "default": "Онлайн-калькулятор"
+  },
+  "calc_title": {
+    "label": "Калькулятор: заголовок",
+    "group": "calculator",
+    "default": "Рассчитайте поездку"
+  },
+  "calc_badge": {
+    "label": "Калькулятор: метка «Заявка за 2 минуты»",
+    "group": "calculator",
+    "default": "Заявка за 2 минуты"
+  },
+  "calc_route_loading": {
+    "label": "Калькулятор: «Считаем маршрут…»",
+    "group": "calculator",
+    "default": "Считаем маршрут…"
+  },
+  "calc_map_hint": {
+    "label": "Калькулятор: подсказка на карте",
+    "group": "calculator",
+    "default": "Выберите откуда и куда — покажем маршрут на карте и посчитаем километраж по дорогам."
+  },
+  "calc_map_error": {
+    "label": "Калькулятор: карта не загрузилась",
+    "group": "calculator",
+    "default": "Карта не загрузилась. Километраж и цена считаются по координатам."
+  },
+  "calc_step_route": {
+    "label": "Калькулятор: шаг «Маршрут»",
+    "group": "calculator",
+    "default": "Маршрут"
+  },
+  "calc_from": {
+    "label": "Калькулятор: подпись «Откуда»",
+    "group": "calculator",
+    "default": "Откуда"
+  },
+  "calc_to": {
+    "label": "Калькулятор: подпись «Куда»",
+    "group": "calculator",
+    "default": "Куда"
+  },
+  "calc_point_placeholder": {
+    "label": "Калькулятор: подсказка в поле точки",
+    "group": "calculator",
+    "default": "Аэропорт, вокзал или город"
+  },
+  "calc_point_missing": {
+    "label": "Калькулятор: точка не найдена",
+    "group": "calculator",
+    "default": "Такой точки нет в списке. Позвоните — рассчитаем маршрут вручную:"
+  },
+  "calc_popular": {
+    "label": "Калькулятор: «Часто заказывают»",
+    "group": "calculator",
+    "default": "Часто заказывают"
+  },
+  "calc_step_when": {
+    "label": "Калькулятор: шаг «Когда»",
+    "group": "calculator",
+    "default": "Когда"
+  },
+  "calc_date": {
+    "label": "Калькулятор: подпись «Дата»",
+    "group": "calculator",
+    "default": "Дата"
+  },
+  "calc_time": {
+    "label": "Калькулятор: подпись «Время»",
+    "group": "calculator",
+    "default": "Время"
+  },
+  "calc_passengers": {
+    "label": "Калькулятор: подпись «Пассажиры»",
+    "group": "calculator",
+    "default": "Пассажиры"
+  },
+  "calc_round_trip": {
+    "label": "Калькулятор: опция «Туда и обратно»",
+    "group": "calculator",
+    "default": "Туда и обратно"
+  },
+  "calc_child_seat": {
+    "label": "Калькулятор: опция «Детское кресло»",
+    "group": "calculator",
+    "default": "Детское кресло"
+  },
+  "calc_extra_stop": {
+    "label": "Калькулятор: опция «Доп. остановка»",
+    "group": "calculator",
+    "default": "Доп. остановка"
+  },
+  "calc_fixed_price": {
+    "label": "Калькулятор: метка «Фиксированная цена»",
+    "group": "calculator",
+    "default": "Фиксированная цена"
+  },
+  "calc_route_hint": {
+    "label": "Калькулятор: подсказка о маршруте",
+    "group": "calculator",
+    "default": "Выберите откуда и куда из подсказок — покажем расстояние, время в пути и цену."
+  },
+  "calc_included_title": {
+    "label": "Калькулятор: заголовок «В стоимость уже входит»",
+    "group": "calculator",
+    "default": "В стоимость уже входит"
+  },
+  "calc_included_1": {
+    "label": "Калькулятор: включено 1",
+    "group": "calculator",
+    "default": "Ожидание рейса — 60 минут бесплатно"
+  },
+  "calc_included_2": {
+    "label": "Калькулятор: включено 2",
+    "group": "calculator",
+    "default": "Встреча с табличкой и помощь с багажом"
+  },
+  "calc_included_3": {
+    "label": "Калькулятор: включено 3",
+    "group": "calculator",
+    "default": "Детское кресло — бесплатно по запросу"
+  },
+  "calc_included_4": {
+    "label": "Калькулятор: включено 4",
+    "group": "calculator",
+    "default": "Оплата только после поездки"
+  },
+  "calc_step_car": {
+    "label": "Калькулятор: шаг «Авто»",
+    "group": "calculator",
+    "default": "Авто"
+  },
+  "calc_price_per_trip": {
+    "label": "Калькулятор: «Цена за поездку»",
+    "group": "calculator",
+    "default": "Цена за поездку"
+  },
+  "calc_help_title": {
+    "label": "Калькулятор: «Поможем выбрать»",
+    "group": "calculator",
+    "default": "Поможем выбрать"
+  },
+  "calc_help_text": {
+    "label": "Калькулятор: «Подберём авто под багаж и маршрут»",
+    "group": "calculator",
+    "default": "Подберём авто под багаж и маршрут"
+  },
+  "calc_checking_km": {
+    "label": "Калькулятор: «Уточняем километраж по дорогам…»",
+    "group": "calculator",
+    "default": "Уточняем километраж по дорогам…"
+  },
+  "calc_summary_route": {
+    "label": "Калькулятор: строка итога «Маршрут»",
+    "group": "calculator",
+    "default": "Маршрут"
+  },
+  "calc_summary_tariff": {
+    "label": "Калькулятор: строка итога «Тариф»",
+    "group": "calculator",
+    "default": "Тариф"
+  },
+  "calc_summary_round_trip": {
+    "label": "Калькулятор: строка итога «Туда и обратно»",
+    "group": "calculator",
+    "default": "Туда и обратно"
+  },
+  "calc_summary_child_seat": {
+    "label": "Калькулятор: строка итога «Детское кресло»",
+    "group": "calculator",
+    "default": "Детское кресло"
+  },
+  "calc_summary_extra_stop": {
+    "label": "Калькулятор: строка итога «Доп. остановка»",
+    "group": "calculator",
+    "default": "Доп. остановка"
+  },
+  "calc_total": {
+    "label": "Калькулятор: «Итого»",
+    "group": "calculator",
+    "default": "Итого"
+  },
+  "calc_book": {
+    "label": "Калькулятор: кнопка «Забронировать»",
+    "group": "calculator",
+    "default": "Забронировать"
+  },
+  "calc_prepay_note": {
+    "label": "Калькулятор: примечание об оплате",
+    "group": "calculator",
+    "default": "Без предоплаты · оплата водителю после поездки"
+  },
+  "cta_calculate_trip": {
+    "label": "Кнопка «Рассчитать поездку»",
+    "group": "calculator",
+    "default": "Рассчитать поездку"
+  },
+  "services_payment_label": {
+    "label": "Услуги: подпись «Оплата»",
+    "group": "services",
+    "default": "Оплата"
+  },
+  "cta_whatsapp": {
+    "label": "Кнопка «Написать в WhatsApp»",
+    "group": "contacts_/_cta",
+    "default": "Написать в WhatsApp"
+  },
+  "contacts_label": {
+    "label": "Контакты: надзаголовок",
+    "group": "contacts",
+    "default": "Контакты"
+  },
+  "contact_phone_label": {
+    "label": "Контакты: подпись «Телефон»",
+    "group": "contacts",
+    "default": "Телефон"
+  },
+  "contact_email_label": {
+    "label": "Контакты: подпись «Почта»",
+    "group": "contacts",
+    "default": "Почта"
+  },
+  "contact_office_label": {
+    "label": "Контакты: подпись «Офис»",
+    "group": "contacts",
+    "default": "Офис"
+  },
+  "contact_hours_label": {
+    "label": "Контакты: подпись «Режим работы»",
+    "group": "contacts",
+    "default": "Режим работы"
+  },
+  "contact_area_label": {
+    "label": "Контакты: подпись «Зона работы»",
+    "group": "contacts",
+    "default": "Зона работы"
+  },
+  "contact_whatsapp": {
+    "label": "Контакты: кнопка «WhatsApp»",
+    "group": "contacts",
+    "default": "WhatsApp"
+  },
+  "contact_telegram": {
+    "label": "Контакты: кнопка «Telegram»",
+    "group": "contacts",
+    "default": "Telegram"
+  },
+  "contact_max": {
+    "label": "Контакты: кнопка «MAX»",
+    "group": "contacts",
+    "default": "MAX"
+  },
+  "footer_link_privacy": {
+    "label": "Подвал: «Политика конфиденциальности»",
+    "group": "footer",
+    "default": "Политика конфиденциальности"
+  },
+  "footer_link_consent": {
+    "label": "Подвал: «Согласие на обработку данных»",
+    "group": "footer",
+    "default": "Согласие на обработку данных"
+  },
+  "footer_link_offer": {
+    "label": "Подвал: «Публичная оферта»",
+    "group": "footer",
+    "default": "Публичная оферта"
+  },
+  "footer_copyright": {
+    "label": "Подвал: «Все права защищены»",
+    "group": "footer",
+    "default": "Все права защищены."
+  },
+  "booking_eyebrow": {
+    "label": "Бронирование: надзаголовок",
+    "group": "booking",
+    "default": "Бронирование"
+  },
+  "booking_title": {
+    "label": "Бронирование: заголовок",
+    "group": "booking",
+    "default": "Оставьте контакты"
+  },
+  "booking_text": {
+    "label": "Бронирование: пояснение",
+    "group": "booking",
+    "default": "Менеджер позвонит в течение 10 минут и подтвердит заказ."
+  },
+  "booking_option_round_trip": {
+    "label": "Бронирование: опция «туда и обратно»",
+    "group": "booking",
+    "default": "туда и обратно"
+  },
+  "booking_option_child_seat": {
+    "label": "Бронирование: опция «детское кресло»",
+    "group": "booking",
+    "default": "детское кресло"
+  },
+  "booking_option_extra_stop": {
+    "label": "Бронирование: опция «+ остановка»",
+    "group": "booking",
+    "default": "+ остановка"
+  },
+  "form_label_name": {
+    "label": "Форма: подпись «Имя»",
+    "group": "booking",
+    "default": "Имя"
+  },
+  "form_placeholder_name": {
+    "label": "Форма: подсказка имени",
+    "group": "booking",
+    "default": "Как к вам обращаться"
+  },
+  "form_label_phone": {
+    "label": "Форма: подпись «Телефон»",
+    "group": "booking",
+    "default": "Телефон"
+  },
+  "form_placeholder_phone": {
+    "label": "Форма: подсказка телефона",
+    "group": "booking",
+    "default": "+7 (___) ___-__-__"
+  },
+  "form_label_comment": {
+    "label": "Форма: подпись «Комментарий»",
+    "group": "booking",
+    "default": "Комментарий"
+  },
+  "form_optional": {
+    "label": "Форма: пометка «необязательно»",
+    "group": "booking",
+    "default": "необязательно"
+  },
+  "form_placeholder_comment": {
+    "label": "Форма: подсказка комментария",
+    "group": "booking",
+    "default": "Номер рейса, адрес отеля, пожелания"
+  },
+  "form_consent_prefix": {
+    "label": "Форма: начало согласия",
+    "group": "booking",
+    "default": "Согласен с"
+  },
+  "form_consent_suffix": {
+    "label": "Форма: конец согласия",
+    "group": "booking",
+    "default": "и обработкой персональных данных"
+  },
+  "form_consent_link": {
+    "label": "Форма: ссылка на политику",
+    "group": "booking",
+    "default": "политикой конфиденциальности"
+  },
+  "booking_prepay_note": {
+    "label": "Бронирование: примечание об оплате",
+    "group": "booking",
+    "default": "Предоплата не нужна. Оплата водителю после поездки."
+  },
+  "success_number_label": {
+    "label": "Заявка: подпись «Номер»",
+    "group": "booking",
+    "default": "Номер"
+  },
+  "success_text_delivered": {
+    "label": "Заявка: текст «Заявка принята»",
+    "group": "booking",
+    "default": "Мы получили заявку — менеджер перезвонит в течение 10 минут и подтвердит бронирование."
+  },
+  "success_text_pending": {
+    "label": "Заявка: текст «Заявка сформирована»",
+    "group": "booking",
+    "default": "Отправьте её нам в удобном мессенджере — менеджер подтвердит бронирование в течение 10 минут."
+  },
+  "success_whatsapp": {
+    "label": "Заявка: кнопка «Отправить в WhatsApp»",
+    "group": "booking",
+    "default": "Отправить в WhatsApp"
+  },
+  "success_call": {
+    "label": "Заявка: «Или позвоните:»",
+    "group": "booking",
+    "default": "Или позвоните:"
+  },
+  "success_new_order": {
+    "label": "Заявка: кнопка «Создать ещё одну заявку»",
+    "group": "booking",
+    "default": "Создать ещё одну заявку"
   }
 }

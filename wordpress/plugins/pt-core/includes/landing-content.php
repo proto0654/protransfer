@@ -46,11 +46,25 @@ function pt_render_landing_copy(string $html, array $site): string
         }
         return $match[1] . wp_kses_post($site['copy'][$match[2]]) . $match[3];
     }, $html);
-    return preg_replace_callback('~(<([a-z][a-z0-9]*)\b[^>]*data-pt-(copy|site)="([a-z0-9_]+)"[^>]*>).*?(</\2>)~si', static function ($match) use ($site) {
+    $html = preg_replace_callback('~(<([a-z][a-z0-9]*)\b[^>]*data-pt-(copy|site)="([a-z0-9_]+)"[^>]*>).*?(</\2>)~si', static function ($match) use ($site) {
         $values = $match[3] === 'copy' ? ($site['copy'] ?? []) : $site;
         if (!array_key_exists($match[4], $values)) {
             return $match[0];
         }
         return $match[1] . esc_html((string) $values[$match[4]]) . $match[5];
+    }, $html);
+    return preg_replace_callback('~<[a-z][a-z0-9]*\b[^>]*\bdata-pt-placeholder="([a-z0-9_]+)"[^>]*>~si', static function ($match) use ($site) {
+        $key = $match[1];
+        if (!array_key_exists($key, $site['copy'] ?? [])) {
+            return $match[0];
+        }
+        $tag = $match[0];
+        $escaped = esc_attr((string) $site['copy'][$key]);
+        $count = 0;
+        $updated = preg_replace_callback('~\splaceholder="[^"]*"~i', static fn () => ' placeholder="' . $escaped . '"', $tag, 1, $count);
+        if ($count === 0) {
+            $updated = preg_replace_callback('~/?>$~', static fn ($end) => ' placeholder="' . $escaped . '"' . $end[0], $tag, 1);
+        }
+        return $updated ?? $tag;
     }, $html);
 }

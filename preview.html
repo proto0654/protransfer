@@ -53,11 +53,11 @@
         </a>
 
         <nav class="hidden items-center gap-7 text-[13px] font-semibold text-white/65 lg:flex" aria-label="Основная навигация">
-          <a href="#tariffs" class="transition hover:text-white">Тарифы</a>
-          <a href="#routes" class="transition hover:text-white">Направления</a>
-          <a href="#how" class="transition hover:text-white">Как это работает</a>
-          <a href="#reviews" class="transition hover:text-white">Отзывы</a>
-          <a href="#faq" class="transition hover:text-white">Вопросы</a>
+          <a href="#tariffs" data-pt-copy="nav_tariffs" class="transition hover:text-white">Тарифы</a>
+          <a href="#routes" data-pt-copy="nav_routes" class="transition hover:text-white">Направления</a>
+          <a href="#how" data-pt-copy="nav_how" class="transition hover:text-white">Как это работает</a>
+          <a href="#reviews" data-pt-copy="nav_reviews" class="transition hover:text-white">Отзывы</a>
+          <a href="#faq" data-pt-copy="nav_faq_short" class="transition hover:text-white">Вопросы</a>
         </nav>
 
         <div class="flex items-center gap-2">
@@ -68,7 +68,7 @@
             <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-phone" /></svg>
             <span x-text="site.phone"></span>
           </a>
-          <a href="#calculator" class="btn btn-accent hidden sm:inline-flex">Заказать</a>
+          <a href="#calculator" data-pt-copy="header_cta" class="btn btn-accent hidden sm:inline-flex">Заказать</a>
           <button
             type="button"
             class="grid h-10 w-10 place-items-center rounded-xl border border-white/15 text-white lg:hidden"
@@ -103,19 +103,19 @@
         </button>
       </div>
       <nav class="container-x mt-6 flex flex-col gap-1 text-2xl font-extrabold" aria-label="Мобильная навигация">
-        <a href="#calculator" @click="mobileOpen = false" class="border-b border-white/10 py-4">Рассчитать поездку</a>
-        <a href="#tariffs" @click="mobileOpen = false" class="border-b border-white/10 py-4">Тарифы</a>
-        <a href="#routes" @click="mobileOpen = false" class="border-b border-white/10 py-4">Направления</a>
-        <a href="#how" @click="mobileOpen = false" class="border-b border-white/10 py-4">Как это работает</a>
-        <a href="#reviews" @click="mobileOpen = false" class="border-b border-white/10 py-4">Отзывы</a>
-        <a href="#faq" @click="mobileOpen = false" class="border-b border-white/10 py-4">Вопросы и ответы</a>
+        <a href="#calculator" data-pt-copy="nav_calculate" @click="mobileOpen = false" class="border-b border-white/10 py-4">Рассчитать поездку</a>
+        <a href="#tariffs" data-pt-copy="nav_tariffs" @click="mobileOpen = false" class="border-b border-white/10 py-4">Тарифы</a>
+        <a href="#routes" data-pt-copy="nav_routes" @click="mobileOpen = false" class="border-b border-white/10 py-4">Направления</a>
+        <a href="#how" data-pt-copy="nav_how" @click="mobileOpen = false" class="border-b border-white/10 py-4">Как это работает</a>
+        <a href="#reviews" data-pt-copy="nav_reviews" @click="mobileOpen = false" class="border-b border-white/10 py-4">Отзывы</a>
+        <a href="#faq" data-pt-copy="nav_faq" @click="mobileOpen = false" class="border-b border-white/10 py-4">Вопросы и ответы</a>
       </nav>
       <div class="container-x mt-8 space-y-3">
         <a :href="'tel:' + site.phoneHref" class="btn btn-accent w-full">
           <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-phone" /></svg>
           <span x-text="site.phone"></span>
         </a>
-        <a :href="'https://wa.me/' + site.whatsapp" target="_blank" rel="noopener" class="btn btn-light w-full">
+        <a :href="'https://wa.me/' + site.whatsapp" target="_blank" rel="noopener" class="btn btn-light w-full" data-pt-copy="cta_whatsapp">
           Написать в WhatsApp
         </a>
         <p class="pt-2 text-center text-sm text-white/45" x-text="site.hours"></p>
@@ -272,13 +272,13 @@
               <div>
                 <p class="eyebrow">
                   <span class="h-px w-6 bg-accent"></span>
-                  Онлайн-калькулятор
+                  <span data-pt-copy="calc_eyebrow">Онлайн-калькулятор</span>
                 </p>
-                <h2 class="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">Рассчитайте поездку</h2>
+                <h2 class="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl" data-pt-copy="calc_title">Рассчитайте поездку</h2>
               </div>
               <div class="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700">
                 <svg class="icon h-3.5 w-3.5" aria-hidden="true"><use href="#i-clock" /></svg>
-                Заявка за 2 минуты
+                <span data-pt-copy="calc_badge">Заявка за 2 минуты</span>
               </div>
             </div>
 
@@ -296,7 +296,7 @@
                   <span x-text="durationLabel"></span>
                 </span>
                 <span x-show="routeLoading" x-cloak class="chip border-transparent bg-white/95 font-semibold text-amber-700 shadow-sm backdrop-blur">
-                  Считаем маршрут…
+                  <span data-pt-copy="calc_route_loading">Считаем маршрут…</span>
                 </span>
               </div>
 
@@ -305,7 +305,7 @@
                 x-cloak
                 class="pointer-events-none absolute inset-0 grid place-items-center bg-paper/75 p-6 text-center"
               >
-                <p class="max-w-sm text-[13px] leading-snug text-ink/60">
+                <p class="max-w-sm text-[13px] leading-snug text-ink/60" data-pt-copy="calc_map_hint">
                   Выберите откуда и куда — покажем маршрут на карте и посчитаем километраж по дорогам.
                 </p>
               </div>
@@ -315,7 +315,7 @@
                 x-cloak
                 class="pointer-events-none absolute inset-0 grid place-items-center bg-paper/85 p-6 text-center text-[13px] text-ink/60"
               >
-                Карта не загрузилась. Километраж и цена считаются по координатам.
+                <span data-pt-copy="calc_map_error">Карта не загрузилась. Километраж и цена считаются по координатам.</span>
               </p>
             </div>
 
@@ -324,13 +324,13 @@
               <div class="min-w-0 lg:col-span-7">
                 <div class="step-label">
                   <span class="step-num">1</span>
-                  Маршрут
+                  <span data-pt-copy="calc_step_route">Маршрут</span>
                 </div>
 
                 <div class="relative mt-3">
                   <div class="space-y-3">
                     <div class="relative" @click.outside="closeList('from')">
-                      <label class="label" for="from">Откуда</label>
+                      <label class="label" for="from" data-pt-copy="calc_from">Откуда</label>
                       <div class="relative">
                         <span class="pointer-events-none absolute left-4 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/15"></span>
                         <input
@@ -338,7 +338,7 @@
                           type="text"
                           autocomplete="off"
                           spellcheck="false"
-                          placeholder="Аэропорт, вокзал или город"
+                          data-pt-placeholder="calc_point_placeholder" placeholder="Аэропорт, вокзал или город"
                           class="field pl-10 pr-14"
                           x-model="fromName"
                           role="combobox"
@@ -380,7 +380,7 @@
                           </template>
 
                           <p x-show="listFor('from').length === 0" class="px-3 py-3 text-[12px] leading-snug text-ink/45">
-                            Такой точки нет в списке. Позвоните — рассчитаем маршрут вручную:
+                            <span data-pt-copy="calc_point_missing">Такой точки нет в списке. Позвоните — рассчитаем маршрут вручную:</span>
                             <a :href="'tel:' + site.phoneHref" class="font-semibold text-ink underline underline-offset-2" x-text="site.phone"></a>
                           </p>
                         </div>
@@ -388,7 +388,7 @@
                     </div>
 
                     <div class="relative" @click.outside="closeList('to')">
-                      <label class="label" for="to">Куда</label>
+                      <label class="label" for="to" data-pt-copy="calc_to">Куда</label>
                       <div class="relative">
                         <span class="pointer-events-none absolute left-4 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-accent ring-4 ring-accent/20"></span>
                         <input
@@ -396,7 +396,7 @@
                           type="text"
                           autocomplete="off"
                           spellcheck="false"
-                          placeholder="Аэропорт, вокзал или город"
+                          data-pt-placeholder="calc_point_placeholder" placeholder="Аэропорт, вокзал или город"
                           class="field pl-10 pr-14"
                           x-model="toName"
                           role="combobox"
@@ -438,7 +438,7 @@
                           </template>
 
                           <p x-show="listFor('to').length === 0" class="px-3 py-3 text-[12px] leading-snug text-ink/45">
-                            Такой точки нет в списке. Позвоните — рассчитаем маршрут вручную:
+                            <span data-pt-copy="calc_point_missing">Такой точки нет в списке. Позвоните — рассчитаем маршрут вручную:</span>
                             <a :href="'tel:' + site.phoneHref" class="font-semibold text-ink underline underline-offset-2" x-text="site.phone"></a>
                           </p>
                         </div>
@@ -457,7 +457,7 @@
                 </div>
 
                 <div class="mt-4">
-                  <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-ink/35">Часто заказывают</p>
+                  <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-ink/35" data-pt-copy="calc_popular">Часто заказывают</p>
                   <div class="mt-2 flex flex-wrap gap-2">
                     <template x-for="r in popularRoutes" :key="r.from.id + '-' + r.to.id">
                       <button
@@ -475,17 +475,17 @@
 
                 <div class="step-label mt-6">
                   <span class="step-num">2</span>
-                  Когда
+                  <span data-pt-copy="calc_step_when">Когда</span>
                 </div>
 
                 <div class="mt-3 grid grid-cols-2 gap-3">
                   <div>
-                    <label class="label" for="date">Дата</label>
+                    <label class="label" for="date" data-pt-copy="calc_date">Дата</label>
                     <input id="date" type="date" class="field" :min="today" x-model="date" />
                     <p x-show="errors.date" x-cloak class="mt-1 text-[11px] font-semibold text-red-600" x-text="errors.date"></p>
                   </div>
                   <div>
-                    <label class="label" for="time">Время</label>
+                    <label class="label" for="time" data-pt-copy="calc_time">Время</label>
                     <input id="time" type="time" class="field" x-model="time" />
                     <p x-show="errors.time" x-cloak class="mt-1 text-[11px] font-semibold text-red-600" x-text="errors.time"></p>
                   </div>
@@ -495,7 +495,7 @@
                   <div class="flex items-center justify-between rounded-xl border border-ink/15 px-3 py-2">
                     <span class="flex items-center gap-2 text-[13px] font-semibold text-ink/75">
                       <svg class="icon h-4 w-4 text-ink/40" aria-hidden="true"><use href="#i-users" /></svg>
-                      Пассажиры
+                      <span data-pt-copy="calc_passengers">Пассажиры</span>
                     </span>
                     <div class="flex items-center gap-1">
                       <button
@@ -522,7 +522,7 @@
 
                   <label class="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-ink/15 px-3 py-2">
                     <span class="flex items-center gap-2 text-[13px] font-semibold text-ink/75">
-                      Туда и обратно
+                      <span data-pt-copy="calc_round_trip">Туда и обратно</span>
                       <span class="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-700" x-text="`×${calc.round_trip_factor}`"></span>
                     </span>
                     <span class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition" :class="roundTrip ? 'bg-ink' : 'bg-ink/15'">
@@ -535,11 +535,11 @@
                 <div class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[12px] text-ink/60">
                   <label class="flex cursor-pointer items-center gap-2">
                     <input type="checkbox" class="h-4 w-4 rounded accent-ink" x-model="childSeat" />
-                    Детское кресло <span class="text-ink/35" x-text="calc.child_seat_price ? `+${money(calc.child_seat_price)}` : 'бесплатно'"></span>
+                    <span data-pt-copy="calc_child_seat">Детское кресло</span> <span class="text-ink/35" x-text="calc.child_seat_price ? `+${money(calc.child_seat_price)}` : 'бесплатно'"></span>
                   </label>
                   <label class="flex cursor-pointer items-center gap-2">
                     <input type="checkbox" class="h-4 w-4 rounded accent-ink" x-model="extraStop" />
-                    Доп. остановка <span class="text-ink/35" x-text="`+${money(calc.extra_stop_price)}`"></span>
+                    <span data-pt-copy="calc_extra_stop">Доп. остановка</span> <span class="text-ink/35" x-text="`+${money(calc.extra_stop_price)}`"></span>
                   </label>
                 </div>
 
@@ -554,31 +554,31 @@
                   </span>
                   <span class="chip border-emerald-200 bg-emerald-50 text-emerald-700">
                     <svg class="icon h-3.5 w-3.5" aria-hidden="true"><use href="#i-shield" /></svg>
-                    Фиксированная цена
+                    <span data-pt-copy="calc_fixed_price">Фиксированная цена</span>
                   </span>
                 </div>
                 <p x-show="!routeInfo" x-cloak class="mt-4 text-[12px] text-ink/40">
-                  Выберите откуда и куда из подсказок — покажем расстояние, время в пути и цену.
+                  <span data-pt-copy="calc_route_hint">Выберите откуда и куда из подсказок — покажем расстояние, время в пути и цену.</span>
                 </p>
 
                 <div class="mt-6 rounded-2xl border border-ink/10 bg-paper/70 p-4">
-                  <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-ink/35">В стоимость уже входит</p>
+                  <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-ink/35" data-pt-copy="calc_included_title">В стоимость уже входит</p>
                   <ul class="mt-3 grid gap-2 text-[12px] leading-snug text-ink/60 sm:grid-cols-2">
                     <li class="flex items-start gap-2">
                       <svg class="icon mt-px h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true"><use href="#i-check" /></svg>
-                      Ожидание рейса — 60 минут бесплатно
+                      <span data-pt-copy="calc_included_1">Ожидание рейса — 60 минут бесплатно</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <svg class="icon mt-px h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true"><use href="#i-check" /></svg>
-                      Встреча с табличкой и помощь с багажом
+                      <span data-pt-copy="calc_included_2">Встреча с табличкой и помощь с багажом</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <svg class="icon mt-px h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true"><use href="#i-check" /></svg>
-                      Детское кресло — бесплатно по запросу
+                      <span data-pt-copy="calc_included_3">Детское кресло — бесплатно по запросу</span>
                     </li>
                     <li class="flex items-start gap-2">
                       <svg class="icon mt-px h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true"><use href="#i-check" /></svg>
-                      Оплата только после поездки
+                      <span data-pt-copy="calc_included_4">Оплата только после поездки</span>
                     </li>
                   </ul>
                 </div>
@@ -589,9 +589,9 @@
                 <div class="flex items-center justify-between">
                   <div class="step-label">
                     <span class="step-num">3</span>
-                    Авто
+                    <span data-pt-copy="calc_step_car">Авто</span>
                   </div>
-                  <span class="text-[10px] font-semibold uppercase tracking-wider text-ink/35">Цена за поездку</span>
+                  <span class="text-[10px] font-semibold uppercase tracking-wider text-ink/35" data-pt-copy="calc_price_per_trip">Цена за поездку</span>
                 </div>
 
                 <div class="mt-3 grid grid-cols-2 gap-2.5">
@@ -631,9 +631,9 @@
                   >
                     <span class="flex items-center gap-1.5 text-[12px] font-extrabold leading-tight">
                       <svg class="icon h-3.5 w-3.5 text-ink/50" aria-hidden="true"><use href="#i-sign" /></svg>
-                      Поможем выбрать
+                      <span data-pt-copy="calc_help_title">Поможем выбрать</span>
                     </span>
-                    <span class="mt-1 block text-[10px] leading-snug text-ink/45">Подберём авто под багаж и маршрут</span>
+                    <span class="mt-1 block text-[10px] leading-snug text-ink/45" data-pt-copy="calc_help_text">Подберём авто под багаж и маршрут</span>
                     <span class="mt-2 block text-[11px] font-extrabold text-ink underline decoration-ink/20 underline-offset-2">
                       <span x-text="site.phone"></span>
                     </span>
@@ -643,41 +643,41 @@
                 <div class="mt-4 rounded-2xl bg-paper p-4 sm:p-5">
                   <p x-show="routeLoading" x-cloak class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-amber-700">
                     <svg class="icon h-3.5 w-3.5 animate-pulse" aria-hidden="true"><use href="#i-route" /></svg>
-                    Уточняем километраж по дорогам…
+                    <span data-pt-copy="calc_checking_km">Уточняем километраж по дорогам…</span>
                   </p>
                   <div class="space-y-1.5 text-[13px]">
                     <div class="flex items-center justify-between gap-3 text-ink/50">
-                      <span>Маршрут</span>
+                      <span data-pt-copy="calc_summary_route">Маршрут</span>
                       <span class="text-right font-semibold text-ink" x-text="routeInfo ? routeInfo.km + ' км · ' + durationLabel : '—'"></span>
                     </div>
                     <div class="flex items-center justify-between gap-3 text-ink/50">
-                      <span>Тариф</span>
+                      <span data-pt-copy="calc_summary_tariff">Тариф</span>
                       <span class="font-semibold text-ink" x-text="selectedTariff ? selectedTariff.name : '—'"></span>
                     </div>
                     <div x-show="roundTrip" x-cloak class="flex items-center justify-between gap-3 text-ink/50">
-                      <span>Туда и обратно</span>
+                      <span data-pt-copy="calc_summary_round_trip">Туда и обратно</span>
                       <span class="font-semibold text-emerald-700" x-text="`×${calc.round_trip_factor}`"></span>
                     </div>
                     <div x-show="childSeat" x-cloak class="flex items-center justify-between gap-3 text-ink/50">
-                      <span>Детское кресло</span>
+                      <span data-pt-copy="calc_summary_child_seat">Детское кресло</span>
                       <span class="font-semibold text-ink" x-text="calc.child_seat_price ? `+${money(calc.child_seat_price)}` : 'бесплатно'"></span>
                     </div>
                     <div x-show="extraStop" x-cloak class="flex items-center justify-between gap-3 text-ink/50">
-                      <span>Доп. остановка</span>
+                      <span data-pt-copy="calc_summary_extra_stop">Доп. остановка</span>
                       <span class="font-semibold text-ink" x-text="`+${money(calc.extra_stop_price)}`"></span>
                     </div>
                   </div>
 
                   <div class="mt-3 flex items-end justify-between border-t border-ink/10 pt-3">
-                    <span class="text-[13px] font-semibold text-ink/50">Итого</span>
+                    <span class="text-[13px] font-semibold text-ink/50" data-pt-copy="calc_total">Итого</span>
                     <span class="text-[26px] font-extrabold leading-none tracking-tight" x-text="totalLabel"></span>
                   </div>
 
                   <button type="button" class="btn btn-accent btn-lg mt-4 w-full" :disabled="!canBook" @click="openBooking()">
-                    Забронировать
+                    <span data-pt-copy="calc_book">Забронировать</span>
                     <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-arrow-right" /></svg>
                   </button>
-                  <p class="mt-2.5 text-center text-[11px] text-ink/40">Без предоплаты · оплата водителю после поездки</p>
+                  <p class="mt-2.5 text-center text-[11px] text-ink/40" data-pt-copy="calc_prepay_note">Без предоплаты · оплата водителю после поездки</p>
                 </div>
               </div>
             </div>
@@ -730,7 +730,7 @@
               <p class="lead mt-4" data-pt-copy="tariffs_text_1" x-text="site.copy.tariffs_text_1">Все автомобили с кондиционером, детскими креслами по запросу и водителями, которые знают дороги Крыма и Юга России.</p>
             </div>
             <a href="#calculator" class="btn btn-ink">
-              Рассчитать поездку
+              <span data-pt-copy="cta_calculate_trip">Рассчитать поездку</span>
               <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-arrow-up-right" /></svg>
             </a>
           </div>
@@ -809,7 +809,7 @@
                 </a>
                 <a :href="'https://wa.me/' + site.whatsapp" target="_blank" rel="noopener" class="btn btn-light w-full">
                   <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-whatsapp" /></svg>
-                  Написать в WhatsApp
+                  <span data-pt-copy="cta_whatsapp">Написать в WhatsApp</span>
                 </a>
               </div>
             </article>
@@ -888,7 +888,7 @@
 
           <div class="mt-12 flex flex-wrap items-center gap-4">
             <a href="#calculator" class="btn btn-accent">
-              Рассчитать поездку
+              <span data-pt-copy="cta_calculate_trip">Рассчитать поездку</span>
               <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-arrow-right" /></svg>
             </a>
             <a :href="'tel:' + site.phoneHref" class="btn btn-light">
@@ -924,7 +924,7 @@
           </div>
 
           <div class="mt-8 flex flex-wrap items-center gap-3 rounded-2xl border border-ink/10 bg-white p-4 sm:px-6">
-            <span class="text-[12px] font-extrabold uppercase tracking-wider text-ink/40">Оплата</span>
+            <span class="text-[12px] font-extrabold uppercase tracking-wider text-ink/40" data-pt-copy="services_payment_label">Оплата</span>
             <template x-for="payment in site.payments" :key="payment">
               <span class="chip bg-white" x-text="payment"></span>
             </template>
@@ -1005,7 +1005,7 @@
                 </a>
                 <a :href="'https://wa.me/' + site.whatsapp" target="_blank" rel="noopener" class="btn btn-outline mt-2 w-full">
                   <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-whatsapp" /></svg>
-                  Написать в WhatsApp
+                  <span data-pt-copy="cta_whatsapp">Написать в WhatsApp</span>
                 </a>
               </div>
             </div>
@@ -1103,7 +1103,7 @@
 
             <div class="relative grid gap-10 lg:grid-cols-2 lg:gap-14">
               <div>
-                <p class="eyebrow-light"><span class="h-px w-6 bg-accent"></span>Контакты</p>
+                <p class="eyebrow-light"><span class="h-px w-6 bg-accent"></span><span data-pt-copy="contacts_label">Контакты</span></p>
                 <h2 class="h2 mt-3" data-pt-copy="contacts_cta_title_1" x-text="site.copy.contacts_cta_title_1">Поездка начинается с одного звонка</h2>
                 <p class="mt-4 max-w-md text-[14px] leading-relaxed text-white/55" data-pt-copy="contacts_cta_text_1" x-text="site.copy.contacts_cta_text_1">Диспетчер на связи круглосуточно. Подберём машину, посчитаем маршрут и подтвердим бронь — без предоплаты.</p>
 
@@ -1117,38 +1117,38 @@
                 <div class="mt-6 flex flex-wrap gap-2">
                   <a :href="'https://wa.me/' + site.whatsapp" target="_blank" rel="noopener" class="btn btn-light">
                     <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-whatsapp" /></svg>
-                    WhatsApp
+                    <span data-pt-copy="contact_whatsapp">WhatsApp</span>
                   </a>
                   <a :href="'https://t.me/' + site.telegram" target="_blank" rel="noopener" class="btn btn-light">
                     <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-telegram" /></svg>
-                    Telegram
+                    <span data-pt-copy="contact_telegram">Telegram</span>
                   </a>
                   <a :href="site.max" target="_blank" rel="noopener" class="btn btn-light">
                     <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-max" /></svg>
-                    MAX
+                    <span data-pt-copy="contact_max">MAX</span>
                   </a>
                 </div>
               </div>
 
               <div class="grid content-start gap-3 sm:grid-cols-2">
                 <a :href="'tel:' + site.phoneHref" class="rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35">Телефон</span>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35" data-pt-copy="contact_phone_label">Телефон</span>
                   <span class="mt-1 block text-[13px] font-bold" x-text="site.phone"></span>
                 </a>
                 <a :href="'mailto:' + site.email" class="rounded-2xl border border-white/10 bg-white/5 p-4 transition hover:bg-white/10">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35">Почта</span>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35" data-pt-copy="contact_email_label">Почта</span>
                   <span class="mt-1 block truncate text-[13px] font-bold" x-text="site.email"></span>
                 </a>
                 <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35">Офис</span>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35" data-pt-copy="contact_office_label">Офис</span>
                   <span class="mt-1 block text-[13px] font-bold" x-text="site.address"></span>
                 </div>
                 <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35">Режим работы</span>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35" data-pt-copy="contact_hours_label">Режим работы</span>
                   <span class="mt-1 block text-[13px] font-bold" x-text="site.hours"></span>
                 </div>
                 <div class="rounded-2xl border border-white/10 bg-white/5 p-4 sm:col-span-2">
-                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35">Зона работы</span>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-white/35" data-pt-copy="contact_area_label">Зона работы</span>
                   <span class="mt-1 block text-[13px] font-bold"><span data-pt-copy="service_area" x-text="site.copy.service_area">Крым · Краснодарский край · Ростов-на-Дону · Кавказские Минеральные Воды</span></span>
                 </div>
               </div>
@@ -1176,18 +1176,18 @@
           <div class="lg:col-span-2">
             <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/30" data-pt-copy="footer_text_2" x-text="site.copy.footer_text_2">Сервис</p>
             <nav class="mt-3 flex flex-col gap-2 text-[12px]">
-              <a href="#calculator" class="transition hover:text-white">Калькулятор</a>
-              <a href="#tariffs" class="transition hover:text-white">Тарифы</a>
-              <a href="#routes" class="transition hover:text-white">Направления</a>
-              <a href="#reviews" class="transition hover:text-white">Отзывы</a>
+              <a href="#calculator" data-pt-copy="nav_calculator" class="transition hover:text-white">Калькулятор</a>
+              <a href="#tariffs" data-pt-copy="nav_tariffs" class="transition hover:text-white">Тарифы</a>
+              <a href="#routes" data-pt-copy="nav_routes" class="transition hover:text-white">Направления</a>
+              <a href="#reviews" data-pt-copy="nav_reviews" class="transition hover:text-white">Отзывы</a>
             </nav>
           </div>
 
           <div class="lg:col-span-2">
             <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/30" data-pt-copy="footer_text_3" x-text="site.copy.footer_text_3">Помощь</p>
             <nav class="mt-3 flex flex-col gap-2 text-[12px]">
-              <a href="#faq" class="transition hover:text-white">Вопросы и ответы</a>
-              <a href="#contacts" class="transition hover:text-white">Контакты</a>
+              <a href="#faq" data-pt-copy="nav_faq" class="transition hover:text-white">Вопросы и ответы</a>
+              <a href="#contacts" data-pt-copy="nav_contacts" class="transition hover:text-white">Контакты</a>
               <a :href="'tel:' + site.phoneHref" class="transition hover:text-white" x-text="site.phone"></a>
               <a :href="'mailto:' + site.email" class="transition hover:text-white" x-text="site.email"></a>
             </nav>
@@ -1196,16 +1196,16 @@
           <div class="lg:col-span-4">
             <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/30" data-pt-copy="footer_text_4" x-text="site.copy.footer_text_4">Документы</p>
             <nav class="mt-3 flex flex-col gap-2 text-[12px]">
-              <a href="legal.html#privacy" class="transition hover:text-white">Политика конфиденциальности</a>
-              <a href="legal.html#consent" class="transition hover:text-white">Согласие на обработку данных</a>
-              <a href="legal.html#offer" class="transition hover:text-white">Публичная оферта</a>
+              <a href="legal.html#privacy" data-pt-copy="footer_link_privacy" class="transition hover:text-white">Политика конфиденциальности</a>
+              <a href="legal.html#consent" data-pt-copy="footer_link_consent" class="transition hover:text-white">Согласие на обработку данных</a>
+              <a href="legal.html#offer" data-pt-copy="footer_link_offer" class="transition hover:text-white">Публичная оферта</a>
             </nav>
             <p class="mt-4 text-[11px] leading-relaxed text-white/25" data-pt-copy="footer_text_5" x-text="site.copy.footer_text_5">Информация на сайте не является публичной офертой. Итоговую стоимость подтверждает менеджер.</p>
           </div>
         </div>
 
         <div class="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-[11px] sm:flex-row sm:items-center sm:justify-between">
-          <p>© <span x-text="new Date().getFullYear()"></span> <span data-pt-site="brand" x-text="site.brand">Про Трансфер</span>. Все права защищены.</p>
+          <p>© <span x-text="new Date().getFullYear()"></span> <span data-pt-site="brand" x-text="site.brand">Про Трансфер</span>. <span data-pt-copy="footer_copyright">Все права защищены.</span></p>
           <p class="text-white/25" data-pt-copy="footer_text_6" x-text="site.copy.footer_text_6" data-pt-copy="footer_signature" x-text="site.copy.footer_signature">Сделано с заботой о пассажирах</p>
         </div>
       </div>
@@ -1220,11 +1220,11 @@
     >
       <div class="mx-auto flex max-w-xl items-center gap-3">
         <div class="min-w-0 flex-1">
-          <div class="text-[9px] font-bold uppercase tracking-wider text-ink/40">Итого</div>
+          <div class="text-[9px] font-bold uppercase tracking-wider text-ink/40" data-pt-copy="calc_total">Итого</div>
           <div class="truncate text-lg font-extrabold leading-tight" x-text="totalLabel"></div>
         </div>
         <button type="button" class="btn btn-accent" :disabled="!canBook" @click="openBooking()">
-          Забронировать
+          <span data-pt-copy="calc_book">Забронировать</span>
           <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-arrow-right" /></svg>
         </button>
       </div>
@@ -1244,9 +1244,9 @@
         <div x-show="bookingOpen" x-transition class="w-full rounded-3xl bg-white p-5 shadow-2xl sm:p-7">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <p class="eyebrow"><span class="h-px w-5 bg-accent"></span>Бронирование</p>
-              <h2 id="booking-title" class="mt-1.5 text-2xl font-extrabold tracking-tight">Оставьте контакты</h2>
-              <p class="mt-1 text-[12px] text-ink/45">Менеджер позвонит в течение 10 минут и подтвердит заказ.</p>
+              <p class="eyebrow"><span class="h-px w-5 bg-accent"></span><span data-pt-copy="booking_eyebrow">Бронирование</span></p>
+              <h2 id="booking-title" class="mt-1.5 text-2xl font-extrabold tracking-tight" data-pt-copy="booking_title">Оставьте контакты</h2>
+              <p class="mt-1 text-[12px] text-ink/45" data-pt-copy="booking_text">Менеджер позвонит в течение 10 минут и подтвердит заказ.</p>
             </div>
             <button
               type="button"
@@ -1268,12 +1268,12 @@
               <span><span x-text="dateLabel"></span> · <span x-text="time"></span></span>
               <span><span x-text="passengers"></span> пасс.</span>
               <span x-text="selectedTariff ? selectedTariff.name : ''"></span>
-              <span x-show="roundTrip" x-cloak class="text-emerald-700">туда и обратно</span>
-              <span x-show="childSeat" x-cloak>детское кресло</span>
-              <span x-show="extraStop" x-cloak>+ остановка</span>
+              <span x-show="roundTrip" x-cloak class="text-emerald-700"><span data-pt-copy="booking_option_round_trip">туда и обратно</span></span>
+              <span x-show="childSeat" x-cloak><span data-pt-copy="booking_option_child_seat">детское кресло</span></span>
+              <span x-show="extraStop" x-cloak><span data-pt-copy="booking_option_extra_stop">+ остановка</span></span>
             </div>
             <div class="mt-3 flex items-end justify-between border-t border-ink/10 pt-3">
-              <span class="text-[11px] font-semibold text-ink/40">Итого</span>
+              <span class="text-[11px] font-semibold text-ink/40" data-pt-copy="calc_total">Итого</span>
               <span class="text-xl font-extrabold leading-none" x-text="totalLabel"></span>
             </div>
           </div>
@@ -1291,12 +1291,13 @@
             </div>
 
             <div>
-              <label class="label" for="booking-name">Имя</label>
+              <label class="label" for="booking-name" data-pt-copy="form_label_name">Имя</label>
               <input
                 id="booking-name"
                 x-ref="nameInput"
                 type="text"
                 class="field"
+                data-pt-placeholder="form_placeholder_name"
                 placeholder="Как к вам обращаться"
                 autocomplete="name"
                 x-model="name"
@@ -1306,11 +1307,12 @@
             </div>
 
             <div>
-              <label class="label" for="booking-phone">Телефон</label>
+              <label class="label" for="booking-phone" data-pt-copy="form_label_phone">Телефон</label>
               <input
                 id="booking-phone"
                 type="tel"
                 class="field"
+                data-pt-placeholder="form_placeholder_phone"
                 placeholder="+7 (___) ___-__-__"
                 autocomplete="tel"
                 inputmode="tel"
@@ -1322,11 +1324,12 @@
             </div>
 
             <div>
-              <label class="label" for="booking-comment">Комментарий <span class="normal-case tracking-normal text-ink/30">необязательно</span></label>
+              <label class="label" for="booking-comment"><span data-pt-copy="form_label_comment">Комментарий</span> <span class="normal-case tracking-normal text-ink/30" data-pt-copy="form_optional">необязательно</span></label>
               <textarea
                 id="booking-comment"
                 rows="2"
                 class="field resize-none"
+                data-pt-placeholder="form_placeholder_comment"
                 placeholder="Номер рейса, адрес отеля, пожелания"
                 x-model="comment"
               ></textarea>
@@ -1335,9 +1338,9 @@
             <label class="flex cursor-pointer items-start gap-2.5 text-[11px] leading-relaxed text-ink/50">
               <input type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded accent-ink" x-model="consent" @change="errors.consent = ''" />
               <span>
-                Согласен с
-                <a href="legal.html#privacy" target="_blank" class="font-semibold text-ink underline decoration-ink/25 underline-offset-2">политикой конфиденциальности</a>
-                и обработкой персональных данных
+                <span data-pt-copy="form_consent_prefix">Согласен с</span>
+                <a href="legal.html#privacy" target="_blank" class="font-semibold text-ink underline decoration-ink/25 underline-offset-2" data-pt-copy="form_consent_link">политикой конфиденциальности</a>
+                <span data-pt-copy="form_consent_suffix">и обработкой персональных данных</span>
               </span>
             </label>
             <p x-show="errors.consent" x-cloak class="-mt-2 text-[11px] font-semibold text-red-600" x-text="errors.consent"></p>
@@ -1348,7 +1351,7 @@
               <span x-text="submitting ? 'Отправляем…' : 'Отправить заявку'"></span>
               <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-arrow-right" /></svg>
             </button>
-            <p class="text-center text-[10px] text-ink/35">Предоплата не нужна. Оплата водителю после поездки.</p>
+            <p class="text-center text-[10px] text-ink/35" data-pt-copy="booking_prepay_note">Предоплата не нужна. Оплата водителю после поездки.</p>
           </form>
         </div>
       </div>
@@ -1382,18 +1385,20 @@
 
           <h2 id="success-title" class="mt-4 text-2xl font-extrabold tracking-tight" x-text="order && order.delivered ? 'Заявка принята' : 'Заявка сформирована'">Заявка сформирована</h2>
           <p x-show="order && order.delivered" class="mt-1.5 text-[13px] leading-relaxed text-ink/50">
-            Номер <strong class="text-ink" x-text="order ? order.id : ''"></strong>. Мы получили заявку — менеджер
-            перезвонит в течение 10 минут и подтвердит бронирование.
+            <span data-pt-copy="success_number_label">Номер</span>
+            <strong class="text-ink" x-text="order ? order.id : ''"></strong>.
+            <span data-pt-copy="success_text_delivered">Мы получили заявку — менеджер перезвонит в течение 10 минут и подтвердит бронирование.</span>
           </p>
           <p x-show="!order || !order.delivered" class="mt-1.5 text-[13px] leading-relaxed text-ink/50">
-            Номер <strong class="text-ink" x-text="order ? order.id : ''"></strong>. Отправьте её нам в удобном
-            мессенджере — менеджер подтвердит бронирование в течение 10 минут.
+            <span data-pt-copy="success_number_label">Номер</span>
+            <strong class="text-ink" x-text="order ? order.id : ''"></strong>.
+            <span data-pt-copy="success_text_pending">Отправьте её нам в удобном мессенджере — менеджер подтвердит бронирование в течение 10 минут.</span>
           </p>
 
           <div class="mt-4 rounded-2xl bg-paper p-4 text-[12px] leading-relaxed text-ink/65">
             <p class="whitespace-pre-line" x-text="orderSummary"></p>
             <div class="mt-2 flex items-center justify-between border-t border-ink/10 pt-2">
-              <span class="text-[11px] font-semibold text-ink/40">Итого</span>
+              <span class="text-[11px] font-semibold text-ink/40" data-pt-copy="calc_total">Итого</span>
               <span class="text-lg font-extrabold capitalize text-ink" x-text="order ? order.price : ''"></span>
             </div>
           </div>
@@ -1401,12 +1406,12 @@
           <div class="mt-4 space-y-2" x-show="!order || !order.delivered">
             <a :href="waHref" target="_blank" rel="noopener" class="btn btn-accent w-full">
               <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-whatsapp" /></svg>
-              Отправить в WhatsApp
+              <span data-pt-copy="success_whatsapp">Отправить в WhatsApp</span>
             </a>
             <div class="grid grid-cols-2 gap-2">
               <a :href="tgHref" target="_blank" rel="noopener" class="btn btn-ink">
                 <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-telegram" /></svg>
-                Telegram
+                <span data-pt-copy="contact_telegram">Telegram</span>
               </a>
               <button type="button" class="btn btn-outline" @click="copyOrder()">
                 <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-copy" /></svg>
@@ -1417,9 +1422,9 @@
 
           <div class="mt-4 flex flex-col gap-2 border-t border-ink/10 pt-4 text-center">
             <a :href="'tel:' + site.phoneHref" class="text-[12px] font-bold text-ink transition hover:text-ink/60">
-              Или позвоните: <span x-text="site.phone"></span>
+              <span data-pt-copy="success_call">Или позвоните:</span> <span x-text="site.phone"></span>
             </a>
-            <button type="button" class="text-[11px] text-ink/40 underline underline-offset-2 transition hover:text-ink" @click="startNewOrder()">
+            <button type="button" class="text-[11px] text-ink/40 underline underline-offset-2 transition hover:text-ink" data-pt-copy="success_new_order" @click="startNewOrder()">
               Создать ещё одну заявку
             </button>
           </div>

@@ -14,12 +14,12 @@ add_action('carbon_fields_register_fields', function () {
     Container::make('post_meta', 'Точка')
         ->where('post_type', '=', 'pt_point')
         ->add_fields([
-            Field::make('hidden', 'pt_city'),
             Field::make('text', 'pt_lat', 'Широта')->set_attribute('type', 'number')->set_attribute('step', 'any')
                 ->set_attribute('min', '-90')->set_attribute('max', '90'),
             Field::make('text', 'pt_lon', 'Долгота')->set_attribute('type', 'number')->set_attribute('step', 'any')
                 ->set_attribute('min', '-180')->set_attribute('max', '180'),
             Field::make('complex', 'pt_aliases', 'Варианты поиска')
+                ->setup_labels(['singular_name' => 'вариант', 'plural_name' => 'варианты'])
                 ->add_fields([
                     Field::make('text', 'alias', 'Вариант названия')->set_width(100),
                 ])
@@ -30,7 +30,7 @@ add_action('carbon_fields_register_fields', function () {
         ->where('post_type', '=', 'pt_tariff')
         ->add_fields([
             Field::make('image', 'pt_photo', 'Фото авто')
-                ->set_help_text('Или задайте «Изображение записи» (featured image) слева — оно приоритетнее.'),
+                ->set_help_text('Или задайте «Изображение записи» слева — оно приоритетнее.'),
             Field::make('text', 'pt_seats', 'Мест')->set_attribute('type', 'number'),
             Field::make('text', 'pt_bags', 'Багаж')->set_attribute('type', 'number'),
             Field::make('text', 'pt_cars', 'Примеры авто'),
@@ -42,7 +42,7 @@ add_action('carbon_fields_register_fields', function () {
             Field::make('checkbox', 'pt_on_request', 'Цена по запросу'),
         ]);
 
-    Container::make('post_meta', 'FAQ')
+    Container::make('post_meta', 'Вопросы и ответы')
         ->where('post_type', '=', 'pt_faq')
         ->add_fields([
             Field::make('textarea', 'pt_answer', 'Ответ'),
@@ -67,7 +67,7 @@ add_action('carbon_fields_register_fields', function () {
             Field::make('text', 'pt_tariff', 'Тариф'),
             Field::make('text', 'pt_price', 'Цена'),
             Field::make('text', 'pt_when', 'Дата/время'),
-            Field::make('textarea', 'pt_payload', 'Снимок JSON'),
+            Field::make('textarea', 'pt_payload', 'Снимок данных заявки'),
             Field::make('select', 'pt_status', 'Статус')
                 ->add_options([
                     'new' => 'Новая',
@@ -83,23 +83,25 @@ add_action('carbon_fields_register_fields', function () {
             Field::make('text', 'pt_brand', 'Бренд'),
             Field::make('text', 'pt_tagline', 'Слоган'),
             Field::make('text', 'pt_phone', 'Телефон'),
-            Field::make('text', 'pt_phone_href', 'Телефон (href)'),
+            Field::make('text', 'pt_phone_href', 'Телефон (ссылка)'),
             Field::make('text', 'pt_whatsapp', 'WhatsApp'),
             Field::make('text', 'pt_telegram', 'Telegram'),
-            Field::make('text', 'pt_max', 'MAX URL'),
+            Field::make('text', 'pt_max', 'Ссылка MAX'),
             Field::make('text', 'pt_email', 'Email'),
             Field::make('text', 'pt_address', 'Адрес'),
             Field::make('text', 'pt_hours', 'Часы работы'),
-            Field::make('text', 'pt_map_api_key', 'Yandex Maps API key'),
+            Field::make('text', 'pt_map_api_key', 'Ключ API Яндекс Карт'),
             Field::make('text', 'pt_rating', 'Рейтинг'),
             Field::make('text', 'pt_reviews_count', 'Число отзывов'),
             Field::make('complex', 'pt_stats', 'Статистика')
+                ->setup_labels(['singular_name' => 'показатель', 'plural_name' => 'показатели'])
                 ->add_fields([
                     Field::make('text', 'stat_value', 'Значение')->set_width(40),
                     Field::make('text', 'label', 'Подпись')->set_width(60),
                 ])
                 ->set_header_template('<%- stat_value %> — <%- label %>'),
             Field::make('complex', 'pt_advantages', 'Преимущества')
+                ->setup_labels(['singular_name' => 'преимущество', 'plural_name' => 'преимущества'])
                 ->add_fields([
                     Field::make('text', 'icon', 'Иконка')->set_width(20),
                     Field::make('text', 'title', 'Заголовок')->set_width(30),
@@ -107,12 +109,14 @@ add_action('carbon_fields_register_fields', function () {
                 ])
                 ->set_header_template('<%- title %>'),
             Field::make('complex', 'pt_steps', 'Шаги')
+                ->setup_labels(['singular_name' => 'шаг', 'plural_name' => 'шаги'])
                 ->add_fields([
                     Field::make('text', 'title', 'Заголовок')->set_width(40),
                     Field::make('textarea', 'text', 'Текст')->set_width(60),
                 ])
                 ->set_header_template('<%- title %>'),
             Field::make('complex', 'pt_services', 'Услуги')
+                ->setup_labels(['singular_name' => 'услуга', 'plural_name' => 'услуги'])
                 ->add_fields([
                     Field::make('text', 'icon', 'Иконка')->set_width(20),
                     Field::make('text', 'title', 'Заголовок')->set_width(30),
@@ -120,6 +124,7 @@ add_action('carbon_fields_register_fields', function () {
                 ])
                 ->set_header_template('<%- title %>'),
             Field::make('complex', 'pt_payments', 'Оплата')
+                ->setup_labels(['singular_name' => 'способ оплаты', 'plural_name' => 'способы оплаты'])
                 ->add_fields([
                     Field::make('text', 'label', 'Способ'),
                 ])
@@ -145,8 +150,8 @@ add_action('carbon_fields_register_fields', function () {
     Container::make('post_meta', 'Поисковые системы и обложка')
         ->where('post_type', '=', 'pt_settings')
         ->add_fields([
-            Field::make('text', 'pt_seo_title', 'Заголовок страницы (SEO)'),
-            Field::make('textarea', 'pt_seo_description', 'Описание страницы (SEO)'),
+            Field::make('text', 'pt_seo_title', 'Заголовок страницы для поисковых систем'),
+            Field::make('textarea', 'pt_seo_description', 'Описание страницы для поисковых систем'),
             Field::make('image', 'pt_hero_image', 'Фоновое изображение первого экрана'),
         ]);
 
@@ -202,15 +207,17 @@ add_action('carbon_fields_register_fields', function () {
         ->add_fields([
             Field::make('select', 'pt_popular_tariff', 'Тариф для цен популярных направлений')->add_options($route_tariffs),
             Field::make('complex', 'pt_popular_routes', 'Популярные направления')
+                ->setup_labels(['singular_name' => 'направление', 'plural_name' => 'направления'])
                 ->add_fields([
-                    Field::make('text', 'from_slug', 'Откуда (slug)')->set_width(50),
-                    Field::make('text', 'to_slug', 'Куда (slug)')->set_width(50),
+                    Field::make('text', 'from_slug', 'Откуда (код точки)')->set_width(50),
+                    Field::make('text', 'to_slug', 'Куда (код точки)')->set_width(50),
                 ])
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>'),
             Field::make('complex', 'pt_route_overrides', 'Ручные км')
+                ->setup_labels(['singular_name' => 'маршрут', 'plural_name' => 'маршруты'])
                 ->add_fields([
-                    Field::make('text', 'from_slug', 'Откуда (slug)')->set_width(35),
-                    Field::make('text', 'to_slug', 'Куда (slug)')->set_width(35),
+                    Field::make('text', 'from_slug', 'Откуда (код точки)')->set_width(35),
+                    Field::make('text', 'to_slug', 'Куда (код точки)')->set_width(35),
                     Field::make('text', 'km', 'км')->set_width(30)->set_attribute('type', 'number'),
                 ])
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>: <%- km %> км'),

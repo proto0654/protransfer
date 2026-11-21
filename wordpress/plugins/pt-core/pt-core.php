@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Protransfer Core
- * Description: Точки, тарифы, маршруты, калькулятор, seed и REST для Про Трансфер.
+ * Description: Точки, тарифы, маршруты, калькулятор, импорт данных и REST для Про Трансфер.
  * Version: 0.1.0
  * Requires at least: 6.6
  * Requires PHP: 8.1
@@ -23,6 +23,7 @@ add_action('after_setup_theme', function () {
 }, 5);
 
 require_once PT_CORE_PATH . 'includes/content.php';
+require_once PT_CORE_PATH . 'includes/i18n.php';
 require_once PT_CORE_PATH . 'includes/point-editor.php';
 require_once PT_CORE_PATH . 'includes/calc.php';
 require_once PT_CORE_PATH . 'includes/landing-content.php';

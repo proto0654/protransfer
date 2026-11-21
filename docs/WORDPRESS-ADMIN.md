@@ -14,7 +14,7 @@ This is an operator guide to the current Protransfer staging site. The quoted la
 | «Тарифы» | Vehicle classes, capacity, photos and pricing inputs | Change the minimum price or add a class |
 | «Тарифы» → «Калькулятор» | Saved global calculation settings | Change rounding or an option price |
 | «Тарифы» → «Отладка» | Interactive quote preview and global settings | Test a route and understand the formula |
-| «FAQ» | Question titles and answers | Add or edit a question |
+| «Вопросы и ответы» | Question titles and answers | Add or edit a question |
 | «Отзывы» | Review author and review fields | Edit a review |
 | «Заявки» | Manual order records and statuses | Inspect or enter a record manually; the public form is not connected |
 | «Медиафайлы» | WordPress media library | Upload and reuse images |
@@ -28,11 +28,13 @@ Standard WordPress items such as «Записи», «Страницы», «Ко�
 3. Save using the applicable button: «Обновить»/«Опубликовать» for a record, or «Сохранить изменения» for an options screen. The debugger has its own «Сохранить настройки» button.
 4. Open or refresh the staging landing and check the changed section. For local development, reload the local page too; it reads the same staging backend through the development proxy.
 
+All project post types use the named project boxes only. The standard «Произвольные поля» (Custom Fields) panel is not available on these screens, so there is no second, technical place to edit the same values. Carbon Fields controls and messages (for example «Добавить», «Свернуть все») follow the Russian admin language.
+
 Only published points, tariffs, FAQs and reviews are read into the public data. Page attributes/order can affect the display order; check the landing after changing it. Avoid changing a point's slug after routes refer to it, because route rows store that slug as text.
 
 ## «Общие данные» → «Настройки сайта»
 
-Open the single existing record «Настройки сайта». Its «Контакты и контент» box contains the brand, tagline, display phone, phone link, WhatsApp, Telegram, MAX, email, address, hours, Yandex Maps key, review rating and review count. The display phone and «Телефон (href)» are separate fields: update both when the number changes. WhatsApp is used as a number in a `wa.me` link; Telegram is a handle, and MAX is a URL. Check each link on the site after editing.
+Open the single existing record «Настройки сайта». Its «Контакты и контент» box contains the brand, tagline, display phone, phone link, WhatsApp, Telegram, MAX, email, address, hours, Yandex Maps key, review rating and review count. The display phone and «Телефон (ссылка)» are separate fields: update both when the number changes. The map key field is «Ключ API Яндекс Карт», and the MAX field is «Ссылка MAX». WhatsApp is used as a number in a `wa.me` link; Telegram is a handle, and MAX is a URL. Check each link on the site after editing.
 
 The same box holds repeatable «Статистика», «Преимущества», «Шаги», «Услуги» and «Оплата» rows. Their text and order feed the corresponding homepage lists. Icon fields contain icon identifiers used by the existing site icon set, not arbitrary image uploads; keep an existing working identifier when changing only text.
 
@@ -50,7 +52,9 @@ For supported landing-copy fields, an unset field uses initial text; an explicit
 
 ## «Точки» and «Типы точек»
 
-Each published point represents a named place that can be selected in the calculator. Its record has a title, an optional linked settlement, latitude, longitude, type and «Варианты поиска». Coordinates drive map placement and distance estimation; search variants are alternate names. The type categorizes the point, for example city, airport, railway station, port or resort.
+Each published point represents a named place that can be selected in the calculator. Its record has a title, an optional linked settlement, latitude, longitude, type and «Варианты поиска». Coordinates drive map placement and distance estimation; search variants are alternate names. The type categorizes the point, for example city, airport, railway station, port or resort. Type names appear in Russian: «Город», «Курорт или посёлок», «Аэропорт», «Железнодорожный вокзал», «Морской порт».
+
+The point screen has no separate city text field and no «Произвольные поля» panel. The city is defined by «Относится к населённому пункту»; legacy city text from older records is kept server-side for unlinked or unavailable parents and is not shown as an editable input. The former «Pt City» field was removed, so do not look for it in the «Точка» box.
 
 ### Scenario: add a point
 
@@ -59,18 +63,18 @@ Each published point represents a named place that can be selected in the calcul
 3. Publish the record. Note its slug: route options refer to this identifier, not the displayed title.
 4. Refresh the landing and verify search, map placement and a route to another point. The calculator accepts the published point list; it is not a general arbitrary-address geocoder.
 
-Parent choices are published points with the `city` or `resort` type; a point cannot be its own parent or create a cycle. A linked parent supplies its current name; unchanged legacy text is retained for unlinked or unavailable parents. The migration dry run and rollback are documented in [staging operations](WORDPRESS-STAGING.md). If a point is missing, check publication status, search variants, type and whether the browser is showing the current staging data. Do not assume that changing a title also updates references to its slug.
+Parent choices are published points with the «Город» or «Курорт или посёлок» type (`city` or `resort` in stored data); a point cannot be its own parent or create a cycle. A linked parent supplies its current name; unchanged legacy text is retained for unlinked or unavailable parents. The migration dry run and rollback are documented in [staging operations](WORDPRESS-STAGING.md). If a point is missing, check publication status, search variants, type and whether the browser is showing the current staging data. Do not assume that changing a title also updates references to its slug.
 
 ## «Точки» → «Маршруты»
 
 - «Тариф для цен популярных направлений» chooses the tariff whose one-way estimate appears on popular-route cards. If the selected tariff is unavailable, the frontend falls back to the first available tariff.
-- «Популярные направления» stores pairs of point slugs. Each pair must refer to two published points. Cards whose points cannot be found are omitted.
-- «Ручные км» stores a positive distance for a pair of slugs. The same distance is used in both directions. This is a **fallback distance**, not a fixed route price and not a guaranteed override of live routing.
+- «Популярные направления» stores pairs of point codes (slugs). Each pair must refer to two published points. Cards whose points cannot be found are omitted.
+- «Ручные км» stores a positive distance for a pair of codes. The same distance is used in both directions. This is a **fallback distance**, not a fixed route price and not a guaranteed override of live routing.
 
 ### Scenario: add a popular route
 
 1. Find the two published point slugs in «Точки».
-2. In «Маршруты», add a row to «Популярные направления», enter the exact departure and destination slugs, and save.
+2. In «Маршруты», add a row to «Популярные направления», enter the exact departure and destination codes (the «Откуда (код точки)» and «Куда (код точки)» fields) and save.
 3. If needed, add the same pair with a positive value under «Ручные км» and save.
 4. Refresh the site, open the route card and verify the calculator. The cards use an estimate; the calculator may later receive a different road distance from a routing provider.
 
@@ -103,9 +107,9 @@ The debugger embeds the actual customer calculator above a detailed live client-
 4. Change a setting to explore a result in both previews. The client preview receives only values accepted by the server comparison. Leave without pressing «Сохранить настройки» if the change is only a test. Save only after confirming the intended global effect.
 5. The embedded customer calculator can call Yandex/OSRM. Use the separate server comparison for the same price calculation with its own estimated time. Booking controls are disabled in the test view.
 
-## «FAQ», «Отзывы» and «Медиафайлы»
+## «Вопросы и ответы», «Отзывы» and «Медиафайлы»
 
-For «FAQ», the record title is the question and «Ответ» is its answer. Publish the record and check the question/answer on the landing.
+For «Вопросы и ответы», the record title is the question and «Ответ» is its answer. Publish the record and check the question/answer on the landing.
 
 For «Отзывы», the title is the author/name. Edit city, route, rating, date label and review text; publish only approved real content. The separately configured aggregate rating/count in «Общие данные» is not automatically recalculated from review records.
 

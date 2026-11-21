@@ -6,15 +6,15 @@ if (!defined('ABSPATH')) {
 function pt_register_types(): void
 {
     $types = [
-        'pt_point' => ['Точки', 'Точка', true, 'dashicons-location'],
-        'pt_tariff' => ['Тарифы', 'Тариф', true, 'dashicons-car'],
-        'pt_faq' => ['FAQ', 'Вопрос', true, 'dashicons-editor-help'],
-        'pt_review' => ['Отзывы', 'Отзыв', true, 'dashicons-star-filled'],
-        'pt_order' => ['Заявки', 'Заявка', false, 'dashicons-email-alt'],
-        'pt_settings' => ['Общие данные', 'Общие данные', false, 'dashicons-admin-generic'],
+        'pt_point' => ['Точки', 'Точка', 'dashicons-location'],
+        'pt_tariff' => ['Тарифы', 'Тариф', 'dashicons-car'],
+        'pt_faq' => ['Вопросы и ответы', 'Вопрос', 'dashicons-editor-help'],
+        'pt_review' => ['Отзывы', 'Отзыв', 'dashicons-star-filled'],
+        'pt_order' => ['Заявки', 'Заявка', 'dashicons-email-alt'],
+        'pt_settings' => ['Общие данные', 'Общие данные', 'dashicons-admin-generic'],
     ];
 
-    foreach ($types as $type => [$plural, $singular, $public_ui, $icon]) {
+    foreach ($types as $type => [$plural, $singular, $icon]) {
         $args = [
             'labels' => [
                 'name' => $plural,
@@ -29,26 +29,22 @@ function pt_register_types(): void
             'show_in_rest' => false,
             'has_archive' => false,
             'menu_icon' => $icon,
-            'supports' => ['title', 'page-attributes', 'custom-fields'],
+            'supports' => ['title', 'page-attributes'],
             'capability_type' => 'page',
             'map_meta_cap' => true,
         ];
 
         if ($type === 'pt_tariff') {
-            $args['supports'] = ['title', 'thumbnail', 'page-attributes', 'custom-fields'];
+            $args['supports'] = ['title', 'thumbnail', 'page-attributes'];
         }
 
         if ($type === 'pt_settings') {
             $args['capabilities'] = ['create_posts' => 'do_not_allow'];
-            $args['supports'] = ['title', 'custom-fields'];
+            $args['supports'] = ['title'];
         }
 
         if ($type === 'pt_order') {
-            $args['supports'] = ['title', 'custom-fields'];
-        }
-
-        if (!$public_ui && $type !== 'pt_settings' && $type !== 'pt_order') {
-            // keep UI for all listed
+            $args['supports'] = ['title'];
         }
 
         register_post_type($type, $args);

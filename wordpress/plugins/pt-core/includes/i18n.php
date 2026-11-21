@@ -27,17 +27,23 @@ function pt_reload_carbon_textdomains(): void
 add_action('after_setup_theme', 'pt_reload_carbon_textdomains', 11);
 
 /**
- * Supply the Carbon UI string that its bundled Russian catalog does not cover.
+ * Feed the Carbon UI JavaScript strings through the config it already reads.
  *
- * The vendor's ru_RU translation predates this label, so it would otherwise
- * reach the field JavaScript as English even after the textdomain reload.
+ * Verified in the browser: `wp.i18n.setLocaleData` does not reach the bundled
+ * components (wp.i18n still returns the English msgid), while Carbon's own UI
+ * reads `cf.config.locale`. Merging the map here is what actually translates
+ * «Add %s» and «There are no entries yet.»; existing vendor entries win.
  */
 function pt_translate_carbon_ui_strings(array $config): array
 {
     if (!isset($config['config']['locale']) || !is_array($config['config']['locale'])) {
         return $config;
     }
-    $config['config']['locale']['There are no entries yet.'] ??= ['Записей пока нет.'];
+    foreach (pt_carbon_ui_js_translations() as $msgid => $translation) {
+        if (!isset($config['config']['locale'][$msgid])) {
+            $config['config']['locale'][$msgid] = [$translation];
+        }
+    }
     return $config;
 }
 if (function_exists('add_filter')) {

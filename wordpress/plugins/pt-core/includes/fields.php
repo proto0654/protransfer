@@ -117,42 +117,66 @@ function pt_route_point_options(array $rows = []): array
  * Carbon's value tree wraps every child value as a list of `['value' => …]`
  * nodes, so unwrap it here and also tolerate a plain string.
  *
+ * When the tree is unavailable (for example after a Carbon upgrade changes its
+ * internal API), fall back to the plain theme option so normal rows keep their
+ * saved selections. Only orphaned codes that have no published point are lost
+ * in that path. Results are cached per option because the select callbacks run
+ * on every field render.
+ *
  * @return array<int,array<string,string>>
  */
 function pt_route_saved_rows(string $option): array
 {
-    if (!class_exists(\Carbon_Fields\Helper\Helper::class)) {
-        return [];
-    }
-    $field = \Carbon_Fields\Helper\Helper::get_field_clone(null, 'theme_options', '', $option);
-    if (!$field || !method_exists($field, 'get_value_tree')) {
-        return [];
+    static $cache = [];
+    if (array_key_exists($option, $cache)) {
+        return $cache[$option];
     }
 
-    $read = static function ($node): string {
-        if (is_array($node)) {
-            $first = reset($node);
-            if (is_array($first)) {
-                return is_scalar($first['value'] ?? null) ? (string) $first['value'] : '';
-            }
-            return is_scalar($first) ? (string) $first : '';
-        }
-        return is_scalar($node) ? (string) $node : '';
-    };
-
-    $field->load();
     $rows = [];
-    foreach ((array) $field->get_value_tree() as $row) {
-        if (is_array($row)) {
-            $rows[] = [
-                'from_slug' => $read($row['from_slug'] ?? null),
-                'to_slug' => $read($row['to_slug'] ?? null),
-                'km' => $read($row['km'] ?? null),
-            ];
+    if (class_exists(\Carbon_Fields\Helper\Helper::class)) {
+        $field = \Carbon_Fields\Helper\Helper::get_field_clone(null, 'theme_options', '', $option);
+        if ($field && method_exists($field, 'get_value_tree')) {
+            $read = static function ($node): string {
+                if (is_array($node)) {
+                    $first = reset($node);
+                    if (is_array($first)) {
+                        return is_scalar($first['value'] ?? null) ? (string) $first['value'] : '';
+                    }
+                    return is_scalar($first) ? (string) $first : '';
+                }
+                return is_scalar($node) ? (string) $node : '';
+            };
+
+            $field->load();
+            foreach ((array) $field->get_value_tree() as $row) {
+                if (is_array($row)) {
+                    $rows[] = [
+                        'from_slug' => $read($row['from_slug'] ?? null),
+                        'to_slug' => $read($row['to_slug'] ?? null),
+                        'km' => $read($row['km'] ?? null),
+                    ];
+                }
+            }
         }
     }
 
-    return $rows;
+    if (!$rows && function_exists('carbon_get_theme_option')) {
+        $stored = carbon_get_theme_option($option);
+        if (is_array($stored) && $stored) {
+            $string = static fn ($value): string => is_scalar($value) ? (string) $value : '';
+            foreach ($stored as $row) {
+                if (is_array($row)) {
+                    $rows[] = [
+                        'from_slug' => $string($row['from_slug'] ?? ''),
+                        'to_slug' => $string($row['to_slug'] ?? ''),
+                        'km' => $string($row['km'] ?? ''),
+                    ];
+                }
+            }
+        }
+    }
+
+    return $cache[$option] = $rows;
 }
 
 add_action('carbon_fields_register_fields', function () {
@@ -388,4 +412,17 @@ add_action('carbon_fields_register_fields', function () {
                 ])
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>: <%- km %> км'),
         ]);
+});
+
+// Carbon puts the readable labels only in the select options, so replace the
+// code-based row header on the routes screen with the selected point names.
+add_action('admin_enqueue_scripts', function ($hook) {
+    if ($hook !== 'pt_point_page_pt-routes') {
+        return;
+    }
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'pt_point_page_pt-routes') {
+        return;
+    }
+    wp_enqueue_script('pt-admin-routes', PT_CORE_URL . 'includes/admin-routes.js', [], PT_CORE_VERSION, true);
 });

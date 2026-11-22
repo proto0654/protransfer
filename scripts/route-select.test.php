@@ -42,6 +42,10 @@ namespace {
     }
 
     function add_action(...$args) {}
+    function carbon_get_theme_option($option)
+    {
+        return $GLOBALS['route_theme_options'][$option] ?? [];
+    }
     function pt_point_type_labels(): array
     {
         return [
@@ -118,5 +122,28 @@ namespace {
     $empty = pt_route_point_options([['from_slug' => '', 'to_slug' => 'yalta', 'km' => '5']]);
     expect(array_keys($empty) === ['', 'sev', 'sip', 'yalta', 'sip-air', 'zaoz'], 'An empty slug must not create an orphan option');
 
-    echo "Route point selects: 13 checks passed\n";
+    // Fallback: Carbon's tree API is unavailable, but the plain option still has rows.
+    $GLOBALS['route_field'] = null;
+    $GLOBALS['route_theme_options']['pt_fallback_routes'] = [
+        ['from_slug' => 'sip-air', 'to_slug' => 'yalta', 'km' => 50],
+    ];
+    $fallback = pt_route_saved_rows('pt_fallback_routes');
+    expect($fallback === [
+        ['from_slug' => 'sip-air', 'to_slug' => 'yalta', 'km' => '50'],
+    ], 'An unavailable value tree must fall back to the plain theme option with string fields');
+
+    // Cache: the select callbacks render many times, so read each option once.
+    $GLOBALS['route_field'] = new Route_Field_Stub();
+    $GLOBALS['route_field_tree'] = [
+        ['from_slug' => [['value' => 'sip']], 'to_slug' => [['value' => 'yalta']], 'km' => [['value' => '15']]],
+    ];
+    $cached = pt_route_saved_rows('pt_cache_a');
+    $GLOBALS['route_field_tree'] = [
+        ['from_slug' => [['value' => 'ghost']], 'to_slug' => [['value' => 'sev']], 'km' => [['value' => '99']]],
+    ];
+    expect(pt_route_saved_rows('pt_cache_a') === $cached, 'Repeated reads of one option must use the cached rows');
+    $other = pt_route_saved_rows('pt_cache_b');
+    expect($other !== $cached && $other[0]['from_slug'] === 'ghost', 'Another option must read and cache its own rows');
+
+    echo "Route point selects: 16 checks passed\n";
 }

@@ -368,20 +368,22 @@ add_action('carbon_fields_register_fields', function () {
             Field::make('select', 'pt_popular_tariff', 'Тариф для цен популярных направлений')->add_options($route_tariffs),
             Field::make('complex', 'pt_popular_routes', 'Популярные направления')
                 ->setup_labels(['singular_name' => 'направление', 'plural_name' => 'направления'])
+                ->set_help_text($route_help)
                 ->add_fields([
                     Field::make('select', 'from_slug', 'Откуда')->add_options($route_options('pt_popular_routes'))
-                        ->set_width(50)->set_help_text($route_help),
+                        ->set_width(50),
                     Field::make('select', 'to_slug', 'Куда')->add_options($route_options('pt_popular_routes'))
-                        ->set_width(50)->set_help_text($route_help),
+                        ->set_width(50),
                 ])
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>'),
             Field::make('complex', 'pt_route_overrides', 'Ручные км')
                 ->setup_labels(['singular_name' => 'маршрут', 'plural_name' => 'маршруты'])
+                ->set_help_text($route_help)
                 ->add_fields([
                     Field::make('select', 'from_slug', 'Откуда')->add_options($route_options('pt_route_overrides'))
-                        ->set_width(35)->set_help_text($route_help),
+                        ->set_width(35),
                     Field::make('select', 'to_slug', 'Куда')->add_options($route_options('pt_route_overrides'))
-                        ->set_width(35)->set_help_text($route_help),
+                        ->set_width(35),
                     Field::make('text', 'km', 'км')->set_width(30)->set_attribute('type', 'number'),
                 ])
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>: <%- km %> км'),

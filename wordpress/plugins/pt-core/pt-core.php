@@ -13,7 +13,14 @@ if (!defined('ABSPATH')) {
 
 define('PT_CORE_PATH', plugin_dir_path(__FILE__));
 define('PT_CORE_URL', plugin_dir_url(__FILE__));
-define('PT_CORE_VERSION', '0.1.0');
+/*
+ * Static-asset version for the ?ver query arg, not the product version.
+ * WordPress serves these admin scripts with a long max-age, so a fixed version
+ * kept editors on stale copies after a deploy; the file mtime changes it.
+ */
+$pt_core_mtime = is_readable(__FILE__) ? @filemtime(__FILE__) : false;
+define('PT_CORE_VERSION', '0.1.0' . ($pt_core_mtime ? '.' . $pt_core_mtime : ''));
+unset($pt_core_mtime);
 
 add_action('after_setup_theme', function () {
     if (!class_exists('Carbon_Fields\\Carbon_Fields') && file_exists(PT_CORE_PATH . 'vendor/autoload.php')) {

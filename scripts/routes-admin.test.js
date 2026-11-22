@@ -14,9 +14,18 @@ function helpers() {
 
 test('route field keys come only from Carbon compact row names', () => {
   const { fieldSlug } = helpers()
+  // Real names from the live DOM: Carbon prefixes compact row children with `_`.
+  assert.equal(fieldSlug('carbon_fields_compact_input[_pt_route_overrides][3][_from_slug]'), 'from_slug')
+  assert.equal(fieldSlug('carbon_fields_compact_input[_pt_route_overrides][3][_to_slug]'), 'to_slug')
+  assert.equal(fieldSlug('carbon_fields_compact_input[_pt_route_overrides][3][_km]'), 'km')
+  assert.equal(fieldSlug('carbon_fields_compact_input[_pt_popular_routes][0][_from_slug]'), 'from_slug')
+  assert.equal(fieldSlug('carbon_fields_compact_input[_pt_popular_routes][0][_to_slug]'), 'to_slug')
+  assert.equal(fieldSlug('carbon_fields_compact_input[_pt_popular_routes][0][value]'), '')
+  // Unprefixed variants keep working.
   assert.equal(fieldSlug('carbon_fields_compact_input[_pt_route_overrides][3][from_slug]'), 'from_slug')
   assert.equal(fieldSlug('carbon_fields_compact_input[_pt_route_overrides][3][to_slug]'), 'to_slug')
   assert.equal(fieldSlug('carbon_fields_compact_input[_pt_route_overrides][3][km]'), 'km')
+  assert.equal(fieldSlug('carbon_fields_compact_input[_pt_route_overrides][3][value]'), '')
   assert.equal(fieldSlug('carbon_fields_compact_input[_pt_popular_routes][0][alias]'), '')
   assert.equal(fieldSlug('pt_popular_tariff'), '')
   assert.equal(fieldSlug(''), '')

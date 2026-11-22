@@ -8,7 +8,11 @@
 
   /** Field key from a Carbon compact input name, or '' for unrelated fields. */
   function fieldSlug(name) {
-    const match = /^carbon_fields_compact_input\[[^\]]*\]\[[^\]]*\]\[(from_slug|to_slug|km)\]$/.exec(String(name || ''))
+    // Carbon prefixes the child field names of compact rows with an underscore
+    // (`...[_pt_route_overrides][3][_from_slug]`), so `_?` is required to read
+    // the real DOM; the canonical key returned stays unprefixed. The hidden
+    // row marker `[value]` never matches the allowed slugs.
+    const match = /^carbon_fields_compact_input\[[^\]]*\]\[[^\]]*\]\[_?(from_slug|to_slug|km)\]$/.exec(String(name || ''))
     return match ? match[1] : ''
   }
 

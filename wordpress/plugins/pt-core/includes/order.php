@@ -587,11 +587,47 @@ function pt_notification_channel_ready(string $channel): bool
 }
 
 /**
+ * The client's phone as a MAX contact card: tapping it in the client is the closest thing
+ * to a «Позвонить» button, because MAX only allows http(s) URLs in keyboard buttons and
+ * silently strips `tel:` links from the message text.
+ */
+function pt_max_contact_attachment(WP_Post $order): array
+{
+    $digits = (string) preg_replace('/\D+/', '', (string) get_post_meta($order->ID, 'pt_phone', true));
+    if ($digits === '') {
+        return [];
+    }
+
+    $payload = json_decode((string) get_post_meta($order->ID, 'pt_payload', true), true);
+    $payload = is_array($payload) ? $payload : [];
+    $name = trim((string) ($payload['name'] ?? ''));
+    if ($name === '') {
+        $name = 'Клиент';
+    }
+    $name = str_replace(['\\', ',', ';'], ['\\\\', '\\,', '\\;'], $name);
+
+    return [
+        'type' => 'contact',
+        'payload' => [
+            'name' => $name,
+            'vcf_info' => implode("\r\n", [
+                'BEGIN:VCARD',
+                'VERSION:3.0',
+                'PRODID:ez-vcard 0.10.3',
+                'TEL;TYPE=cell:' . $digits,
+                'FN:' . $name,
+                'END:VCARD',
+            ]),
+        ],
+    ];
+}
+
+/**
  * Sends one order to the MAX group. Returns an empty string on success (or when the
  * channel is not configured yet), or an error text for the «Уведомление» column.
  *
  * MAX rejects non-http(s) button URLs, so there is no call button: the phone travels in
- * the message text and the MAX client makes it tappable.
+ * the message text and, as a MAX contact card, in an attachment.
  */
 function pt_notify_max(WP_Post $order, string $message): string
 {
@@ -601,16 +637,22 @@ function pt_notify_max(WP_Post $order, string $message): string
         return '';
     }
 
+    $body = [
+        'text' => $message,
+        'format' => 'markdown',
+    ];
+    $contact = pt_max_contact_attachment($order);
+    if ($contact) {
+        $body['attachments'] = [$contact];
+    }
+
     $response = wp_remote_post('https://botapi.max.ru/messages?chat_id=' . rawurlencode($chat_id), [
         'timeout' => 15,
         'headers' => [
             'Authorization' => $token,
             'Content-Type' => 'application/json',
         ],
-        'body' => wp_json_encode([
-            'text' => $message,
-            'format' => 'markdown',
-        ]),
+        'body' => wp_json_encode($body),
     ]);
 
     if (is_wp_error($response)) {

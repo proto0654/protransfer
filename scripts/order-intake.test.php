@@ -434,7 +434,10 @@ expect(str_contains($max_text, 'Опции: детское кресло'), 'MAX 
 expect(str_contains($max_text, 'Комментарий: Рейс SU 123'), 'MAX must carry the comment');
 expect(!str_contains($max_text, '&lt;'), 'MAX text must not be HTML-escaped');
 expect(!str_contains($max_text, 'wp-admin'), 'The MAX message must not link to the admin');
-expect(!isset($max_body['attachments']), 'The MAX message must not carry buttons');
+expect(($max_body['attachments'][0]['type'] ?? '') === 'contact', 'MAX must attach the client phone as a contact card');
+expect(str_contains((string) ($max_body['attachments'][0]['payload']['vcf_info'] ?? ''), 'TEL;TYPE=cell:79781234567'), 'The contact card must carry the phone in VCF');
+expect(str_contains((string) ($max_body['attachments'][0]['payload']['vcf_info'] ?? ''), 'FN:Иван'), 'The contact card must carry the customer name');
+expect(($max_body['attachments'][0]['payload']['buttons'] ?? null) === null, 'The contact card must not fake a keyboard button');
 expect(get_post_meta(501, '_pt_notified_at') !== '', 'A delivered MAX notification must be recorded');
 
 /* An unconfigured MAX channel stays silent and stores no error */

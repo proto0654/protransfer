@@ -10,3 +10,6 @@ docs/.vector-index/
 .env
 .env.*
 !.env.example
+
+# kanban project worktrees
+.worktrees/

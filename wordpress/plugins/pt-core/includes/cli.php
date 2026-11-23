@@ -25,7 +25,6 @@ class PT_CLI_Command
         $force = !empty($assoc_args['force']);
         $data = PT_CORE_PATH . 'data/';
 
-        $this->seed_point_types();
         $this->seed_points($this->read_json($data . 'points.json'), $force);
         $this->seed_tariffs($this->read_json($data . 'tariffs.json'), $force);
         $this->seed_routes($this->read_json($data . 'routes.json'), $force);
@@ -161,15 +160,6 @@ class PT_CLI_Command
         return $data;
     }
 
-    private function seed_point_types(): void
-    {
-        foreach (pt_point_type_labels() as $slug => $label) {
-            if (!term_exists($slug, 'pt_point_type')) {
-                wp_insert_term($label, 'pt_point_type', ['slug' => $slug]);
-            }
-        }
-    }
-
     private function upsert_cpt(string $type, string $slug, string $title, int $menu_order = 0): int
     {
         $existing = get_posts([
@@ -250,9 +240,6 @@ class PT_CLI_Command
                 $aliases[] = ['alias' => $alias];
             }
             $this->set_meta($id, 'pt_aliases', $aliases, $force);
-            if (!empty($row['type'])) {
-                wp_set_object_terms($id, $row['type'], 'pt_point_type', false);
-            }
         }
         WP_CLI::log('points: ' . count($rows));
     }

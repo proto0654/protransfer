@@ -50,15 +50,17 @@ function pt_register_types(): void
         register_post_type($type, $args);
     }
 
+    // The point type is legacy data: it stays registered so stored terms keep
+    // resolving, but the editor no longer offers it and the site never sees it.
     register_taxonomy('pt_point_type', 'pt_point', [
         'labels' => [
             'name' => 'Типы точек',
             'singular_name' => 'Тип точки',
         ],
         'public' => false,
-        'show_ui' => true,
+        'show_ui' => false,
         'hierarchical' => false,
-        'show_admin_column' => true,
+        'show_admin_column' => false,
         'rewrite' => false,
     ]);
 }

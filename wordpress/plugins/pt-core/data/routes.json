@@ -52,6 +52,15 @@
     { "from": "dzhankoy", "to": "simferopol", "km": 90 },
     { "from": "dzhankoy", "to": "kerch", "km": 150 },
     { "from": "pyatigorsk", "to": "min-vody-air", "km": 25 },
-    { "from": "kislovodsk", "to": "min-vody-air", "km": 55 }
+    { "from": "kislovodsk", "to": "min-vody-air", "km": 55 },
+    { "from": "kerch-yuzhnaya", "to": "yalta", "km": 300 },
+    { "from": "kerch-yuzhnaya", "to": "simferopol", "km": 200 },
+    { "from": "kerch-yuzhnaya", "to": "sip-air", "km": 235 },
+    { "from": "kerch-yuzhnaya", "to": "sevastopol", "km": 280 },
+    { "from": "kerch-yuzhnaya", "to": "alushta", "km": 235 },
+    { "from": "kerch-yuzhnaya", "to": "sudak", "km": 145 },
+    { "from": "kerch-yuzhnaya", "to": "feodosia", "km": 100 },
+    { "from": "kerch-yuzhnaya", "to": "anapa", "km": 130 },
+    { "from": "kerch-yuzhnaya", "to": "krasnodar", "km": 245 }
   ]
 }

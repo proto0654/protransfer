@@ -52,6 +52,116 @@ function pt_route_overrides_map(): array
     return $map;
 }
 
+/**
+ * Field key that holds a route's own price for one tariff. Tariff slugs are
+ * normalised because a Carbon child field name must not carry hyphens.
+ */
+function pt_route_price_field(string $tariff_slug): string
+{
+    return 'price_' . preg_replace('/[^a-z0-9]+/', '_', strtolower(trim($tariff_slug)));
+}
+
+/**
+ * Per-route prices read from «Маршруты»: «from|to|price_field» => ₽/км, both
+ * directions. A row may set a price without manual kilometres, so this is read
+ * separately from pt_route_overrides_map().
+ *
+ * @return array<string,float>
+ */
+function pt_route_price_map(): array
+{
+    $map = [];
+    if (!function_exists('carbon_get_theme_option')) {
+        return $map;
+    }
+
+    $rows = carbon_get_theme_option('pt_route_overrides') ?: [];
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $from = (string) ($row['from_slug'] ?? '');
+        $to = (string) ($row['to_slug'] ?? '');
+        if ($from === '' || $to === '' || $from === $to) {
+            continue;
+        }
+        foreach ($row as $key => $value) {
+            $key = (string) $key;
+            if (strpos($key, 'price_') !== 0 || !is_numeric($value)) {
+                continue;
+            }
+            $price = (float) $value;
+            if (!is_finite($price) || $price <= 0) {
+                continue;
+            }
+            $map["{$from}|{$to}|{$key}"] = $price;
+            $map["{$to}|{$from}|{$key}"] = $price;
+        }
+    }
+
+    return $map;
+}
+
+/**
+ * Route rows for the public bootstrap: manual kilometres plus own prices keyed
+ * by tariff slug. A row is kept when it carries either value, because a fixed
+ * route price does not need a manual distance.
+ *
+ * @param array<int,string> $tariff_ids Published tariff slugs.
+ * @return array<int,array<string,mixed>>
+ */
+function pt_route_override_payload(array $tariff_ids = []): array
+{
+    if (!function_exists('carbon_get_theme_option')) {
+        return [];
+    }
+
+    $price_ids = [];
+    foreach ($tariff_ids as $tariff_id) {
+        $tariff_id = (string) $tariff_id;
+        if ($tariff_id !== '') {
+            $price_ids[pt_route_price_field($tariff_id)] = $tariff_id;
+        }
+    }
+
+    $rows = [];
+    foreach (carbon_get_theme_option('pt_route_overrides') ?: [] as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $from = (string) ($row['from_slug'] ?? '');
+        $to = (string) ($row['to_slug'] ?? '');
+        if ($from === '' || $to === '') {
+            continue;
+        }
+        $entry = ['from' => $from, 'to' => $to];
+        $km = (float) ($row['km'] ?? 0);
+        if ($km > 0) {
+            $entry['km'] = $km;
+        }
+        $prices = [];
+        foreach ($row as $key => $value) {
+            $key = (string) $key;
+            if (!isset($price_ids[$key]) || !is_numeric($value)) {
+                continue;
+            }
+            $price = (float) $value;
+            if (!is_finite($price) || $price <= 0) {
+                continue;
+            }
+            $prices[$price_ids[$key]] = $price;
+        }
+        if ($prices) {
+            $entry['prices'] = $prices;
+        }
+        if (isset($entry['km']) || $prices) {
+            $rows[] = $entry;
+        }
+    }
+
+    return $rows;
+}
+
 function pt_haversine_km(array $a, array $b): float
 {
     $R = 6371.0;
@@ -122,7 +232,11 @@ function pt_calculate_quote(array $from, array $to, array $tariff, array $option
 
     $on_request = !empty($tariff['on_request']);
     $base = (float) ($tariff['base'] ?? 0);
-    $per_km = (float) ($tariff['per_km'] ?? 0);
+    $tariff_id = (string) ($tariff['id'] ?? '');
+    $tariff_per_km = (float) ($tariff['per_km'] ?? 0);
+    // A route may carry its own ₽/км for this tariff; it wins over the tariff rate.
+    $route_per_km = pt_route_price_map()["{$from_id}|{$to_id}|" . pt_route_price_field($tariff_id)] ?? null;
+    $per_km = $route_per_km ?? $tariff_per_km;
     $min_price = (float) ($tariff['min_price'] ?? 0);
 
     $formula_price = $base + $per_km * (float) $km;
@@ -153,6 +267,8 @@ function pt_calculate_quote(array $from, array $to, array $tariff, array $option
         'on_request' => $on_request,
         'base' => $base,
         'per_km' => $per_km,
+        'tariff_per_km' => $tariff_per_km,
+        'per_km_source' => $route_per_km !== null ? 'route' : 'tariff',
         'min_price' => $min_price,
         'formula_price' => round($before_min, 2),
         'used_min_price' => $used_min,

@@ -154,7 +154,7 @@ function pt_render_calc_debug_page(): void
       <h2>Серверная проверка и настройки</h2>
 
       <p>Серверная проверка использует тарифы и точки. Сайт сначала запрашивает Яндекс или OSRM; чтобы сравнить цену, введите километраж с сайта вручную.</p>
-      <p><a href="<?php echo esc_url(admin_url('edit.php?post_type=pt_tariff&page=pt-calculator')); ?>">Настройки расчёта</a> · <a href="<?php echo esc_url(admin_url('edit.php?post_type=pt_point&page=pt-routes')); ?>">Маршруты и ручные расстояния</a> · <a href="<?php echo esc_url(admin_url('edit.php?post_type=pt_tariff')); ?>">Тарифы</a></p>
+      <p><a href="<?php echo esc_url(admin_url('edit.php?post_type=pt_tariff&page=pt-calculator')); ?>">Настройки расчёта</a> · <a href="<?php echo esc_url(admin_url('edit.php?post_type=pt_point&page=pt-routes')); ?>">Маршруты: км и цены</a> · <a href="<?php echo esc_url(admin_url('edit.php?post_type=pt_tariff')); ?>">Тарифы</a></p>
       <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
       <div style="flex:1 1 420px;min-width:0">
       <form method="post" id="pt-debug-form" data-ajax-url="<?php echo esc_url(admin_url('admin-ajax.php')); ?>" data-nonce="<?php echo esc_attr(wp_create_nonce('pt_calc_debug')); ?>">
@@ -224,6 +224,7 @@ function pt_render_calc_debug_page(): void
                 'Расстояние' => $result['km'] . ' км',
                 'Время (оценка)' => $result['minutes'] . ' мин',
                 'База + ставка × км' => $result['formula_price'] . ' ₽',
+                'Ставка за км' => $result['per_km'] . ' ₽ (' . (($result['per_km_source'] ?? 'tariff') === 'route' ? 'цена маршрута' : 'тариф') . ')',
                 'Минимальная цена' => $result['min_price'] . ' ₽',
                 'После минимума' => $result['after_base_or_min'] . ' ₽',
                 'Туда-обратно' => $result['round_trip'] ? '× ' . $result['round_trip_factor'] : 'Нет',

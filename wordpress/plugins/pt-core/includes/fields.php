@@ -179,6 +179,41 @@ function pt_route_saved_rows(string $option): array
     return $cache[$option] = $rows;
 }
 
+/**
+ * Published tariffs as «price field key => title»: the route rows store one
+ * own ₽/км value per tariff, and the row header script labels those fields.
+ *
+ * @return array<string,string>
+ */
+function pt_route_price_choices(): array
+{
+    static $choices = null;
+    if ($choices !== null) {
+        return $choices;
+    }
+
+    $choices = [];
+    $posts = get_posts([
+        'post_type' => 'pt_tariff',
+        'post_status' => 'publish',
+        'numberposts' => -1,
+        'orderby' => 'menu_order title',
+        'order' => 'ASC',
+    ]);
+    foreach (is_array($posts) ? $posts : [] as $post) {
+        if (!($post instanceof WP_Post) || $post->post_type !== 'pt_tariff' || $post->post_status !== 'publish') {
+            continue;
+        }
+        $slug = (string) $post->post_name;
+        if ($slug === '') {
+            continue;
+        }
+        $choices[pt_route_price_field($slug)] = trim((string) $post->post_title) ?: $slug;
+    }
+
+    return $choices;
+}
+
 add_action('carbon_fields_register_fields', function () {
     if (!class_exists(Container::class)) {
         return;
@@ -385,7 +420,18 @@ add_action('carbon_fields_register_fields', function () {
     $route_options = static function (string $option): callable {
         return static fn (): array => pt_route_point_options(pt_route_saved_rows($option));
     };
-    $route_help = 'Переименование точки не меняет её код, поэтому маршрут продолжит работать. Если изменить код (slug) точки, сохранённые маршруты сломаются. «точка не найдена» — сохранённый код без опубликованной точки.';
+    $route_help = 'Переименование точки не меняет её код, поэтому маршрут продолжит работать. Если изменить код (slug) точки, сохранённые маршруты сломаются. «точка не найдена» — сохранённый код без опубликованной точки. Цена за км на маршруте перекрывает ставку тарифа: пустое поле — цена берётся из тарифа. Км нужны только для маршрутов, которые считаются без карт.';
+
+    // One own-price field per published tariff: the client asked for a price
+    // per route and per tariff, so the tariff list drives these fields.
+    $route_price_fields = [];
+    foreach (pt_route_price_choices() as $key => $title) {
+        $route_price_fields[] = Field::make('text', $key, '₽/км — ' . $title)
+            ->set_attribute('type', 'number')
+            ->set_attribute('min', '0')
+            ->set_attribute('step', 'any')
+            ->set_width(25);
+    }
 
     Container::make('theme_options', 'Маршруты')
         ->set_page_parent('edit.php?post_type=pt_point')
@@ -402,16 +448,16 @@ add_action('carbon_fields_register_fields', function () {
                         ->set_width(50),
                 ])
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>'),
-            Field::make('complex', 'pt_route_overrides', 'Ручные км')
+            Field::make('complex', 'pt_route_overrides', 'Км и цены маршрутов')
                 ->setup_labels(['singular_name' => 'маршрут', 'plural_name' => 'маршруты'])
                 ->set_help_text($route_help)
-                ->add_fields([
+                ->add_fields(array_merge([
                     Field::make('select', 'from_slug', 'Откуда')->add_options($route_options('pt_route_overrides'))
                         ->set_width(35),
                     Field::make('select', 'to_slug', 'Куда')->add_options($route_options('pt_route_overrides'))
                         ->set_width(35),
                     Field::make('text', 'km', 'км')->set_width(30)->set_attribute('type', 'number'),
-                ])
+                ], $route_price_fields))
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>: <%- km %> км'),
         ]);
 });
@@ -427,4 +473,6 @@ add_action('admin_enqueue_scripts', function ($hook) {
         return;
     }
     wp_enqueue_script('pt-admin-routes', PT_CORE_URL . 'includes/admin-routes.js', [], PT_CORE_VERSION, true);
+    // Tariff titles for the row headers: «Ялта → Симферополь: 50 км · Эконом 24 ₽/км».
+    wp_localize_script('pt-admin-routes', 'ptAdminRoutes', ['prices' => pt_route_price_choices()]);
 });

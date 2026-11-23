@@ -373,11 +373,16 @@ class PT_CLI_Command
         }
         $overrides = [];
         foreach ($data['overrides'] ?? [] as $row) {
-            $overrides[] = [
-                'from_slug' => $row['from'],
-                'to_slug' => $row['to'],
-                'km' => (string) $row['km'],
+            $override = [
+                'from_slug' => (string) ($row['from'] ?? ''),
+                'to_slug' => (string) ($row['to'] ?? ''),
+                'km' => (string) ($row['km'] ?? ''),
             ];
+            // Optional own ₽/км per tariff: «prices» => ['comfort' => 40].
+            foreach ($row['prices'] ?? [] as $tariff_slug => $price) {
+                $override[pt_route_price_field((string) $tariff_slug)] = (string) $price;
+            }
+            $overrides[] = $override;
         }
         $this->set_theme('pt_popular_routes', $popular, $force);
         $this->set_theme('pt_route_overrides', $overrides, $force);

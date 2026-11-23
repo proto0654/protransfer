@@ -16,8 +16,28 @@ export function routeKey(a, b) {
 export function buildOverrides(list) {
   const map = {}
   for (const item of list) {
-    map[`${item.from}|${item.to}`] = item.km
-    map[`${item.to}|${item.from}`] = item.km
+    const km = Number(item.km)
+    if (!Number.isFinite(km) || km <= 0) continue
+    map[`${item.from}|${item.to}`] = km
+    map[`${item.to}|${item.from}`] = km
+  }
+  return map
+}
+
+/**
+ * Per-route prices from «Маршруты»: «from|to|tariff» => ₽/км, both directions.
+ * The bootstrap payload keys prices by tariff slug.
+ */
+export function buildRoutePrices(list) {
+  const map = {}
+  for (const item of list) {
+    const prices = item.prices || {}
+    for (const [tariffId, raw] of Object.entries(prices)) {
+      const price = Number(raw)
+      if (!Number.isFinite(price) || price <= 0) continue
+      map[`${item.from}|${item.to}|${tariffId}`] = price
+      map[`${item.to}|${item.from}|${tariffId}`] = price
+    }
   }
   return map
 }
@@ -65,14 +85,19 @@ export function roundPrice(value, settings = defaults) {
 
 export function priceBreakdown(tariff, km, options, settings = defaults) {
   if (!tariff || !Number.isFinite(km) || km <= 0) return null
-  const formula = Number(tariff.base) + Number(tariff.perKm) * km
+  // A route may carry its own ₽/км for this tariff; it replaces the tariff rate
+  // while the base, minimum and surcharges stay as configured.
+  const override = Number(options.perKm)
+  const usesRoutePrice = Number.isFinite(override) && override > 0
+  const perKm = usesRoutePrice ? override : Number(tariff.perKm)
+  const formula = Number(tariff.base) + perKm * km
   const minimum = Number(tariff.minPrice)
   const basePrice = Math.max(minimum, formula)
   const multiplier = options.roundTrip ? settings.round_trip_factor : 1
   const extraStop = options.extraStop ? settings.extra_stop_price : 0
   const childSeat = options.childSeat ? settings.child_seat_price : 0
   const beforeRounding = basePrice * multiplier + extraStop + childSeat
-  return { km, formula, minimum, basePrice, multiplier, extraStop, childSeat, beforeRounding,
+  return { km, perKm, perKmSource: usesRoutePrice ? 'route' : 'tariff', formula, minimum, basePrice, multiplier, extraStop, childSeat, beforeRounding,
     roundStep: settings.price_round, onRequest: Boolean(tariff.onRequest),
     total: tariff.onRequest ? null : roundPrice(beforeRounding, settings) }
 }

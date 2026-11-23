@@ -261,10 +261,12 @@ require PT_CORE_PATH . 'includes/order.php';
 
 function expect($condition, string $message): void
 {
+    static $checks = 0;
     if (!$condition) {
         fwrite(STDERR, $message . "\n");
         exit(1);
     }
+    $GLOBALS['pt_checks'] = ++$checks;
 }
 
 function order_input(array $overrides = []): array
@@ -398,6 +400,60 @@ expect(str_contains($text, '2 500 ₽'), 'The stored price must be formatted in 
 expect(get_post_meta(500, '_pt_notified_at') !== '', 'A delivered notification must be recorded');
 expect(get_post_meta(500, '_pt_notify_error') === '', 'A delivered notification must not store an error');
 
+/* MAX channel: the whole order as markdown, phone only, no admin link and no buttons */
+$http_calls = [];
+$carbon[900]['pt_max_bot_token'] = 'maxtoken';
+$carbon[900]['pt_max_chat_id'] = '-19000000000001';
+$posts[501] = new WP_Post(501, 'Новая заявка', 'pt_order', 'publish');
+$meta[501] = [
+    'pt_phone' => '79781234567',
+    'pt_from' => 'Аэропорт',
+    'pt_to' => 'Ялта',
+    'pt_tariff' => 'Комфорт',
+    'pt_price' => '2500',
+    'pt_when' => '2026-06-16 10:00',
+    'pt_payload' => json_encode(['name' => 'Иван', 'passengers' => 2, 'comment' => 'Рейс SU 123', 'child_seat' => true], JSON_UNESCAPED_UNICODE),
+];
+$filters['pt_order_notification_channels'] = static fn () => ['max'];
+$http_response = ['response' => ['code' => 200], 'body' => '{"message":{"body":{"mid":"mid.1","seq":1,"text":"ok"},"timestamp":1795474270238}}'];
+pt_notify_new_order($posts[501]);
+expect(count($http_calls) === 1, 'The MAX channel must send exactly one request');
+expect($http_calls[0]['url'] === 'https://botapi.max.ru/messages?chat_id=-19000000000001', 'The MAX URL must carry the group id');
+expect(($http_calls[0]['args']['headers']['Authorization'] ?? '') === 'maxtoken', 'MAX must authenticate with the bot token header');
+$max_body = json_decode((string) $http_calls[0]['args']['body'], true);
+expect(($max_body['format'] ?? '') === 'markdown', 'MAX must use markdown formatting');
+$max_text = (string) ($max_body['text'] ?? '');
+expect(str_starts_with($max_text, '**Новая заявка'), 'The MAX title must be bold');
+expect(str_contains($max_text, 'Маршрут: Аэропорт → Ялта'), 'MAX must carry the route');
+expect(str_contains($max_text, 'Тариф: Комфорт'), 'MAX must carry the tariff');
+expect(str_contains($max_text, 'Пассажиров: 2'), 'MAX must carry the passenger count');
+expect(str_contains($max_text, 'Итого: 2 500 ₽'), 'MAX must carry the price');
+expect(str_contains($max_text, 'Имя: Иван'), 'MAX must carry the customer name');
+expect(str_contains($max_text, 'Телефон: +7 (978) 123-45-67'), 'MAX must carry the phone for a call');
+expect(str_contains($max_text, 'Опции: детское кресло'), 'MAX must carry the options');
+expect(str_contains($max_text, 'Комментарий: Рейс SU 123'), 'MAX must carry the comment');
+expect(!str_contains($max_text, '&lt;'), 'MAX text must not be HTML-escaped');
+expect(!str_contains($max_text, 'wp-admin'), 'The MAX message must not link to the admin');
+expect(!isset($max_body['attachments']), 'The MAX message must not carry buttons');
+expect(get_post_meta(501, '_pt_notified_at') !== '', 'A delivered MAX notification must be recorded');
+
+/* An unconfigured MAX channel stays silent and stores no error */
+unset($carbon[900]['pt_max_bot_token'], $carbon[900]['pt_max_chat_id']);
+$http_calls = [];
+pt_notify_new_order($posts[501]);
+expect(count($http_calls) === 0, 'An unconfigured MAX channel must not send anything');
+expect(get_post_meta(501, '_pt_notify_error') === '', 'An unconfigured MAX channel must not store an error');
+
+/* MAX API failures are stored like Telegram ones */
+$carbon[900]['pt_max_bot_token'] = 'maxtoken';
+$carbon[900]['pt_max_chat_id'] = '-19000000000001';
+$http_response = ['response' => ['code' => 401], 'body' => '{"code":"verify.token","message":"Invalid access_token"}'];
+pt_notify_new_order($posts[501]);
+expect(str_contains((string) get_post_meta(501, '_pt_notify_error'), 'Invalid access_token'), 'MAX API errors must be stored');
+
+unset($carbon[900]['pt_max_bot_token'], $carbon[900]['pt_max_chat_id'], $filters['pt_order_notification_channels']);
+$http_response = ['response' => ['code' => 200], 'body' => '{"ok":true}'];
+
 /* Notification failures keep the order */
 $http_response = new WP_Error('http_request_failed', 'Таймаут соединения');
 pt_notify_new_order($posts[500]);
@@ -416,4 +472,24 @@ expect(count($http_calls) === 0, 'Disabled notifications must not call Telegram'
 expect(get_post_meta(500, '_pt_notify_skipped') === '1', 'Disabled notifications must be recorded');
 unset($filters['pt_order_notify_enabled']);
 
-echo "Order intake: 49 checks passed\n";
+/* A real order carries the whole calculator input and its calculation */
+reset_order_state('203.0.113.16');
+$carbon[900]['pt_max_bot_token'] = 'maxtoken';
+$carbon[900]['pt_max_chat_id'] = '-19000000000001';
+$http_response = ['response' => ['code' => 200], 'body' => '{"message":{"body":{"mid":"mid.2"}}}'];
+$filters['pt_order_notification_channels'] = static fn () => ['max'];
+$created = pt_create_order(order_input(['child_seat' => true]));
+expect(is_array($created), 'The order must be created before the notification check');
+$max_body = json_decode((string) $http_calls[0]['args']['body'], true);
+$max_text = (string) ($max_body['text'] ?? '');
+expect(str_contains($max_text, 'Тариф: Комфорт — 1 000 ₽ база + 30 ₽/км'), 'MAX must carry the tariff with its price row');
+expect(str_contains($max_text, 'Километраж: 50 км (ручные км маршрута)'), 'MAX must carry the distance and where it came from');
+expect(str_contains($max_text, 'Расчёт по тарифу: 1 000 ₽ + 50 км × 30 ₽/км = 2 500 ₽'), 'MAX must carry the price formula');
+expect(str_contains($max_text, 'Итого: 2 500 ₽'), 'MAX must carry the calculated total');
+expect(str_contains($max_text, 'Пассажиров: 2'), 'MAX must carry the passenger count of the real order');
+expect(str_contains($max_text, 'детское кресло'), 'MAX must carry the chosen options');
+expect(str_contains($max_text, 'Дата и время: 16.06.2026 10:00'), 'The trip time must be rendered in Russian format');
+expect(!str_contains($max_text, '(0 ₽)'), 'Options without a surcharge must not show a price');
+unset($carbon[900]['pt_max_bot_token'], $carbon[900]['pt_max_chat_id'], $filters['pt_order_notification_channels']);
+
+echo 'Order intake: ' . (int) ($GLOBALS['pt_checks'] ?? 0) . " checks passed\n";

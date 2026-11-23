@@ -327,6 +327,21 @@ function pt_create_order(array $input): array|WP_Error
     update_post_meta($post_id, 'pt_payload', (string) wp_json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     update_post_meta($post_id, 'pt_status', 'new');
     update_post_meta($post_id, '_pt_km_source', (string) $quote['km_source']);
+    update_post_meta($post_id, '_pt_quote', (string) wp_json_encode([
+        'km' => $quote['km'],
+        'km_source' => $quote['km_source'],
+        'raw_km' => $quote['raw_km'],
+        'minutes' => $quote['minutes'],
+        'base' => $quote['base'],
+        'per_km' => $quote['per_km'],
+        'min_price' => $quote['min_price'],
+        'formula_price' => $quote['formula_price'],
+        'used_min_price' => $quote['used_min_price'],
+        'round_trip_factor' => $quote['round_trip_factor'],
+        'extra_stop_price' => $quote['extra_stop_price'],
+        'child_seat_price' => $quote['child_seat_price'],
+        'total' => $quote['total'],
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     if ($quote['km'] !== null) {
         update_post_meta($post_id, '_pt_distance_km', (string) $quote['km']);
     }
@@ -359,7 +374,7 @@ function pt_notify_new_order(WP_Post $order): void
         return;
     }
 
-    $channels = apply_filters('pt_order_notification_channels', ['telegram']);
+    $channels = apply_filters('pt_order_notification_channels', ['telegram', 'max']);
     if (!is_array($channels)) {
         $channels = [];
     }
@@ -370,8 +385,18 @@ function pt_notify_new_order(WP_Post $order): void
 
     foreach (array_unique($channels) as $channel) {
         $channel = (string) $channel;
+        if (!pt_notification_channel_ready($channel)) {
+            continue;
+        }
         if ($channel === 'telegram') {
             $error = pt_notify_telegram($order, $message);
+            if ($error !== '') {
+                $errors[] = $error;
+            } else {
+                $notified = true;
+            }
+        } elseif ($channel === 'max') {
+            $error = pt_notify_max($order, pt_order_notification_markdown($order));
             if ($error !== '') {
                 $errors[] = $error;
             } else {
@@ -393,43 +418,220 @@ function pt_notify_new_order(WP_Post $order): void
     }
 }
 
-function pt_order_notification_message(WP_Post $order): string
+/**
+ * Notification content shared by every channel: a title plus label/value rows.
+ *
+ * Values are raw (already sanitised when the order was stored); each channel renders
+ * and escapes them for its own markup.
+ */
+function pt_order_notification_rows(WP_Post $order): array
 {
     $payload = json_decode((string) get_post_meta($order->ID, 'pt_payload', true), true);
     $payload = is_array($payload) ? $payload : [];
 
+    $quote_raw = (string) get_post_meta($order->ID, '_pt_quote', true);
+    $quote = json_decode($quote_raw, true);
+    $quote = is_array($quote) ? $quote : [];
+
     $price = (string) get_post_meta($order->ID, 'pt_price', true);
-    $price_label = is_numeric($price) ? number_format((float) $price, 0, '', ' ') . ' ₽' : $price;
+    $price_label = is_numeric($price) ? pt_order_money((float) $price) : $price;
+
+    $km = isset($quote['km']) && is_numeric($quote['km']) ? (float) $quote['km'] : null;
+    $base = isset($quote['base']) && is_numeric($quote['base']) ? (float) $quote['base'] : null;
+    $per_km = isset($quote['per_km']) && is_numeric($quote['per_km']) ? (float) $quote['per_km'] : null;
+    $min_price = isset($quote['min_price']) && is_numeric($quote['min_price']) ? (float) $quote['min_price'] : 0.0;
+    $km_sources = [
+        'manual' => 'километры клиента',
+        'override' => 'ручные км маршрута',
+        'haversine' => 'оценка по координатам',
+    ];
+
+    $tariff = (string) get_post_meta($order->ID, 'pt_tariff', true);
+    if ($base !== null && $per_km !== null && $per_km > 0) {
+        $tariff .= ' — ' . pt_order_money($base) . ' база + ' . pt_order_money($per_km) . '/км';
+    }
 
     $options = [];
     if (!empty($payload['round_trip'])) {
-        $options[] = 'туда и обратно';
+        $factor = isset($quote['round_trip_factor']) && is_numeric($quote['round_trip_factor']) ? (float) $quote['round_trip_factor'] : null;
+        $options[] = 'туда и обратно' . ($factor !== null ? ' (×' . rtrim(rtrim(number_format($factor, 2, ',', ''), '0'), ',') . ')' : '');
     }
     if (!empty($payload['extra_stop'])) {
-        $options[] = 'дополнительная остановка';
+        $extra = isset($quote['extra_stop_price']) && is_numeric($quote['extra_stop_price']) ? (float) $quote['extra_stop_price'] : 0.0;
+        $options[] = 'дополнительная остановка' . ($extra > 0 ? ' (' . pt_order_money($extra) . ')' : '');
     }
     if (!empty($payload['child_seat'])) {
-        $options[] = 'детское кресло';
+        $seat = isset($quote['child_seat_price']) && is_numeric($quote['child_seat_price']) ? (float) $quote['child_seat_price'] : 0.0;
+        $options[] = 'детское кресло' . ($seat > 0 ? ' (' . pt_order_money($seat) . ')' : '');
     }
 
-    $lines = [
-        '<b>Новая заявка ' . esc_html(pt_order_number($order->ID)) . '</b>',
-        'Маршрут: ' . esc_html((string) get_post_meta($order->ID, 'pt_from', true)) . ' → ' . esc_html((string) get_post_meta($order->ID, 'pt_to', true)),
-        'Дата и время: ' . esc_html((string) get_post_meta($order->ID, 'pt_when', true)),
-        'Тариф: ' . esc_html((string) get_post_meta($order->ID, 'pt_tariff', true)),
-        'Пассажиров: ' . esc_html((string) ($payload['passengers'] ?? '')),
-        'Стоимость: ' . esc_html($price_label),
-        'Имя: ' . esc_html((string) ($payload['name'] ?? '')),
-        'Телефон: ' . esc_html(pt_format_phone((string) get_post_meta($order->ID, 'pt_phone', true))),
-    ];
-    if ($options) {
-        $lines[] = 'Опции: ' . esc_html(implode(', ', $options));
+    $when = (string) get_post_meta($order->ID, 'pt_when', true);
+    $when_ts = strtotime($when);
+    if ($when_ts) {
+        $when = date('d.m.Y H:i', $when_ts);
     }
+
+    $rows = [
+        ['Маршрут', (string) get_post_meta($order->ID, 'pt_from', true) . ' → ' . (string) get_post_meta($order->ID, 'pt_to', true)],
+        ['Дата и время', $when],
+        ['Тариф', $tariff],
+    ];
+
+    if ($km !== null) {
+        $source = $km_sources[(string) ($quote['km_source'] ?? '')] ?? '';
+        $rows[] = ['Километраж', trim(rtrim(rtrim(number_format($km, 1, ',', ''), '0'), ',') . ' км' . ($source !== '' ? ' (' . $source . ')' : ''))];
+    }
+    if (isset($quote['minutes']) && is_numeric($quote['minutes']) && (int) $quote['minutes'] > 0) {
+        $minutes = (int) $quote['minutes'];
+        $rows[] = ['В пути', $minutes >= 60 ? '~' . intdiv($minutes, 60) . ' ч ' . ($minutes % 60) . ' мин' : '~' . $minutes . ' мин'];
+    }
+
+    $rows[] = ['Пассажиров', (string) ($payload['passengers'] ?? '')];
+
+    if ($km !== null && $base !== null && $per_km !== null && $per_km > 0) {
+        $formula = pt_order_money($base) . ' + ' . rtrim(rtrim(number_format($km, 1, ',', ''), '0'), ',') . ' км × ' . pt_order_money($per_km) . '/км';
+        $formula_total = $base + $per_km * $km;
+        if (!empty($quote['used_min_price'])) {
+            $formula .= ' = ' . pt_order_money($formula_total) . ', но не меньше ' . pt_order_money($min_price);
+        } else {
+            $formula .= ' = ' . pt_order_money($formula_total);
+        }
+        $rows[] = ['Расчёт по тарифу', $formula];
+    }
+
+    $rows[] = ['Итого', $price_label];
+    if ($options) {
+        $rows[] = ['Опции', implode(', ', $options)];
+    }
+    $rows[] = ['Имя', (string) ($payload['name'] ?? '')];
+    $rows[] = ['Телефон', pt_format_phone((string) get_post_meta($order->ID, 'pt_phone', true))];
     if (trim((string) ($payload['comment'] ?? '')) !== '') {
-        $lines[] = 'Комментарий: ' . esc_html((string) $payload['comment']);
+        $rows[] = ['Комментарий', (string) $payload['comment']];
+    }
+    if (function_exists('get_post_time') && $order instanceof WP_Post) {
+        $created = get_post_time('d.m.Y H:i', false, $order);
+        if (is_string($created) && $created !== '') {
+            $rows[] = ['Заявка создана', $created];
+        }
+    }
+
+    return [
+        'title' => 'Новая заявка ' . pt_order_number($order->ID),
+        'rows' => $rows,
+    ];
+}
+
+/**
+ * Money label used in the notification text: «2 500 ₽».
+ */
+function pt_order_money(float $value): string
+{
+    return number_format($value, 0, '', ' ') . ' ₽';
+}
+
+function pt_order_notification_message(WP_Post $order): string
+{
+    $data = pt_order_notification_rows($order);
+    $lines = ['<b>' . esc_html($data['title']) . '</b>'];
+    foreach ($data['rows'] as [$label, $value]) {
+        $lines[] = $label . ': ' . esc_html($value);
     }
 
     return implode("\n", $lines);
+}
+
+/**
+ * The same order as MAX markdown: bold title, plain label rows, no HTML entities.
+ */
+function pt_order_notification_markdown(WP_Post $order): string
+{
+    $data = pt_order_notification_rows($order);
+    $lines = ['**' . pt_max_markdown_text($data['title']) . '**'];
+    foreach ($data['rows'] as [$label, $value]) {
+        $lines[] = $label . ': ' . pt_max_markdown_text($value);
+    }
+
+    return implode("\n", $lines);
+}
+
+/**
+ * Escapes the markdown characters MAX understands so user text stays literal.
+ */
+function pt_max_markdown_text(string $value): string
+{
+    return (string) preg_replace('/([\\\\*_`\[\]])/', '\\\\$1', $value);
+}
+
+/**
+ * MAX is an optional channel: the token and the group id come from the site settings.
+ */
+function pt_max_channel_configured(): bool
+{
+    return pt_order_setting('pt_max_bot_token') !== '' && pt_order_setting('pt_max_chat_id') !== '';
+}
+
+/**
+ * An empty credential pair means the channel is simply off, not broken: the dispatcher
+ * skips it instead of writing a false «Ошибка» into the order.
+ */
+function pt_notification_channel_ready(string $channel): bool
+{
+    if ($channel === 'telegram') {
+        return pt_order_setting('pt_tg_bot_token') !== '' && pt_order_setting('pt_tg_chat_id') !== '';
+    }
+    if ($channel === 'max') {
+        return pt_max_channel_configured();
+    }
+
+    return true;
+}
+
+/**
+ * Sends one order to the MAX group. Returns an empty string on success (or when the
+ * channel is not configured yet), or an error text for the «Уведомление» column.
+ *
+ * MAX rejects non-http(s) button URLs, so there is no call button: the phone travels in
+ * the message text and the MAX client makes it tappable.
+ */
+function pt_notify_max(WP_Post $order, string $message): string
+{
+    $token = pt_order_setting('pt_max_bot_token');
+    $chat_id = pt_order_setting('pt_max_chat_id');
+    if ($token === '' || $chat_id === '') {
+        return '';
+    }
+
+    $response = wp_remote_post('https://botapi.max.ru/messages?chat_id=' . rawurlencode($chat_id), [
+        'timeout' => 15,
+        'headers' => [
+            'Authorization' => $token,
+            'Content-Type' => 'application/json',
+        ],
+        'body' => wp_json_encode([
+            'text' => $message,
+            'format' => 'markdown',
+        ]),
+    ]);
+
+    if (is_wp_error($response)) {
+        return 'MAX: ' . $response->get_error_message();
+    }
+
+    $code = (int) wp_remote_retrieve_response_code($response);
+    $body = json_decode((string) wp_remote_retrieve_body($response), true);
+    if ($code < 200 || $code >= 300 || empty($body['message'])) {
+        $description = 'HTTP ' . $code;
+        if (is_array($body)) {
+            if (!empty($body['message']) && is_string($body['message'])) {
+                $description = (string) $body['message'];
+            } elseif (!empty($body['code'])) {
+                $description = (string) $body['code'];
+            }
+        }
+        return 'MAX: ' . $description;
+    }
+
+    return '';
 }
 
 /**

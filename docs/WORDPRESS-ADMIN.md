@@ -36,7 +36,7 @@ Only published points, tariffs, FAQs and reviews are read into the public data. 
 
 Open the single existing record «Настройки сайта». Its «Контакты и контент» box contains the brand, tagline, display phone, phone link, WhatsApp, Telegram, MAX, email, address, hours, Yandex Maps key, review rating and review count. The display phone and «Телефон (ссылка)» are separate fields: update both when the number changes. The map key field is «Ключ API Яндекс Карт», and the MAX field is «Ссылка MAX». WhatsApp is used as a number in a `wa.me` link; Telegram is a handle, and MAX is a URL. Check each link on the site after editing.
 
-The same box contains the two order-notification fields «Telegram: токен бота» and «Telegram: chat id». They are used by «Заявки»; see the notification instructions in that section. Leave them empty to keep orders in WordPress without Telegram delivery.
+The same box contains the four order-notification fields: «Telegram: токен бота», «Telegram: chat id», «MAX: токен бота» and «MAX: chat id группы». They are used by «Заявки»; see the notification instructions in that section. Leave a pair empty to keep orders in WordPress without delivery to that channel.
 
 The same box holds repeatable «Статистика», «Преимущества», «Шаги», «Услуги» and «Оплата» rows. Their text and order feed the corresponding homepage lists. Icon fields contain icon identifiers used by the existing site icon set, not arbitrary image uploads; keep an existing working identifier when changing only text.
 
@@ -147,11 +147,18 @@ Statuses are «Новая», «Подтверждена», «Выполнена�
 
 ### Notification settings and failures
 
-Enter both fields in «Общие данные» → «Настройки сайта» → «Контакты и контент»:
+Enter the credentials in «Общие данные» → «Настройки сайта» → «Контакты и контент»:
 - «Telegram: токен бота» — the token from Telegram's BotFather;
 - «Telegram: chat id» — the personal, group or channel chat identifier (group IDs are usually negative). Add the bot to that chat first.
+- «MAX: токен бота» — the token the MAX business bot gives you at `https://max.ru/business_bot` (MAX requires the bot to be registered to a company or self-employed account);
+- «MAX: chat id группы» — the group identifier, usually negative, e.g. `-19000000000001`. Add the bot to that group first.
 
-When both fields are filled, each new order sends one HTML message to `https://api.telegram.org/bot<token>/sendMessage` with the order number, route, date/time, tariff, passengers, price, name, phone, options and comment. Values are escaped before sending. A missing setting or a Telegram/network error never deletes the order: the «Уведомление» column shows «Ошибка: …», and the full text is stored with the order. Check the column after a test booking.
+Each filled pair turns its channel on; an empty pair keeps it silent without recording an error. Every new order then goes to both channels with the same content — order number, route, date/time, tariff, passengers, price, name, phone, options and comment:
+
+- Telegram gets an HTML message at `https://api.telegram.org/bot<token>/sendMessage`, values escaped, `parse_mode=HTML`;
+- MAX gets a markdown message at `https://botapi.max.ru/messages?chat_id=<id>` with the token in the `Authorization` header and `format=markdown`.
+
+The MAX message carries no buttons and no link to the order: MAX rejects non-http(s) button URLs, so a `tel:` «Позвонить» button is impossible, and the business decision is phone-only — the number sits on its own «Телефон» line and the MAX client makes it tappable. A missing setting or a network/broker error never deletes the order: the «Уведомление» column shows «Ошибка: …» with the channel name (`Telegram:` or `MAX:`), and the full text is stored with the order. Check the column after a test booking.
 
 When Telegram fails:
 1. Open the order and read the «Уведомление» error. «chat not found» or «bot was blocked» usually means a wrong «Telegram: chat id» or that the bot is not a member of the chat.
@@ -159,7 +166,12 @@ When Telegram fails:
 3. Contact the customer from the stored phone even if the notification failed. Never rely on the «Уведомление» column alone: an order with no notification settings is still a real order.
 4. Staging deliberately suppresses notifications even when the fields are filled; see [staging operations](WORDPRESS-STAGING.md).
 
-Do not add a second external service for notifications without an approved business decision. The code dispatches to channels through a filter so a future MAX channel can be added, but only Telegram is implemented today.
+When MAX fails:
+1. Read the «Уведомление» error after «MAX:». `verify.token` or `Invalid access_token` means the token is wrong or was reissued in the MAX business bot; `chat not found` (HTTP 404) means the bot is not a member of that group or the id is wrong.
+2. Fix the field in «Контакты и контент», save, and make another test booking. There is no retry button for an already stored order.
+3. Check the bot is still in the group: the MAX group admin can remove it, and the bot then loses the right to post.
+
+MAX is an approved notification channel: the client asked for leads in a closed MAX group and registered the bot himself, so the code sends to both Telegram and MAX. Do not add a third external service without an approved business decision — the channels go through the `pt_order_notification_channels` filter and each one is a separate `pt_notify_<channel>()` function.
 
 ## Common checks and escalation
 

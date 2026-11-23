@@ -8,6 +8,6 @@ Landing copy defaults and editor labels are shared in `wordpress/plugins/pt-core
 
 Staging owns CMS records and uploaded media. Local Vite proxies its API/media paths; a push to the configured main-branch paths builds and publishes through GitHub Actions/SSH. Routine deployments back up the current database and code, preserve editor data, and do not rerun seed. See the deployment domain document for access locations and rollback.
 
-The booking form now creates real orders: the public form posts to `POST /wp-json/pt/v1/order`, and WordPress validates the request, recalculates the price on the server, stores a `pt_order` record and sends a Telegram notification when the bot settings are filled. A static/browser-only build without a backend keeps the localStorage draft and messenger handoff as a fallback. Landing-copy save-and-render and order creation were verified on the stand; a field-by-field acceptance across every editor screen is still incomplete.
+The booking form now creates real orders: the public form posts to `POST /wp-json/pt/v1/order`, and WordPress validates the request, recalculates the price on the server, stores a `pt_order` record and sends a Telegram and MAX notification when the matching bot settings are filled. A static/browser-only build without a backend keeps the localStorage draft and messenger handoff as a fallback. Landing-copy save-and-render and order creation were verified on the stand; a field-by-field acceptance across every editor screen is still incomplete.
 
 Documentation index: [README.md](README.md).

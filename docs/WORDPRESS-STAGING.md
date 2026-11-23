@@ -87,13 +87,13 @@ The installed WP-CLI needs `--no-tablespaces=true` when exporting with `--column
 
 ## Order notifications on staging
 
-`wordpress/mu-plugins/pt-staging.php` registers `pt_order_notify_enabled` and returns the value of the `pt_tg_notify_staging` option, so notifications are off on the stand by default: no Telegram request leaves staging even when the bot token and chat id are filled in «Контакты и контент». Orders are still validated, priced and stored; the attempt is recorded as skipped and the «Уведомление» column stays empty.
+`wordpress/mu-plugins/pt-staging.php` registers `pt_order_notify_enabled` and returns the value of the `pt_tg_notify_staging` option, so notifications are off on the stand by default: no Telegram or MAX request leaves staging even when the bot credentials are filled in «Контакты и контент». The option name is historical (it gates every channel, not just Telegram). Orders are still validated, priced and stored; the attempt is recorded as skipped and the «Уведомление» column stays empty.
 
 Safe testing:
-- use a dedicated test bot and a private test chat, never the real business chat;
-- fill «Telegram: токен бота» and «Telegram: chat id» on the stand, then run `wp option update pt_tg_notify_staging 1`;
+- use a dedicated test bot and a private test chat/group, never the real business chat;
+- fill the channel fields on the stand («Telegram: токен бота» + «Telegram: chat id» and/or «MAX: токен бота» + «MAX: chat id группы»), then run `wp option update pt_tg_notify_staging 1`;
 - submit a test booking and check the chat plus the order's «Уведомление» column;
-- run `wp option update pt_tg_notify_staging 0` afterwards to return the stand to silent mode. Do not put production Telegram credentials into staging or Git.
+- run `wp option update pt_tg_notify_staging 0` afterwards to return the stand to silent mode. Do not put production Telegram or MAX credentials into staging or Git.
 
 Expected failures such as a missing token or a wrong chat id appear in the order's notification meta and in the «Уведомление» column. The order itself is never rolled back by a failed notification.
 

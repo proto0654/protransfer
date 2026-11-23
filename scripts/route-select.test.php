@@ -23,11 +23,6 @@ namespace {
         ) {}
     }
 
-    class WP_Term
-    {
-        public function __construct(public string $slug, public string $name) {}
-    }
-
     class Route_Field_Stub
     {
         public function load(): void
@@ -46,23 +41,9 @@ namespace {
     {
         return $GLOBALS['route_theme_options'][$option] ?? [];
     }
-    function pt_point_type_labels(): array
-    {
-        return [
-            'city' => 'Город',
-            'resort' => 'Курорт или посёлок',
-            'airport' => 'Аэропорт',
-            'rail' => 'Железнодорожный вокзал',
-            'port' => 'Морской порт',
-        ];
-    }
     function get_posts(array $args): array
     {
         return $GLOBALS['route_points'] ?? [];
-    }
-    function wp_get_post_terms(int $id, string $taxonomy): array
-    {
-        return isset($GLOBALS['route_point_terms'][$id]) ? [$GLOBALS['route_point_terms'][$id]] : [];
     }
 
     require dirname(__DIR__) . '/wordpress/plugins/pt-core/includes/fields.php';
@@ -83,18 +64,11 @@ namespace {
         new WP_Post(5, 'Черновик', 'pt_point', 'draft', 'draft-point'),
         new WP_Post(6, 'Заозёрное', 'pt_point', 'publish', 'zaoz'),
     ];
-    $GLOBALS['route_point_terms'] = [
-        1 => new WP_Term('resort', 'Курорт или посёлок'),
-        2 => new WP_Term('airport', 'Аэропорт'),
-        3 => new WP_Term('city', 'Город'),
-        4 => new WP_Term('city', 'Город'),
-        5 => new WP_Term('city', 'Город'),
-    ];
 
     $choices = pt_route_point_choices();
-    expect(array_keys($choices) === ['sev', 'sip', 'yalta', 'sip-air', 'zaoz'], 'Published points must keep slug keys and be ordered by type then title');
-    expect($choices['sip-air'] === 'Аэропорт Симферополь — аэропорт', 'Airport label must carry the title and the type');
-    expect($choices['yalta'] === 'Ялта — курорт или посёлок', 'Resort label must carry the title and the type');
+    expect(array_keys($choices) === ['sip-air', 'zaoz', 'sev', 'sip', 'yalta'], 'Published points must keep slug keys and be ordered by title');
+    expect($choices['sip-air'] === 'Аэропорт Симферополь', 'The label must be the point title without a type');
+    expect($choices['yalta'] === 'Ялта', 'A point title must not carry a type suffix');
     expect(strpos($choices['sip'], 'sip') === false, 'Labels must not contain the raw slug');
     expect(!isset($choices['draft-point']), 'Draft points must be excluded');
 
@@ -113,14 +87,14 @@ namespace {
 
     $options = pt_route_point_options($stored);
     expect($options[''] === '— выберите точку —', 'The empty «not chosen» option must come first');
-    expect(array_values(array_intersect(['sev', 'sip', 'yalta', 'sip-air', 'zaoz'], array_keys($options))) === ['sev', 'sip', 'yalta', 'sip-air', 'zaoz'], 'Every published point must be a select option');
-    expect($options['sip-air'] === 'Аэропорт Симферополь — аэропорт', 'Published point options must use readable labels');
+    expect(array_values(array_intersect(['sip-air', 'zaoz', 'sev', 'sip', 'yalta'], array_keys($options))) === ['sip-air', 'zaoz', 'sev', 'sip', 'yalta'], 'Every published point must be a select option');
+    expect($options['sip-air'] === 'Аэропорт Симферополь', 'Published point options must use readable titles');
     expect($options['ghost'] === 'ghost — точка не найдена', 'An orphan slug must get an extra preserving option');
     expect(array_keys($options, 'ghost — точка не найдена', true) === ['ghost'], 'An orphan slug must be added only once');
     expect(!isset($options['draft-point']), 'Unpublished points must stay out of the select options');
 
     $empty = pt_route_point_options([['from_slug' => '', 'to_slug' => 'yalta', 'km' => '5']]);
-    expect(array_keys($empty) === ['', 'sev', 'sip', 'yalta', 'sip-air', 'zaoz'], 'An empty slug must not create an orphan option');
+    expect(array_keys($empty) === ['', 'sip-air', 'zaoz', 'sev', 'sip', 'yalta'], 'An empty slug must not create an orphan option');
 
     // Fallback: Carbon's tree API is unavailable, but the plain option still has rows.
     $GLOBALS['route_field'] = null;

@@ -6,8 +6,8 @@ const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
 const tomorrowISO = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
 
 const points = [
-  { id: 'airport', name: 'Аэропорт', city: '', type: 'airport', lat: 45, lon: 34, alias: [] },
-  { id: 'yalta', name: 'Ялта', city: 'Ялта', type: 'city', lat: 45.5, lon: 34.5, alias: [] },
+  { id: 'airport', name: 'Аэропорт', city: '', lat: 45, lon: 34, alias: [] },
+  { id: 'yalta', name: 'Ялта', city: 'Ялта', lat: 45.5, lon: 34.5, alias: [] },
 ]
 const tariff = { id: 'comfort', name: 'Комфорт', cars: 'Kia Carnival', base: 1000, perKm: 30, minPrice: 1000, seats: 4, onRequest: false }
 

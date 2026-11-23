@@ -64,25 +64,25 @@ On wide screens, plain single-line text, number and checkbox fields in a project
 2. Update the visible phone, its link value, and any affected messenger/email fields.
 3. Click «Обновить», reload the landing, and test the phone and messenger links. Do not rely only on the text displayed in the editor.
 
-## «Точки» and «Типы точек»
+## «Точки»
 
-Each published point represents a named place that can be selected in the calculator. Its record has a title, an optional linked settlement, latitude, longitude, type and «Варианты поиска». Coordinates drive map placement and distance estimation; search variants are alternate names. The type categorizes the point, for example city, airport, railway station, port or resort. Type names appear in Russian: «Город», «Курорт или посёлок», «Аэропорт», «Железнодорожный вокзал», «Морской порт».
+Each published point represents a named place that can be selected in the calculator. Its record has a title, an optional linked settlement, latitude, longitude and «Варианты поиска». Coordinates drive map placement and distance estimation; search variants are alternate names. The former point type field was removed: a point is identified by its name alone («станция Керчь-Южная»), and the title is what route lists and the calculator show. The `pt_point_type` taxonomy stays registered only for legacy stored terms; it is hidden from the editor and is not part of the public point payload, so do not look for a type selector in the point screen.
 
 The point screen has no separate city text field and no «Произвольные поля» panel. The city is defined by «Относится к населённому пункту»; legacy city text from older records is kept server-side for unlinked or unavailable parents and is not shown as an editable input. The former «Pt City» field was removed, so do not look for it in the «Точка» box.
 
 ### Scenario: add a point
 
-1. Choose «Точки» → «Добавить: Точка» and enter its name. Under «Расположение и принадлежность», optionally select an existing published city or resort as its parent. Click the map or drag its marker to set coordinates; manual latitude/longitude fields remain available when the map fails.
-2. Select the appropriate existing point type and add useful «Варианты поиска», one row per variant.
+1. Choose «Точки» → «Добавить: Точка» and enter its name. Under «Расположение и принадлежность», optionally select an existing top-level point as its parent. Click the map or drag its marker to set coordinates; manual latitude/longitude fields remain available when the map fails.
+2. Add useful «Варианты поиска», one row per variant, when the point is known by other names (for example «жд керчь южная»).
 3. Publish the record. Note its slug: route options refer to this identifier, not the displayed title.
 4. Refresh the landing and verify search, map placement and a route to another point. The calculator accepts the published point list; it is not a general arbitrary-address geocoder.
 
-Parent choices are published points with the «Город» or «Курорт или посёлок» type (`city` or `resort` in stored data); a point cannot be its own parent or create a cycle. A linked parent supplies its current name; unchanged legacy text is retained for unlinked or unavailable parents. The migration dry run and rollback are documented in [staging operations](WORDPRESS-STAGING.md). If a point is missing, check publication status, search variants, type and whether the browser is showing the current staging data. Do not assume that changing a title also updates references to its slug.
+Parent choices are published points that do not belong to another point themselves (no stored parent link, or an explicit «не относится»); a linked point is a station, an airport or a district inside its settlement and is not offered as a parent. A point cannot be its own parent or create a cycle. A linked parent supplies its current name; unchanged legacy text is retained for unlinked or unavailable parents. The migration dry run and rollback are documented in [staging operations](WORDPRESS-STAGING.md). If a point is missing, check publication status, search variants and whether the browser is showing the current staging data. Do not assume that changing a title also updates references to its slug.
 
 ## «Точки» → «Маршруты»
 
 - «Тариф для цен популярных направлений» chooses the tariff whose one-way estimate appears on popular-route cards. If the selected tariff is unavailable, the frontend falls back to the first available tariff.
-- «Популярные направления» stores pairs of points. Choose the departure and destination from the «Откуда» and «Куда» lists instead of typing codes; the lists show published points as «Название — тип». Each row still stores the point code (slug), and both points must be published. Cards whose points cannot be found are omitted.
+- «Популярные направления» stores pairs of points. Choose the departure and destination from the «Откуда» and «Куда» lists instead of typing codes; the lists show published points by title, alphabetically. Each row still stores the point code (slug), and both points must be published. Cards whose points cannot be found are omitted.
 - «Ручные км» stores a positive distance for a route pair chosen in the same way from «Откуда» and «Куда». The same distance is used in both directions. This is a **fallback distance**, not a fixed route price and not a guaranteed override of live routing.
 
 ### Scenario: add a popular route

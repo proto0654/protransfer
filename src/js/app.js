@@ -24,14 +24,6 @@ const MAP = {
 // объекты карты вне реактивного состояния Alpine
 const mapStore = { ymaps: null, map: null, layer: null, promise: null }
 
-const typeLabels = {
-  city: 'город',
-  airport: 'аэропорт',
-  rail: 'ЖД вокзал',
-  port: 'морской порт',
-  resort: 'курорт',
-}
-
 export default function app(data) {
   const routeCache = new Map()
   let routeRevision = 0
@@ -421,14 +413,6 @@ export default function app(data) {
       )
     },
 
-    typeLabel(type) {
-      return typeLabels[type] || ''
-    },
-
-    iconFor(type) {
-      return { airport: 'plane', rail: 'train', port: 'ship', resort: 'compass', city: 'sign' }[type] || 'sign'
-    },
-
     normalize(value) {
       return String(value || '')
         .toLowerCase()
@@ -445,14 +429,11 @@ export default function app(data) {
           out.push(point)
         }
       }
-      this.points.filter((p) => p.type === 'airport').slice(0, 3).forEach(push)
       this.routes.popular.forEach((route) => {
         push(this.points.find((p) => p.id === route.from))
         push(this.points.find((p) => p.id === route.to))
       })
-      this.points.filter((p) => p.type === 'rail').forEach(push)
-      this.points.filter((p) => p.type === 'airport').slice(3).forEach(push)
-      this.points.filter((p) => p.type === 'resort').forEach(push)
+      this.points.forEach(push)
       return out.slice(0, 8)
     },
 
@@ -563,8 +544,8 @@ export default function app(data) {
 
     pointLabel(point) {
       if (!point) return ''
-      const label = this.typeLabel(point.type)
-      return point.type === 'city' || !point.city ? label : `${label} · ${point.city}`
+      const city = String(point.city || '').trim()
+      return city && city !== point.name ? city : ''
     },
 
     seatsLabel(n) {

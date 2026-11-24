@@ -23,6 +23,7 @@
   { "id": "sudak", "name": "Судак", "city": "Судак", "type": "resort", "lat": 44.85, "lon": 34.976 },
   { "id": "novyi-svet", "name": "Новый Свет", "city": "Судак", "type": "resort", "lat": 44.8228, "lon": 34.9141 },
   { "id": "kerch", "name": "Керчь", "city": "Керчь", "type": "city", "lat": 45.3531, "lon": 36.4745 },
+  { "id": "kerch-yuzhnaya", "name": "Керчь-Южная", "city": "Керчь", "type": "rail", "lat": 45.318079, "lon": 36.429475, "alias": ["жд керчь южная", "керчь южная"] },
   { "id": "dzhankoy", "name": "Джанкой", "city": "Джанкой", "type": "city", "lat": 45.717, "lon": 34.383 },
   { "id": "armyansk", "name": "Армянск", "city": "Армянск", "type": "city", "lat": 46.108, "lon": 33.692 },
   { "id": "krasnoperekopsk", "name": "Красноперекопск", "city": "Красноперекопск", "type": "city", "lat": 45.96, "lon": 33.8 },

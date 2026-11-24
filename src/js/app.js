@@ -972,8 +972,8 @@ export default function app(data) {
         .join('\n')
     },
 
-    get waHref() {
-      return `https://wa.me/${this.site.whatsapp}?text=${encodeURIComponent(this.orderText)}`
+    get maxHref() {
+      return this.site.max || 'https://max.ru/'
     },
 
     get tgHref() {

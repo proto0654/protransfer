@@ -257,7 +257,6 @@ add_action('carbon_fields_register_fields', function () {
             Field::make('text', 'pt_tagline', 'Слоган'),
             Field::make('text', 'pt_phone', 'Телефон'),
             Field::make('text', 'pt_phone_href', 'Телефон (ссылка)'),
-            Field::make('text', 'pt_whatsapp', 'WhatsApp'),
             Field::make('text', 'pt_telegram', 'Telegram'),
             Field::make('text', 'pt_max', 'Ссылка MAX'),
             Field::make('text', 'pt_email', 'Email'),

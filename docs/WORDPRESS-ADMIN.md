@@ -34,7 +34,7 @@ Only published points, tariffs, FAQs and reviews are read into the public data. 
 
 ## «Общие данные» → «Настройки сайта»
 
-Open the single existing record «Настройки сайта». Its «Контакты и контент» box contains the brand, tagline, display phone, phone link, WhatsApp, Telegram, MAX, email, address, hours, Yandex Maps key, review rating and review count. The display phone and «Телефон (ссылка)» are separate fields: update both when the number changes. The map key field is «Ключ API Яндекс Карт», and the MAX field is «Ссылка MAX». WhatsApp is used as a number in a `wa.me` link; Telegram is a handle, and MAX is a URL. Check each link on the site after editing.
+Open the single existing record «Настройки сайта». Its «Контакты и контент» box contains the brand, tagline, display phone, phone link, Telegram, MAX, email, address, hours, Yandex Maps key, review rating and review count. The display phone and «Телефон (ссылка)» are separate fields: update both when the number changes. The map key field is «Ключ API Яндекс Карт», and the MAX field is «Ссылка MAX». Telegram is a handle and MAX is a full URL such as `https://web.max.ru/888630310`; both are used as-is on every «написать» button, so check the links on the site after editing.
 
 The same box contains the four order-notification fields: «Telegram: токен бота», «Telegram: chat id», «MAX: токен бота» and «MAX: chat id группы». They are used by «Заявки»; see the notification instructions in that section. Leave a pair empty to keep orders in WordPress without delivery to that channel.
 

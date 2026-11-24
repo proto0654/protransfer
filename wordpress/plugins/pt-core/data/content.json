@@ -512,10 +512,10 @@
     "group": "services",
     "default": "Оплата"
   },
-  "cta_whatsapp": {
-    "label": "Кнопка «Написать в WhatsApp»",
+  "cta_max": {
+    "label": "Кнопка «Написать в MAX»",
     "group": "contacts_/_cta",
-    "default": "Написать в WhatsApp"
+    "default": "Написать в MAX"
   },
   "contacts_label": {
     "label": "Контакты: надзаголовок",
@@ -546,11 +546,6 @@
     "label": "Контакты: подпись «Зона работы»",
     "group": "contacts",
     "default": "Зона работы"
-  },
-  "contact_whatsapp": {
-    "label": "Контакты: кнопка «WhatsApp»",
-    "group": "contacts",
-    "default": "WhatsApp"
   },
   "contact_telegram": {
     "label": "Контакты: кнопка «Telegram»",
@@ -682,10 +677,10 @@
     "group": "booking",
     "default": "Отправьте её нам в удобном мессенджере — менеджер подтвердит бронирование в течение 10 минут."
   },
-  "success_whatsapp": {
-    "label": "Заявка: кнопка «Отправить в WhatsApp»",
+  "success_max": {
+    "label": "Заявка: кнопка «Отправить в MAX»",
     "group": "booking",
-    "default": "Отправить в WhatsApp"
+    "default": "Отправить в MAX"
   },
   "success_call": {
     "label": "Заявка: «Или позвоните:»",

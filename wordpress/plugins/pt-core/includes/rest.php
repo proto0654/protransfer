@@ -104,7 +104,6 @@ function pt_rest_bootstrap(): WP_REST_Response
         'tagline' => '',
         'phone' => '',
         'phoneHref' => '',
-        'whatsapp' => '',
         'telegram' => '',
         'max' => '',
         'email' => '',
@@ -125,7 +124,6 @@ function pt_rest_bootstrap(): WP_REST_Response
         $site['tagline'] = (string) carbon_get_post_meta($settings_id, 'pt_tagline');
         $site['phone'] = (string) carbon_get_post_meta($settings_id, 'pt_phone');
         $site['phoneHref'] = (string) carbon_get_post_meta($settings_id, 'pt_phone_href');
-        $site['whatsapp'] = (string) carbon_get_post_meta($settings_id, 'pt_whatsapp');
         $site['telegram'] = (string) carbon_get_post_meta($settings_id, 'pt_telegram');
         $site['max'] = (string) carbon_get_post_meta($settings_id, 'pt_max');
         $site['email'] = (string) carbon_get_post_meta($settings_id, 'pt_email');

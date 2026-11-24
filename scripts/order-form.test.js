@@ -13,7 +13,7 @@ const tariff = { id: 'comfort', name: 'Комфорт', cars: 'Kia Carnival', ba
 
 function instance() {
   const state = app({
-    site: { brand: 'Про Трансфер', whatsapp: '79781234567', phoneHref: '+79781234567', email: 'info@example.test' },
+    site: { brand: 'Про Трансфер', max: 'https://web.max.ru/888630310', phoneHref: '+79781234567', email: 'info@example.test' },
     points,
     tariffs: [tariff],
     reviews: [],

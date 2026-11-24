@@ -418,7 +418,6 @@ class PT_CLI_Command
             'pt_tagline' => $site['tagline'] ?? '',
             'pt_phone' => $site['phone'] ?? '',
             'pt_phone_href' => $site['phoneHref'] ?? '',
-            'pt_whatsapp' => $site['whatsapp'] ?? '',
             'pt_telegram' => $site['telegram'] ?? '',
             'pt_max' => $site['max'] ?? '',
             'pt_email' => $site['email'] ?? '',

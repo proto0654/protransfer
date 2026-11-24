@@ -7,8 +7,7 @@ use Carbon_Fields\Container;
 use Carbon_Fields\Field;
 
 /**
- * Published points as route choices: slug => «Title — type».
- * Ordered by the canonical point-type order, then by title.
+ * Published points as route choices: slug => title, alphabetically by title.
  *
  * @return array<string,string>
  */
@@ -27,9 +26,6 @@ function pt_route_point_choices(): array
         'order' => 'ASC',
     ]);
 
-    $type_labels = pt_point_type_labels();
-    $type_order = array_flip(array_keys($type_labels));
-    $unknown_type_order = count($type_order);
     $lower = static function (string $value): string {
         return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
     };
@@ -46,27 +42,10 @@ function pt_route_point_choices(): array
             continue;
         }
 
-        $type_slug = '';
-        $type_label = '';
-        $terms = wp_get_post_terms((int) $post->ID, 'pt_point_type');
-        if (is_array($terms) && $terms && is_object($terms[0])) {
-            $type_slug = isset($terms[0]->slug) ? (string) $terms[0]->slug : '';
-            $type_label = isset($terms[0]->name) ? trim((string) $terms[0]->name) : '';
-        }
-        if ($type_label === '' && isset($type_labels[$type_slug])) {
-            $type_label = $type_labels[$type_slug];
-        }
-
-        $type_label = $lower($type_label);
         $items[] = [
             'slug' => $slug,
-            'label' => $type_label === '' ? $title : $title . ' — ' . $type_label,
-            'sort' => [
-                $type_order[$type_slug] ?? $unknown_type_order,
-                $type_label,
-                $lower($title),
-                $title,
-            ],
+            'title' => $title,
+            'sort' => [$lower($title), $title],
         ];
     }
 
@@ -74,7 +53,7 @@ function pt_route_point_choices(): array
 
     $options = [];
     foreach ($items as $item) {
-        $options[$item['slug']] = $item['label'];
+        $options[$item['slug']] = $item['title'];
     }
 
     return $choices = $options;

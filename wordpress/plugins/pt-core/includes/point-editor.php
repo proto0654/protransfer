@@ -4,7 +4,6 @@ if (!defined('ABSPATH')) {
 }
 
 const PT_PARENT_POINT_META = '_pt_parent_point';
-const PT_SETTLEMENT_TYPES = ['city', 'resort'];
 
 function pt_point_type_labels(): array
 {
@@ -43,19 +42,38 @@ function pt_parent_would_cycle(int $point_id, int $parent_id, array $planned = [
     return false;
 }
 
+/**
+ * Published points that can be a parent: top-level records only. A point that
+ * is linked to a settlement (a station, an airport, a district) is inside it.
+ *
+ * @return WP_Post[]
+ */
 function pt_settlement_points(): array
 {
-    return get_posts([
+    $posts = get_posts([
         'post_type' => 'pt_point', 'post_status' => 'publish', 'numberposts' => -1,
         'orderby' => 'title', 'order' => 'ASC',
-        'tax_query' => [['taxonomy' => 'pt_point_type', 'field' => 'slug', 'terms' => PT_SETTLEMENT_TYPES]],
     ]);
+
+    return array_values(array_filter(
+        is_array($posts) ? $posts : [],
+        static fn ($post): bool => pt_is_published_settlement($post instanceof WP_Post ? $post : null)
+    ));
+}
+
+/** A point without a parent link is top-level; a linked point belongs to one. */
+function pt_point_is_top_level(WP_Post $post): bool
+{
+    if (!metadata_exists('post', (int) $post->ID, PT_PARENT_POINT_META)) {
+        return true;
+    }
+    return (int) get_post_meta((int) $post->ID, PT_PARENT_POINT_META, true) <= 0;
 }
 
 function pt_is_published_settlement(?WP_Post $post): bool
 {
     return $post && $post->post_type === 'pt_point' && $post->post_status === 'publish'
-        && has_term(PT_SETTLEMENT_TYPES, 'pt_point_type', $post);
+        && pt_point_is_top_level($post);
 }
 
 /** Preserve old city text until a relationship is explicitly set. */

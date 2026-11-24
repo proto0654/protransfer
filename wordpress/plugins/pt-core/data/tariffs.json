@@ -1,7 +1,7 @@
 [
   {
     "id": "economy",
-    "photo": "fleet/economy.jpg",
+    "photo": "fleet/economy.webp",
     "name": "Эконом",
     "seats": 3,
     "bags": 2,
@@ -13,7 +13,7 @@
   },
   {
     "id": "standard",
-    "photo": "fleet/standard.jpg",
+    "photo": "fleet/standard.webp",
     "name": "Стандарт",
     "seats": 4,
     "bags": 2,
@@ -26,7 +26,7 @@
   },
   {
     "id": "comfort",
-    "photo": "fleet/comfort.jpg",
+    "photo": "fleet/comfort.webp",
     "name": "Комфорт",
     "seats": 4,
     "bags": 3,
@@ -38,7 +38,7 @@
   },
   {
     "id": "comfort-plus",
-    "photo": "fleet/comfort-plus.jpg",
+    "photo": "fleet/comfort-plus.webp",
     "name": "Комфорт+",
     "seats": 4,
     "bags": 3,
@@ -50,7 +50,7 @@
   },
   {
     "id": "business",
-    "photo": "fleet/business.jpg",
+    "photo": "fleet/business.webp",
     "name": "Бизнес",
     "seats": 4,
     "bags": 3,
@@ -62,7 +62,7 @@
   },
   {
     "id": "business-plus",
-    "photo": "fleet/business-plus.jpg",
+    "photo": "fleet/business-plus.webp",
     "name": "Бизнес+",
     "seats": 3,
     "bags": 3,
@@ -74,7 +74,7 @@
   },
   {
     "id": "microvan",
-    "photo": "fleet/microvan.jpg",
+    "photo": "fleet/microvan.webp",
     "name": "Микровэн",
     "seats": 5,
     "bags": 5,
@@ -86,7 +86,7 @@
   },
   {
     "id": "minivan",
-    "photo": "fleet/minivan.jpg",
+    "photo": "fleet/minivan.webp",
     "name": "Минивэн",
     "seats": 8,
     "bags": 7,
@@ -99,7 +99,7 @@
   },
   {
     "id": "business-minivan",
-    "photo": "fleet/business-minivan.jpg",
+    "photo": "fleet/business-minivan.webp",
     "name": "Бизнес-минивэн",
     "seats": 5,
     "bags": 7,
@@ -111,7 +111,7 @@
   },
   {
     "id": "minibus",
-    "photo": "fleet/minibus.jpg",
+    "photo": "fleet/minibus.webp",
     "name": "Микроавтобус",
     "seats": 20,
     "bags": 10,
@@ -123,7 +123,7 @@
   },
   {
     "id": "bus",
-    "photo": "fleet/bus.jpg",
+    "photo": "fleet/bus.webp",
     "name": "Автобус",
     "seats": 50,
     "bags": 40,

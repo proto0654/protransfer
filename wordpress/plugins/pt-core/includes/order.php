@@ -334,6 +334,8 @@ function pt_create_order(array $input): array|WP_Error
         'minutes' => $quote['minutes'],
         'base' => $quote['base'],
         'per_km' => $quote['per_km'],
+        'tariff_per_km' => $quote['tariff_per_km'] ?? $quote['per_km'],
+        'per_km_source' => $quote['per_km_source'] ?? 'tariff',
         'min_price' => $quote['min_price'],
         'formula_price' => $quote['formula_price'],
         'used_min_price' => $quote['used_min_price'],
@@ -447,8 +449,10 @@ function pt_order_notification_rows(WP_Post $order): array
     ];
 
     $tariff = (string) get_post_meta($order->ID, 'pt_tariff', true);
+    $route_rate = (string) ($quote['per_km_source'] ?? '') === 'route';
     if ($base !== null && $per_km !== null && $per_km > 0) {
-        $tariff .= ' — ' . pt_order_money($base) . ' база + ' . pt_order_money($per_km) . '/км';
+        $tariff .= ' — ' . pt_order_money($base) . ' база + ' . pt_order_money($per_km) . '/км'
+            . ($route_rate ? ' (цена маршрута)' : '');
     }
 
     $options = [];
@@ -496,7 +500,7 @@ function pt_order_notification_rows(WP_Post $order): array
         } else {
             $formula .= ' = ' . pt_order_money($formula_total);
         }
-        $rows[] = ['Расчёт по тарифу', $formula];
+        $rows[] = [$route_rate ? 'Расчёт по маршруту' : 'Расчёт по тарифу', $formula];
     }
 
     $rows[] = ['Итого', $price_label];

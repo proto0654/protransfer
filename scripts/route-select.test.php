@@ -43,17 +43,23 @@ namespace {
     }
     function get_posts(array $args): array
     {
-        return $GLOBALS['route_points'] ?? [];
+        return ($args['post_type'] ?? '') === 'pt_tariff'
+            ? ($GLOBALS['route_tariffs'] ?? [])
+            : ($GLOBALS['route_points'] ?? []);
     }
 
+    // fields.php builds the route price fields through calc.php's key helper.
+    require dirname(__DIR__) . '/wordpress/plugins/pt-core/includes/calc.php';
     require dirname(__DIR__) . '/wordpress/plugins/pt-core/includes/fields.php';
 
     function expect($condition, string $message): void
     {
+        static $checks = 0;
         if (!$condition) {
             fwrite(STDERR, $message . "\n");
             exit(1);
         }
+        $GLOBALS['pt_checks'] = ++$checks;
     }
 
     $GLOBALS['route_points'] = [
@@ -119,5 +125,17 @@ namespace {
     $other = pt_route_saved_rows('pt_cache_b');
     expect($other !== $cached && $other[0]['from_slug'] === 'ghost', 'Another option must read and cache its own rows');
 
-    echo "Route point selects: 16 checks passed\n";
+    // Price fields are keyed by tariff slug so a saved value survives a title change.
+    $GLOBALS['route_tariffs'] = [
+        new WP_Post(11, 'Эконом', 'pt_tariff', 'publish', 'economy'),
+        new WP_Post(12, 'Комфорт', 'pt_tariff', 'publish', 'comfort'),
+        new WP_Post(13, 'Комфорт Плюс', 'pt_tariff', 'publish', 'comfort-pl'),
+        new WP_Post(14, 'Черновик', 'pt_tariff', 'draft', 'draft-tariff'),
+    ];
+    $price_choices = pt_route_price_choices();
+    expect(array_keys($price_choices) === ['price_economy', 'price_comfort', 'price_comfort_pl'], 'Only published tariffs must get a price field, with normalised keys');
+    expect($price_choices['price_comfort_pl'] === 'Комфорт Плюс', 'A price field must be labelled with its tariff title');
+    expect(!isset($price_choices['price_draft_tariff']), 'A draft tariff must not get a price field');
+
+    echo "Route point selects: {$GLOBALS['pt_checks']} checks passed\n";
 }

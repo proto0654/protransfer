@@ -83,16 +83,16 @@ Parent choices are published points that do not belong to another point themselv
 
 - «Тариф для цен популярных направлений» chooses the tariff whose one-way estimate appears on popular-route cards. If the selected tariff is unavailable, the frontend falls back to the first available tariff.
 - «Популярные направления» stores pairs of points. Choose the departure and destination from the «Откуда» and «Куда» lists instead of typing codes; the lists show published points by title, alphabetically. Each row still stores the point code (slug), and both points must be published. Cards whose points cannot be found are omitted.
-- «Ручные км» stores a positive distance for a route pair chosen in the same way from «Откуда» and «Куда». The same distance is used in both directions. This is a **fallback distance**, not a fixed route price and not a guaranteed override of live routing.
+- «Км и цены маршрутов» stores per route pair a positive distance and, optionally, its own ₽/км for every published tariff. Both points are chosen the same way from «Откуда» and «Куда», and the row works in both directions. A field named «₽/км — <тариф>» replaces that tariff's rate for this route only: the base, the minimum and the surcharges still come from the tariff. An empty field means «use the tariff rate», so a route can keep its own distance and no own price. The distance stays a **fallback distance**, not a guaranteed override of live routing: a routing provider response replaces it in the site calculator.
 
 ### Scenario: add a popular route
 
 1. In «Маршруты», add a row to «Популярные направления».
 2. Choose the departure and destination points in «Откуда» and «Куда» and save. The row keeps the point codes, so normal editing only needs the readable lists.
-3. If needed, add the same pair with a positive value under «Ручные км» and save.
+3. If needed, add the same pair under «Км и цены маршрутов»: a positive distance for the fallback estimate and/or a «₽/км — <тариф>» value for a route-specific rate.
 4. Refresh the site, open the route card and verify the calculator. The cards use an estimate; the calculator may later receive a different road distance from a routing provider.
 
-Both route groups start with «— выберите точку —». If a saved row refers to a code that no longer matches a published point, that group gets an extra option such as `sip-air — точка не найдена`; keep it selected to preserve the route, or replace it deliberately. Renaming a point's title is safe because its code does not change. Changing a point's code (slug) still breaks saved route rows; if it cannot be avoided, re-select both points in every affected row. Each route group shows the same warning once in its help text. A row header shows the names of the selected departure and destination points, not their codes, and updates immediately when either selection changes; «Ручные км» rows also show the entered distance.
+Both route groups start with «— выберите точку —». If a saved row refers to a code that no longer matches a published point, that group gets an extra option such as `sip-air — точка не найдена`; keep it selected to preserve the route, or replace it deliberately. Renaming a point's title is safe because its code does not change. Changing a point's code (slug) still breaks saved route rows; if it cannot be avoided, re-select both points in every affected row. Each route group shows the same warning once in its help text. A row header shows the names of the selected departure and destination points, not their codes, and updates immediately when either selection changes; a «Км и цены маршрутов» row also shows the entered distance and its own prices («свои цены: Эконом 24, Комфорт 40 ₽/км»). Price fields follow the published tariffs, so publishing a new tariff adds a field on the next page load and leaving it empty keeps the tariff rate.
 
 For the website calculator, routing is attempted through Yandex when configured, then OSRM; the manual distance or a coordinate-based estimate is the fallback. A successful provider response can replace the initial fallback. The admin debugger instead uses manual route distance or coordinate estimation unless a distance is entered explicitly. The estimated travel time can also differ from a provider's time.
 
@@ -139,7 +139,7 @@ Each order stores:
 - a title in the form `Имя · Откуда → Куда · ГГГГ-ММ-ДД ЧЧ:ММ`;
 - «Телефон» (normalised to 11 digits), «Откуда», «Куда», «Тариф», «Цена», «Дата/время» and «Снимок данных заявки» with the validated request and the distance source;
 - status «Новая»;
-- the server-calculated price. If the browser supplied the kilometres it displayed, the server uses that distance so the stored price matches the quote the customer saw; otherwise it uses «Ручные км» or the coordinate estimate from «Маршруты». A differing client-declared total is kept in a hidden record for comparison.
+- the server-calculated price. If the browser supplied the kilometres it displayed, the server uses that distance so the stored price matches the quote the customer saw; otherwise it uses the manual kilometres or the coordinate estimate from «Маршруты». If the route has its own «₽/км» for the selected tariff, the server uses that rate instead of the tariff rate; the quote snapshot keeps both rates and the notification marks the price as «цена маршрута». A differing client-declared total is kept in a hidden record for comparison.
 
 The «Заявки» list shows «Дата и время», «Телефон» as a clickable `tel:` link, «Маршрут», «Цена», «Статус» and «Уведомление». The date column is sortable, and the status filter above the list narrows the view. The edit screen still contains «Телефон», «Откуда», «Куда», «Тариф», «Цена», «Дата/время», «Снимок данных заявки» and «Статус».
 

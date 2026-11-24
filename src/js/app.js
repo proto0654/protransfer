@@ -1,5 +1,6 @@
 import {
   buildOverrides,
+  buildRoutePrices,
   calculatorSettings,
   priceBreakdown,
   estimateKm,
@@ -34,6 +35,7 @@ export default function app(data) {
   const faq = data.faq
   const routesData = data.routes
   const overrides = buildOverrides(routesData.overrides || [])
+  const routePrices = buildRoutePrices(routesData.overrides || [])
   const calc = calculatorSettings(data.calc)
   const initialRoute = routesData.popular?.[0]
   const initialFrom = points.find((point) => point.id === initialRoute?.from) || points[0]
@@ -615,9 +617,18 @@ export default function app(data) {
       return this.breakdownFor(tariff)?.total ?? null
     },
 
+    /** Own ₽/км saved for this route and tariff in «Маршруты», if any. */
+    routePerKm(tariff) {
+      const from = this.fromPoint
+      const to = this.toPoint
+      if (!tariff || !from || !to) return undefined
+      return routePrices[`${from.id}|${to.id}|${tariff.id}`]
+    },
+
     breakdownFor(tariff) {
       return priceBreakdown(tariff, this.routeInfo?.km, {
         roundTrip: this.roundTrip, extraStop: this.extraStop, childSeat: this.childSeat,
+        perKm: this.routePerKm(tariff),
       }, this.calc)
     },
 
@@ -664,7 +675,8 @@ export default function app(data) {
           if (!from || !to) return null
           const km = estimateKm(from, to, overrides, this.calc)
           const minutes = estimateMinutes(km, this.calc)
-          const price = roundPrice(Math.max(economy.minPrice, economy.base + economy.perKm * km), this.calc)
+          const perKm = routePrices[`${from.id}|${to.id}|${economy.id}`] ?? economy.perKm
+          const price = roundPrice(Math.max(economy.minPrice, economy.base + perKm * km), this.calc)
           return { from, to, km, duration: formatDuration(minutes), price: economy.onRequest ? null : price, tariffName: economy.name }
         })
         .filter(Boolean)

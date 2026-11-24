@@ -13,7 +13,8 @@ if (!defined('ABSPATH') || !current_user_can('manage_options')) {
         <p><strong>Источник расстояния:</strong> <span x-text="labDistanceSource"></span> <span x-show="routeLoading">— уточняем маршрут…</span></p>
         <p><strong>Расстояние и время:</strong> <span x-text="`${routeInfo.km} км · ${durationLabel}`"></span></p>
         <p><strong>Тариф:</strong> <span x-text="selectedTariff.name"></span></p>
-        <p><strong>Формула:</strong> <span x-text="`${money(selectedTariff.base)} + ${money(selectedTariff.perKm)} × ${labBreakdown.km} км = ${money(labBreakdown.formula)}`"></span></p>
+        <p><strong>Ставка за км:</strong> <span x-text="`${money(labBreakdown.perKm)} (${labBreakdown.perKmSource === 'route' ? 'цена маршрута' : 'тариф'})`"></span></p>
+        <p><strong>Формула:</strong> <span x-text="`${money(selectedTariff.base)} + ${money(labBreakdown.perKm)} × ${labBreakdown.km} км = ${money(labBreakdown.formula)}`"></span></p>
         <p><strong>Минимальная стоимость:</strong> <span x-text="money(labBreakdown.minimum)"></span></p>
         <p><strong>После применения минимума:</strong> <span x-text="money(labBreakdown.basePrice)"></span></p>
         <p><strong>Туда и обратно:</strong> <span x-text="`× ${labBreakdown.multiplier}`"></span></p>

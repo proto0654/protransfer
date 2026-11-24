@@ -87,15 +87,13 @@ function pt_rest_bootstrap(): WP_REST_Response
                 $popular[] = ['from' => $row['from_slug'], 'to' => $row['to_slug']];
             }
         }
-        foreach (carbon_get_theme_option('pt_route_overrides') ?: [] as $row) {
-            if (!empty($row['from_slug']) && !empty($row['to_slug']) && !empty($row['km'])) {
-                $overrides[] = [
-                    'from' => $row['from_slug'],
-                    'to' => $row['to_slug'],
-                    'km' => (float) $row['km'],
-                ];
-            }
-        }
+
+        // Route rows may set a price without manual kilometres, so a row is kept
+        // when it carries either value.
+        $overrides = pt_route_override_payload(array_map(
+            static fn (array $tariff): string => (string) ($tariff['id'] ?? ''),
+            $tariffs
+        ));
     }
 
     $settings_id = pt_settings_id();

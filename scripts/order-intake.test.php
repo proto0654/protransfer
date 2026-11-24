@@ -495,4 +495,23 @@ expect(str_contains($max_text, 'Дата и время: 16.06.2026 10:00'), 'The
 expect(!str_contains($max_text, '(0 ₽)'), 'Options without a surcharge must not show a price');
 unset($carbon[900]['pt_max_bot_token'], $carbon[900]['pt_max_chat_id'], $filters['pt_order_notification_channels']);
 
+/* A route price overrides the tariff rate in the stored order and its notification */
+$theme_options['pt_route_overrides'] = [
+    ['from_slug' => 'airport', 'to_slug' => 'yalta', 'km' => 50, 'price_comfort' => 40],
+];
+reset_order_state('203.0.113.17');
+$routed = pt_create_order(order_input());
+expect(is_array($routed), 'An order on a priced route must be accepted');
+expect(get_post_meta($routed['id'], 'pt_price') === '3000', 'The stored price must use the route price: 1 000 + 50 × 40');
+$routed_quote = json_decode((string) get_post_meta($routed['id'], '_pt_quote'), true);
+expect(($routed_quote['per_km'] ?? null) === 40 && ($routed_quote['tariff_per_km'] ?? null) === 30, 'The quote snapshot must keep both rates');
+expect(($routed_quote['per_km_source'] ?? '') === 'route', 'The quote snapshot must record the route price');
+$routed_text = pt_order_notification_markdown(get_post($routed['id']));
+expect(str_contains($routed_text, 'Тариф: Комфорт — 1 000 ₽ база + 40 ₽/км (цена маршрута)'), 'The notification must show the route rate on the tariff row');
+expect(str_contains($routed_text, 'Расчёт по маршруту: 1 000 ₽ + 50 км × 40 ₽/км = 3 000 ₽'), 'The notification formula must use the route rate');
+expect(str_contains($routed_text, 'Итого: 3 000 ₽'), 'The notification total must match the stored price');
+$theme_options['pt_route_overrides'] = [
+    ['from_slug' => 'airport', 'to_slug' => 'yalta', 'km' => 50],
+];
+
 echo 'Order intake: ' . (int) ($GLOBALS['pt_checks'] ?? 0) . " checks passed\n";

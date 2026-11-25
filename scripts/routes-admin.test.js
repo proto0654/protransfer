@@ -54,6 +54,15 @@ test('route field keys come only from Carbon compact row names', () => {
   assert.equal(fieldSlug(undefined), '')
 })
 
+test('price panel opens only for rows with an own price', () => {
+  const { initialPricesState } = helpers()
+  assert.equal(initialPricesState([]), 'closed')
+  assert.equal(initialPricesState(['', '   ']), 'closed')
+  assert.equal(initialPricesState(undefined), 'closed')
+  assert.equal(initialPricesState(['', '40']), 'open')
+  assert.equal(initialPricesState([0]), 'open')
+})
+
 test('row titles use selected point names and optional kilometres', () => {
   const { formatTitle } = helpers()
   assert.equal(formatTitle({ from: 'Ялта — курорт или посёлок', to: 'Симферополь — город' }), 'Ялта — курорт или посёлок → Симферополь — город')

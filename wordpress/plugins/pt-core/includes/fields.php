@@ -398,7 +398,9 @@ add_action('carbon_fields_register_fields', function () {
     $route_options = static function (string $option): callable {
         return static fn (): array => pt_route_point_options(pt_route_saved_rows($option));
     };
-    $route_help = 'Переименование точки не меняет её код, поэтому маршрут продолжит работать. Если изменить код (slug) точки, сохранённые маршруты сломаются. «точка не найдена» — сохранённый код без опубликованной точки. Цена за км на маршруте перекрывает ставку тарифа: пустое поле — цена берётся из тарифа. Км нужны только для маршрутов, которые считаются без карт.';
+    $route_points_help = 'Переименование точки не меняет её код, поэтому маршрут продолжит работать. Если изменить код (slug) точки, сохранённые маршруты сломаются. «точка не найдена» — сохранённый код без опубликованной точки.';
+    $route_help = $route_points_help . ' Км нужны только для маршрутов, которые считаются без карт.';
+    $route_price_help = $route_help . ' Цена за км на маршруте переопределяет ставку тарифа; пустое поле оставляет цену тарифа.';
 
     // One own-price field per published tariff: the client asked for a price
     // per route and per tariff, so the tariff list drives these fields.
@@ -428,7 +430,7 @@ add_action('carbon_fields_register_fields', function () {
                 ->set_header_template('<%- from_slug %> → <%- to_slug %>'),
             Field::make('complex', 'pt_route_overrides', 'Км и цены маршрутов')
                 ->setup_labels(['singular_name' => 'маршрут', 'plural_name' => 'маршруты'])
-                ->set_help_text($route_help)
+                ->set_help_text($route_price_help)
                 ->add_fields(array_merge([
                     Field::make('select', 'from_slug', 'Откуда')->add_options($route_options('pt_route_overrides'))
                         ->set_width(35),

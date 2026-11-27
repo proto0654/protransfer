@@ -189,8 +189,8 @@ export default function app(data) {
       // объекты карты держим вне реактивного состояния Alpine: прокси ломает внутренности Яндекса
       mapStore.map = new ymaps.Map(
         this.$refs.map,
-        { center: MAP.center, zoom: MAP.zoom, controls: ['zoomControl'], type: 'yandex#map' },
-        { suppressObsoleteBrowserNotifier: true },
+        { center: MAP.center, zoom: MAP.zoom, controls: [], type: 'yandex#map' },
+        { suppressObsoleteBrowserNotifier: true, suppressMapOpenBlock: true },
       )
 
       // колесо мыши не должно «съедать» прокрутку страницы — включаем зум по клику

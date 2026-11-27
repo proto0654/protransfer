@@ -467,7 +467,7 @@
                     </span>
                     <div class="min-w-0">
                       <p class="text-[12px] font-extrabold leading-snug text-amber-900" data-pt-copy="calc_crossing_title">Керченский мост закрыт для автомобилей</p>
-                      <p class="mt-0.5 text-[11px] leading-snug text-amber-800/80" data-pt-copy="calc_crossing_text">Выберите, как пересечь пролив: в объезд через Джанкой или с пересадкой на поезд. Цена и маршрут на карте пересчитаются.</p>
+                      <p class="mt-0.5 text-[11px] leading-snug text-amber-800/80" data-pt-copy="calc_crossing_text">Выберите, как пересечь пролив: в объезд по материку или с пересадкой на поезд. Цена и маршрут на карте пересчитаются.</p>
                     </div>
                   </div>
                   <div class="mt-3 grid gap-2" :class="trainAvailable ? 'grid-cols-2' : 'grid-cols-1'">
@@ -481,7 +481,7 @@
                         <svg class="icon h-3.5 w-3.5" aria-hidden="true"><use href="#i-route" /></svg>
                         <span data-pt-copy="calc_crossing_bypass">В объезд</span>
                       </span>
-                      <span class="mt-1 block text-[10px] leading-none" :class="activeCrossingMode === 'bypass' ? 'text-white/55' : 'text-ink/40'" data-pt-copy="calc_crossing_bypass_sub">через Джанкой</span>
+                      <span class="mt-1 block text-[10px] leading-none" :class="activeCrossingMode === 'bypass' ? 'text-white/55' : 'text-ink/40'" data-pt-copy="calc_crossing_bypass_sub">по материку</span>
                     </button>
                     <button
                       type="button"
@@ -702,7 +702,7 @@
                     </div>
                     <div x-show="isCrossRegion" x-cloak class="flex items-center justify-between gap-3 text-ink/50">
                       <span data-pt-copy="calc_summary_crossing">Через пролив</span>
-                      <span class="text-right font-semibold text-ink" x-text="activeCrossingMode === 'train' ? 'авто + поезд' : 'объезд через Джанкой'"></span>
+                      <span class="text-right font-semibold text-ink" x-text="activeCrossingMode === 'train' ? 'авто + поезд' : 'объезд по материку'"></span>
                     </div>
                     <template x-if="activeCrossingMode === 'train' && trainPriceParts.length">
                       <div class="space-y-1">
@@ -1328,7 +1328,7 @@
               <span><span x-text="dateLabel"></span> · <span x-text="time"></span></span>
               <span><span x-text="passengers"></span> пасс.</span>
               <span x-text="selectedTariff ? selectedTariff.name : ''"></span>
-              <span x-show="isCrossRegion" x-cloak class="text-amber-700" x-text="activeCrossingMode === 'train' ? 'авто + поезд' : 'объезд через Джанкой'"></span>
+              <span x-show="isCrossRegion" x-cloak class="text-amber-700" x-text="activeCrossingMode === 'train' ? 'авто + поезд' : 'объезд по материку'"></span>
               <span x-show="roundTrip" x-cloak class="text-emerald-700"><span data-pt-copy="booking_option_round_trip">туда и обратно</span></span>
               <span x-show="childSeat" x-cloak><span data-pt-copy="booking_option_child_seat">детское кресло</span></span>
               <span x-show="extraStop" x-cloak><span data-pt-copy="booking_option_extra_stop">+ остановка</span></span>

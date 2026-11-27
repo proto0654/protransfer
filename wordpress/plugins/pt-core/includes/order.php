@@ -489,7 +489,7 @@ function pt_order_notification_rows(WP_Post $order): array
         'manual' => 'километры клиента',
         'override' => 'ручные км маршрута',
         'haversine' => 'оценка по координатам',
-        'bypass' => 'объезд через Джанкой',
+        'bypass' => 'объезд по материку',
         'train' => 'авто + поезд',
     ];
 
@@ -530,7 +530,7 @@ function pt_order_notification_rows(WP_Post $order): array
     if ($crossing === 'train') {
         $rows[] = ['Как добраться', 'авто + поезд через мост'];
     } elseif ($crossing === 'bypass') {
-        $rows[] = ['Как добраться', 'объезд через Джанкой'];
+        $rows[] = ['Как добраться', 'объезд по материку'];
     }
 
     if ($km !== null) {

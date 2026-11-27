@@ -75,7 +75,7 @@ test('a Crimea-mainland route starts on the bypass and switches to two cars plus
   assert.equal(trip.routeInfo.mode, 'bypass')
   assert.equal(trip.routeInfo.km, 990)
   assert.equal(trip.priceFor(tariff), 20000)
-  assert.match(trip.crossingModeLabel, /Джанкой/)
+  assert.match(trip.crossingModeLabel, /материк/)
 
   trip.crossingMode = 'train'
   assert.equal(trip.activeCrossingMode, 'train')

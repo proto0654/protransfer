@@ -778,11 +778,11 @@ export default function app(data) {
     },
 
     get crossingModeLabel() {
-      return this.activeCrossingMode === 'train' ? 'авто + поезд через мост' : 'объезд через Джанкой'
+      return this.activeCrossingMode === 'train' ? 'авто + поезд через мост' : 'объезд по материку'
     },
 
     get crossingModeShort() {
-      return this.activeCrossingMode === 'train' ? 'Поезд через мост' : 'Объезд через Джанкой'
+      return this.activeCrossingMode === 'train' ? 'Поезд через мост' : 'По материку'
     },
 
     pointName(id) {
@@ -911,7 +911,7 @@ export default function app(data) {
     },
 
     get labDistanceSource() {
-      const labels = { yandex: 'Яндекс', osrm: 'OSRM', override: 'Ручной маршрут', haversine: 'Оценка по координатам', bypass: 'Объезд через Джанкой', train: 'Авто + поезд' }
+      const labels = { yandex: 'Яндекс', osrm: 'OSRM', override: 'Ручной маршрут', haversine: 'Оценка по координатам', bypass: 'По материку', train: 'Авто + поезд' }
       return labels[this.routeInfo?.source] || 'Маршрут не выбран'
     },
 

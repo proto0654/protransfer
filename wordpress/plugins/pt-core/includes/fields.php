@@ -423,7 +423,7 @@ add_action('carbon_fields_register_fields', function () {
             Field::make('select', 'pt_crossing_enabled', 'Комбинированный маршрут через Керченский пролив')
                 ->add_options(['1' => 'Включён', '0' => 'Выключен'])
                 ->set_default_value((string) (pt_crossing_defaults()['enabled'] ? '1' : '0'))
-                ->set_help_text('Показывает выбор «в объезд через Джанкой» или «поездом через мост» для пар Крым ↔ материк.'),
+                ->set_help_text('Показывает выбор «в объезд по материку» или «поездом через мост» для пар Крым ↔ материк.'),
             Field::make('select', 'pt_crossing_rail_from', 'Станция на крымской стороне')
                 ->add_options(pt_route_point_choices())
                 ->set_default_value((string) pt_crossing_defaults()['railFrom'])

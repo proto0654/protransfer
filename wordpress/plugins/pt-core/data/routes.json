@@ -1,4 +1,19 @@
 {
+  "crossing": {
+    "enabled": true,
+    "railFrom": "kerch-yuzhnaya",
+    "railTo": "taman",
+    "via": "armyansk",
+    "corridor": [
+      { "id": "armyansk", "name": "Армянск", "lat": 46.108, "lon": 33.692 },
+      { "id": "melitopol", "name": "Мелитополь", "lat": 46.8389, "lon": 35.365 },
+      { "id": "berdyansk", "name": "Бердянск", "lat": 46.755, "lon": 36.79 },
+      { "id": "mariupol", "name": "Мариуполь", "lat": 47.095, "lon": 37.55 },
+      { "id": "rostov", "name": "Ростов-на-Дону", "lat": 47.2357, "lon": 39.7015 }
+    ],
+    "railMinutes": 45,
+    "transferMinutes": 30
+  },
   "popular": [
     { "from": "sip-air", "to": "yalta" },
     { "from": "sip-air", "to": "sevastopol" },
@@ -61,6 +76,19 @@
     { "from": "kerch-yuzhnaya", "to": "sudak", "km": 145 },
     { "from": "kerch-yuzhnaya", "to": "feodosia", "km": 100 },
     { "from": "kerch-yuzhnaya", "to": "anapa", "km": 130 },
-    { "from": "kerch-yuzhnaya", "to": "krasnodar", "km": 245 }
+    { "from": "kerch-yuzhnaya", "to": "krasnodar", "km": 245 },
+    { "from": "kerch", "to": "kerch-yuzhnaya", "km": 15 },
+    { "from": "taman", "to": "anapa", "km": 88 },
+    { "from": "taman", "to": "anapa-air", "km": 95 },
+    { "from": "taman", "to": "krasnodar", "km": 201 },
+    { "from": "taman", "to": "krasnodar-air", "km": 220 },
+    { "from": "taman", "to": "sochi", "km": 413 },
+    { "from": "taman", "to": "sochi-air", "km": 420 },
+    { "from": "taman", "to": "adler", "km": 425 },
+    { "from": "taman", "to": "krasnaya-polyana", "km": 480 },
+    { "from": "taman", "to": "gelendzhik", "km": 150 },
+    { "from": "taman", "to": "novorossiysk", "km": 120 },
+    { "from": "taman", "to": "rostov", "km": 350 },
+    { "from": "taman", "to": "temryuk", "km": 35 }
   ]
 }

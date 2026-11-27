@@ -289,11 +289,15 @@
               <div class="pointer-events-none absolute right-3 top-3 flex flex-wrap items-center justify-end gap-2">
                 <span x-show="routeInfo" x-cloak class="chip border-transparent bg-white/95 shadow-sm backdrop-blur">
                   <svg class="icon h-3.5 w-3.5 text-ink/40" aria-hidden="true"><use href="#i-route" /></svg>
-                  <span x-text="routeInfo ? routeInfo.km + ' км' : ''"></span>
+                  <span x-text="routeInfo ? routeKmLabel : ''"></span>
                 </span>
                 <span x-show="routeInfo" x-cloak class="chip border-transparent bg-white/95 shadow-sm backdrop-blur">
                   <svg class="icon h-3.5 w-3.5 text-ink/40" aria-hidden="true"><use href="#i-clock" /></svg>
                   <span x-text="durationLabel"></span>
+                </span>
+                <span x-show="isCrossRegion" x-cloak class="chip border-amber-200 bg-amber-50/95 font-semibold text-amber-800 shadow-sm backdrop-blur">
+                  <svg class="icon h-3.5 w-3.5" aria-hidden="true"><use :href="activeCrossingMode === 'train' ? '#i-train' : '#i-route'" /></svg>
+                  <span x-text="activeCrossingMode === 'train' ? site.copy.calc_crossing_badge_train : site.copy.calc_crossing_badge_bypass"></span>
                 </span>
                 <span x-show="routeLoading" x-cloak class="chip border-transparent bg-white/95 font-semibold text-amber-700 shadow-sm backdrop-blur">
                   <span data-pt-copy="calc_route_loading">Считаем маршрут…</span>
@@ -456,6 +460,52 @@
                   </button>
                 </div>
 
+                <div x-show="isCrossRegion" x-cloak class="mt-4 rounded-2xl border border-amber-200 bg-amber-50/70 p-3">
+                  <div class="flex items-start gap-2.5">
+                    <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-100 text-amber-700">
+                      <svg class="icon h-4 w-4" aria-hidden="true"><use href="#i-train" /></svg>
+                    </span>
+                    <div class="min-w-0">
+                      <p class="text-[12px] font-extrabold leading-snug text-amber-900" data-pt-copy="calc_crossing_title">Керченский мост закрыт для автомобилей</p>
+                      <p class="mt-0.5 text-[11px] leading-snug text-amber-800/80" data-pt-copy="calc_crossing_text">Выберите, как пересечь пролив: в объезд через Перекоп или с пересадкой на поезд. Цена и маршрут на карте пересчитаются.</p>
+                    </div>
+                  </div>
+                  <div class="mt-3 grid gap-2" :class="trainAvailable ? 'grid-cols-2' : 'grid-cols-1'">
+                    <button
+                      type="button"
+                      @click="crossingMode = 'bypass'"
+                      class="rounded-xl border p-2.5 text-left transition"
+                      :class="activeCrossingMode === 'bypass' ? 'border-ink bg-ink text-white shadow-[0_18px_40px_-24px_rgba(11,20,34,.9)]' : 'border-ink/10 bg-white hover:border-ink/30'"
+                    >
+                      <span class="flex items-center gap-1.5 text-[12px] font-extrabold leading-tight">
+                        <svg class="icon h-3.5 w-3.5" aria-hidden="true"><use href="#i-route" /></svg>
+                        <span data-pt-copy="calc_crossing_bypass">В объезд</span>
+                      </span>
+                      <span class="mt-1 block text-[10px] leading-none" :class="activeCrossingMode === 'bypass' ? 'text-white/55' : 'text-ink/40'" data-pt-copy="calc_crossing_bypass_sub">через Перекоп</span>
+                    </button>
+                    <button
+                      type="button"
+                      x-show="trainAvailable"
+                      @click="crossingMode = 'train'"
+                      class="rounded-xl border p-2.5 text-left transition"
+                      :class="activeCrossingMode === 'train' ? 'border-ink bg-ink text-white shadow-[0_18px_40px_-24px_rgba(11,20,34,.9)]' : 'border-ink/10 bg-white hover:border-ink/30'"
+                    >
+                      <span class="flex items-center gap-1.5 text-[12px] font-extrabold leading-tight">
+                        <svg class="icon h-3.5 w-3.5" aria-hidden="true"><use href="#i-train" /></svg>
+                        <span data-pt-copy="calc_crossing_train">С поездом</span>
+                      </span>
+                      <span class="mt-1 block text-[10px] leading-none" :class="activeCrossingMode === 'train' ? 'text-white/55' : 'text-ink/40'" data-pt-copy="calc_crossing_train_sub">через мост</span>
+                    </button>
+                  </div>
+                  <p x-show="activeCrossingMode === 'bypass'" class="mt-2.5 text-[11px] leading-snug text-ink/60">
+                    <span x-text="routeInfo ? routeKmLabel + ' · ' + durationLabel : 'Считаем объезд…'"></span>
+                  </p>
+                  <div x-show="activeCrossingMode === 'train'" x-cloak>
+                    <p class="mt-2.5 text-[11px] leading-snug text-ink/60" data-pt-copy="calc_crossing_train_note">До станции — на автомобиле, через мост — на поезде, на другой стороне встречает другой автомобиль. Билеты на поезд пассажир покупает отдельно.</p>
+                    <p class="mt-1 text-[10px] leading-snug text-ink/40" x-text="trainFromPoint && trainToPoint ? 'Станции: ' + trainFromPoint.name + ' → ' + trainToPoint.name : ''"></p>
+                  </div>
+                </div>
+
                 <div class="mt-4">
                   <p class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-ink/35" data-pt-copy="calc_popular">Часто заказывают</p>
                   <div class="mt-2 flex flex-wrap gap-2">
@@ -546,7 +596,7 @@
                 <div x-show="routeInfo" x-cloak class="mt-4 flex flex-wrap items-center gap-2">
                   <span class="chip">
                     <svg class="icon h-3.5 w-3.5 text-ink/40" aria-hidden="true"><use href="#i-route" /></svg>
-                    <span x-text="routeInfo ? routeInfo.km + ' км' : ''"></span>
+                    <span x-text="routeInfo ? routeKmLabel : ''"></span>
                   </span>
                   <span class="chip">
                     <svg class="icon h-3.5 w-3.5 text-ink/40" aria-hidden="true"><use href="#i-clock" /></svg>
@@ -648,8 +698,22 @@
                   <div class="space-y-1.5 text-[13px]">
                     <div class="flex items-center justify-between gap-3 text-ink/50">
                       <span data-pt-copy="calc_summary_route">Маршрут</span>
-                      <span class="text-right font-semibold text-ink" x-text="routeInfo ? routeInfo.km + ' км · ' + durationLabel : '—'"></span>
+                      <span class="text-right font-semibold text-ink" x-text="routeInfo ? routeKmLabel + ' · ' + durationLabel : '—'"></span>
                     </div>
+                    <div x-show="isCrossRegion" x-cloak class="flex items-center justify-between gap-3 text-ink/50">
+                      <span data-pt-copy="calc_summary_crossing">Через пролив</span>
+                      <span class="text-right font-semibold text-ink" x-text="activeCrossingMode === 'train' ? 'авто + поезд' : 'объезд через Перекоп'"></span>
+                    </div>
+                    <template x-if="activeCrossingMode === 'train' && trainPriceParts.length">
+                      <div class="space-y-1">
+                        <template x-for="part in trainPriceParts" :key="part.from + part.to">
+                          <div class="flex items-center justify-between gap-3 pl-2 text-[11px] text-ink/45">
+                            <span class="truncate" x-text="pointName(part.from) + ' → ' + pointName(part.to)"></span>
+                            <span class="shrink-0" x-text="part.km + ' км · ' + money(part.basePrice)"></span>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
                     <div class="flex items-center justify-between gap-3 text-ink/50">
                       <span data-pt-copy="calc_summary_tariff">Тариф</span>
                       <span class="font-semibold text-ink" x-text="selectedTariff ? selectedTariff.name : '—'"></span>
@@ -1264,6 +1328,7 @@
               <span><span x-text="dateLabel"></span> · <span x-text="time"></span></span>
               <span><span x-text="passengers"></span> пасс.</span>
               <span x-text="selectedTariff ? selectedTariff.name : ''"></span>
+              <span x-show="isCrossRegion" x-cloak class="text-amber-700" x-text="activeCrossingMode === 'train' ? 'авто + поезд' : 'объезд через Перекоп'"></span>
               <span x-show="roundTrip" x-cloak class="text-emerald-700"><span data-pt-copy="booking_option_round_trip">туда и обратно</span></span>
               <span x-show="childSeat" x-cloak><span data-pt-copy="booking_option_child_seat">детское кресло</span></span>
               <span x-show="extraStop" x-cloak><span data-pt-copy="booking_option_extra_stop">+ остановка</span></span>

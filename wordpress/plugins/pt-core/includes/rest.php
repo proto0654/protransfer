@@ -21,6 +21,8 @@ add_action('rest_api_init', function () {
             'round_trip' => ['required' => false, 'type' => 'boolean', 'default' => false],
             'extra_stop' => ['required' => false, 'type' => 'boolean', 'default' => false],
             'child_seat' => ['required' => false, 'type' => 'boolean', 'default' => false],
+            'crossing_mode' => ['required' => false, 'type' => 'string', 'default' => ''],
+            'legs' => ['required' => false, 'type' => 'array', 'default' => []],
         ],
     ]);
 
@@ -166,6 +168,7 @@ function pt_rest_bootstrap(): WP_REST_Response
             'tariff' => function_exists('carbon_get_theme_option') ? (string) carbon_get_theme_option('pt_popular_tariff') : '',
             'popular' => $popular,
             'overrides' => $overrides,
+            'crossing' => pt_crossing_settings(),
         ],
         'faq' => $faqs,
         'reviews' => $reviews,
@@ -183,6 +186,16 @@ function pt_rest_quote(WP_REST_Request $request): WP_REST_Response|WP_Error
         return new WP_Error('pt_not_found', 'Точка или тариф не найдены', ['status' => 404]);
     }
 
+    $legs_km = [];
+    $legs = $request['legs'];
+    if (is_array($legs)) {
+        foreach ($legs as $leg) {
+            if (is_array($leg) && isset($leg['km']) && is_numeric($leg['km']) && (float) $leg['km'] > 0) {
+                $legs_km[] = (float) $leg['km'];
+            }
+        }
+    }
+
     $quote = pt_calculate_quote(
         pt_point_payload($from_post),
         pt_point_payload($to_post),
@@ -191,6 +204,8 @@ function pt_rest_quote(WP_REST_Request $request): WP_REST_Response|WP_Error
             'round_trip' => (bool) $request['round_trip'],
             'extra_stop' => (bool) $request['extra_stop'],
             'child_seat' => (bool) $request['child_seat'],
+            'crossing_mode' => (string) $request['crossing_mode'],
+            'legs_km' => $legs_km,
         ]
     );
 

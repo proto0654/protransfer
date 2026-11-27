@@ -141,6 +141,8 @@ function pt_order_prepare(array $input): array
         'child_seat' => pt_order_bool($input['child_seat'] ?? false),
         'distance_km' => null,
         'client_total' => null,
+        'crossing_mode' => '',
+        'legs' => [],
         'company' => pt_order_text($input['company'] ?? ''),
         'consent' => pt_order_bool($input['consent'] ?? false),
     ];
@@ -155,6 +157,24 @@ function pt_order_prepare(array $input): array
         $client_total = (float) $input['total'];
         if (is_finite($client_total) && $client_total >= 0) {
             $data['client_total'] = (int) round($client_total);
+        }
+    }
+    $crossing_mode = pt_order_text($input['crossing_mode'] ?? '');
+    if (in_array($crossing_mode, ['bypass', 'train'], true)) {
+        $data['crossing_mode'] = $crossing_mode;
+    }
+    if (isset($input['legs']) && is_array($input['legs'])) {
+        foreach ($input['legs'] as $leg) {
+            if (!is_array($leg)) {
+                continue;
+            }
+            $leg_from = trim((string) ($leg['from'] ?? ''));
+            $leg_to = trim((string) ($leg['to'] ?? ''));
+            $leg_km = isset($leg['km']) && is_numeric($leg['km']) ? (float) $leg['km'] : 0;
+            if ($leg_from === '' || $leg_to === '' || $leg_km <= 0 || $leg_km > 100000) {
+                continue;
+            }
+            $data['legs'][] = ['from' => $leg_from, 'to' => $leg_to, 'km' => $leg_km];
         }
     }
 
@@ -268,6 +288,12 @@ function pt_create_order(array $input): array|WP_Error
     if ($data['distance_km'] !== null) {
         $options['distance_km'] = $data['distance_km'];
     }
+    if ($data['crossing_mode'] !== '') {
+        $options['crossing_mode'] = $data['crossing_mode'];
+    }
+    if ($data['legs']) {
+        $options['legs_km'] = array_map(static fn (array $leg): float => (float) $leg['km'], $data['legs']);
+    }
     $quote = pt_calculate_quote(pt_point_payload($from), pt_point_payload($to), pt_tariff_payload($tariff), $options);
 
     $total = is_int($quote['total']) ? $quote['total'] : null;
@@ -296,6 +322,8 @@ function pt_create_order(array $input): array|WP_Error
         'child_seat' => $data['child_seat'],
         'distance_km' => $data['distance_km'],
         'total' => $data['client_total'],
+        'crossing_mode' => $data['crossing_mode'],
+        'legs' => $data['legs'],
         'consent' => true,
         'company' => '',
         'km_source' => $quote['km_source'],
@@ -328,6 +356,8 @@ function pt_create_order(array $input): array|WP_Error
     update_post_meta($post_id, 'pt_status', 'new');
     update_post_meta($post_id, '_pt_km_source', (string) $quote['km_source']);
     update_post_meta($post_id, '_pt_quote', (string) wp_json_encode([
+        'mode' => $quote['mode'] ?? 'direct',
+        'legs' => $quote['legs'] ?? [],
         'km' => $quote['km'],
         'km_source' => $quote['km_source'],
         'raw_km' => $quote['raw_km'],
@@ -446,6 +476,8 @@ function pt_order_notification_rows(WP_Post $order): array
         'manual' => 'километры клиента',
         'override' => 'ручные км маршрута',
         'haversine' => 'оценка по координатам',
+        'bypass' => 'объезд через Перекоп',
+        'train' => 'авто + поезд',
     ];
 
     $tariff = (string) get_post_meta($order->ID, 'pt_tariff', true);
@@ -481,6 +513,13 @@ function pt_order_notification_rows(WP_Post $order): array
         ['Тариф', $tariff],
     ];
 
+    $crossing = (string) ($payload['crossing_mode'] ?? '');
+    if ($crossing === 'train') {
+        $rows[] = ['Как добраться', 'авто + поезд через мост'];
+    } elseif ($crossing === 'bypass') {
+        $rows[] = ['Как добраться', 'объезд через Перекоп'];
+    }
+
     if ($km !== null) {
         $source = $km_sources[(string) ($quote['km_source'] ?? '')] ?? '';
         $rows[] = ['Километраж', trim(rtrim(rtrim(number_format($km, 1, ',', ''), '0'), ',') . ' км' . ($source !== '' ? ' (' . $source . ')' : ''))];
@@ -492,7 +531,7 @@ function pt_order_notification_rows(WP_Post $order): array
 
     $rows[] = ['Пассажиров', (string) ($payload['passengers'] ?? '')];
 
-    if ($km !== null && $base !== null && $per_km !== null && $per_km > 0) {
+    if ($km !== null && $base !== null && $per_km !== null && $per_km > 0 && $crossing !== 'train') {
         $formula = pt_order_money($base) . ' + ' . rtrim(rtrim(number_format($km, 1, ',', ''), '0'), ',') . ' км × ' . pt_order_money($per_km) . '/км';
         $formula_total = $base + $per_km * $km;
         if (!empty($quote['used_min_price'])) {

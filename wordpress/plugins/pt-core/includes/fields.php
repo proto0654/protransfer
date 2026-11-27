@@ -418,6 +418,32 @@ add_action('carbon_fields_register_fields', function () {
         ->set_page_file('pt-routes')
         ->add_fields([
             Field::make('select', 'pt_popular_tariff', 'Тариф для цен популярных направлений')->add_options($route_tariffs),
+            // Мост закрыт для автомобилей: межрегиональные маршруты по умолчанию
+            // идут через перешеек, а поезд — вариант с двумя автомобилями.
+            Field::make('select', 'pt_crossing_enabled', 'Комбинированный маршрут через Керченский пролив')
+                ->add_options(['1' => 'Включён', '0' => 'Выключен'])
+                ->set_default_value((string) (pt_crossing_defaults()['enabled'] ? '1' : '0'))
+                ->set_help_text('Показывает выбор «в объезд через Перекоп» или «поездом через мост» для пар Крым ↔ материк.'),
+            Field::make('select', 'pt_crossing_rail_from', 'Станция на крымской стороне')
+                ->add_options(pt_route_point_choices())
+                ->set_default_value((string) pt_crossing_defaults()['railFrom'])
+                ->set_help_text('Опубликованная точка-вокзал. Если её нет, вариант с поездом скрыт, объезд работает.'),
+            Field::make('select', 'pt_crossing_rail_to', 'Станция на материковой стороне')
+                ->add_options(pt_route_point_choices())
+                ->set_default_value((string) pt_crossing_defaults()['railTo'])
+                ->set_help_text('Например, «Тамань-Пассажирская». Если её нет, вариант с поездом скрыт.'),
+            Field::make('select', 'pt_crossing_via', 'Метка перешейка на карте')
+                ->add_options(pt_route_point_choices())
+                ->set_default_value((string) pt_crossing_defaults()['via'])
+                ->set_help_text('Подпись на карте. Объезд идёт по коридору из routes.json: Мелитополь — Бердянск — Мариуполь — Ростов.'),
+            Field::make('text', 'pt_crossing_rail_minutes', 'Поезд через мост, мин')
+                ->set_default_value((string) pt_crossing_defaults()['railMinutes'])
+                ->set_attribute('type', 'number')
+                ->set_attribute('min', '1'),
+            Field::make('text', 'pt_crossing_transfer_minutes', 'Пересадка и ожидание, мин')
+                ->set_default_value((string) pt_crossing_defaults()['transferMinutes'])
+                ->set_attribute('type', 'number')
+                ->set_attribute('min', '0'),
             Field::make('complex', 'pt_popular_routes', 'Популярные направления')
                 ->setup_labels(['singular_name' => 'направление', 'plural_name' => 'направления'])
                 ->set_help_text($route_help)

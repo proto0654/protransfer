@@ -3,8 +3,11 @@ import {
   buildRoutePrices,
   calculatorSettings,
   priceBreakdown,
+  priceBreakdownLegs,
   estimateKm,
   estimateMinutes,
+  isCrossRegionRoute,
+  isMainlandPoint,
   formatDuration,
   money,
   roundPrice,
@@ -37,6 +40,21 @@ export default function app(data) {
   const overrides = buildOverrides(routesData.overrides || [])
   const routePrices = buildRoutePrices(routesData.overrides || [])
   const calc = calculatorSettings(data.calc)
+  // Пересечение Керченского пролива: станции и объезд задаются в «Маршрутах».
+  const crossingSettings = routesData.crossing || {}
+  const crossing = {
+    enabled: crossingSettings.enabled !== false,
+    railFrom: crossingSettings.railFrom || '',
+    railTo: crossingSettings.railTo || '',
+    via: crossingSettings.via || '',
+    corridor: Array.isArray(crossingSettings.corridor)
+      ? crossingSettings.corridor
+        .filter((point) => Number.isFinite(Number(point?.lat)) && Number.isFinite(Number(point?.lon)))
+        .map((point, index) => ({ id: String(point.id || `corridor-${index}`), name: String(point.name || ''), lat: Number(point.lat), lon: Number(point.lon) }))
+      : [],
+    railMinutes: Number(crossingSettings.railMinutes) || 45,
+    transferMinutes: Number.isFinite(Number(crossingSettings.transferMinutes)) ? Number(crossingSettings.transferMinutes) : 30,
+  }
   const initialRoute = routesData.popular?.[0]
   const initialFrom = points.find((point) => point.id === initialRoute?.from) || points[0]
   const initialTo = points.find((point) => point.id === initialRoute?.to) || points.find((point) => point.id !== initialFrom?.id)
@@ -61,6 +79,8 @@ export default function app(data) {
     childSeat: false,
     extraStop: false,
     tariffId: tariffs[0]?.id || '',
+    crossing,
+    crossingMode: 'bypass',
 
     name: '',
     phone: '',
@@ -99,6 +119,7 @@ export default function app(data) {
 
       this.$watch('fromName', () => this.loadRoute())
       this.$watch('toName', () => this.loadRoute())
+      this.$watch('crossingMode', () => this.loadRoute())
 
       this.$nextTick(() => {
         this.setupMapLazy()
@@ -113,13 +134,13 @@ export default function app(data) {
         const info = this.routeInfo
         const state = { type: 'pt-calculator-state', from: this.fromPoint?.id || '',
           to: this.toPoint?.id || '', tariff: this.tariffId, roundTrip: this.roundTrip,
-          childSeat: this.childSeat, extraStop: this.extraStop, km: info?.km ?? null }
+          childSeat: this.childSeat, extraStop: this.extraStop, crossing: this.activeCrossingMode, km: info?.km ?? null }
         const snapshot = JSON.stringify(state)
         if (lastReport === snapshot) return
         lastReport = snapshot
         window.parent.postMessage(state, window.location.origin)
       }
-      for (const field of ['fromName', 'toName', 'tariffId', 'roundTrip', 'childSeat', 'extraStop', 'geo']) this.$watch(field, report)
+      for (const field of ['fromName', 'toName', 'tariffId', 'roundTrip', 'childSeat', 'extraStop', 'crossingMode', 'geo']) this.$watch(field, report)
       this.$nextTick(report)
       window.addEventListener('message', (event) => {
         if (event.origin !== window.location.origin || event.source !== window.parent || event.data?.type !== 'pt-calculator-preview') return
@@ -231,16 +252,49 @@ export default function app(data) {
       }
 
       const key = `${from.id}|${to.id}`
-      const coords =
-        this.geo && this.geo.key === key && this.geo.coords
-          ? this.geo.coords
-          : [
-              [from.lat, from.lon],
-              [to.lat, to.lon],
-            ]
+      const geo = this.geo && this.geo.key === key ? this.geo : null
+      const allCoords = []
 
-      mapStore.layer.add(new ymaps.Polyline(coords, {}, { strokeColor: '#D93B31', strokeWidth: 9, strokeOpacity: 0.45 }))
-      mapStore.layer.add(new ymaps.Polyline(coords, {}, { strokeColor: '#0B1422', strokeWidth: 4, strokeOpacity: 0.9 }))
+      const addAuto = (coords) => {
+        if (!Array.isArray(coords) || coords.length < 2) return
+        mapStore.layer.add(new ymaps.Polyline(coords, {}, { strokeColor: '#D93B31', strokeWidth: 9, strokeOpacity: 0.45 }))
+        mapStore.layer.add(new ymaps.Polyline(coords, {}, { strokeColor: '#0B1422', strokeWidth: 4, strokeOpacity: 0.9 }))
+        allCoords.push(...coords)
+      }
+
+      const addRail = (coords) => {
+        if (!Array.isArray(coords) || coords.length < 2) return
+        mapStore.layer.add(new ymaps.Polyline(coords, {}, { strokeColor: '#2F6FED', strokeWidth: 10, strokeOpacity: 0.14 }))
+        mapStore.layer.add(new ymaps.Polyline(coords, {}, { strokeColor: '#2F6FED', strokeWidth: 4, strokeOpacity: 0.95, strokeStyle: 'dash' }))
+        allCoords.push(...coords)
+      }
+
+      if (geo?.mode === 'train' && Array.isArray(geo.legs)) {
+        for (const leg of geo.legs) {
+          if (leg.type === 'rail') addRail(leg.coords)
+          else addAuto(leg.coords)
+        }
+        const stationFrom = this.railFromPoint
+        const stationTo = this.railToPoint
+        for (const station of [stationFrom, stationTo]) {
+          if (!station) continue
+          mapStore.layer.add(new ymaps.Placemark(
+            [station.lat, station.lon],
+            { iconContent: 'П', hintContent: station.name },
+            { preset: 'islands#circleIcon', iconColor: '#2F6FED' },
+          ))
+        }
+      } else {
+        addAuto(geo?.coords || [[from.lat, from.lon], [to.lat, to.lon]])
+        const via = this.crossingViaPoint
+        if (geo?.mode === 'bypass' && via) {
+          mapStore.layer.add(new ymaps.Placemark(
+            [via.lat, via.lon],
+            { hintContent: via.name },
+            { preset: 'islands#circleDotIcon', iconColor: '#D97706' },
+          ))
+        }
+      }
 
       const pinFrom = this.pin('А', '#0B1422')
       const pinTo = this.pin('Б', '#D93B31')
@@ -251,7 +305,7 @@ export default function app(data) {
         new ymaps.Placemark([to.lat, to.lon], { ...pinTo.properties, hintContent: to.name }, pinTo.options),
       )
 
-      const bounds = coords.reduce(
+      const bounds = allCoords.reduce(
         (acc, coord) => [
           [Math.min(acc[0][0], coord[0]), Math.min(acc[0][1], coord[1])],
           [Math.max(acc[1][0], coord[0]), Math.max(acc[1][1], coord[1])],
@@ -268,26 +322,25 @@ export default function app(data) {
 
     /* маршрут: сначала Яндекс (нужен ключ), потом публичный OSRM, иначе расчёт по координатам */
 
-    async routeFromYandex(from, to) {
+    async routeFromYandex(from, to, via = null) {
       const apiKey = (this.site.map && this.site.map.apiKey) || ''
       if (!mapStore.ymaps || !apiKey) return null
 
       try {
-        const route = await mapStore.ymaps.route(
-          [
-            [from.lat, from.lon],
-            [to.lat, to.lon],
-          ],
-          { routingMode: 'auto', mapStateAutoApply: false },
-        )
+        const vias = Array.isArray(via) ? via : (via ? [via] : [])
+        const waypoints = [[from.lat, from.lon], ...vias.map((point) => [point.lat, point.lon]), [to.lat, to.lon]]
+        const route = await mapStore.ymaps.route(waypoints, { routingMode: 'auto', mapStateAutoApply: false })
         const active = route.getActiveRoute()
         if (!active) return null
 
         const coords = []
-        const segments = route.getPaths().get(0).getSegments()
-        for (let i = 0; i < segments.getLength(); i += 1) {
-          const piece = segments.get(i).getCoordinates()
-          for (let j = 0; j < piece.length; j += 1) coords.push([piece[j][0], piece[j][1]])
+        const paths = route.getPaths()
+        for (let p = 0; p < paths.getLength(); p += 1) {
+          const segments = paths.get(p).getSegments()
+          for (let i = 0; i < segments.getLength(); i += 1) {
+            const piece = segments.get(i).getCoordinates()
+            for (let j = 0; j < piece.length; j += 1) coords.push([piece[j][0], piece[j][1]])
+          }
         }
         if (coords.length < 2) return null
 
@@ -302,13 +355,15 @@ export default function app(data) {
       }
     },
 
-    async routeFromOsrm(from, to) {
+    async routeFromOsrm(from, to, via = null) {
       const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 5000)
+      const timer = setTimeout(() => controller.abort(), 8000)
       try {
+        const vias = Array.isArray(via) ? via : (via ? [via] : [])
+        const waypoints = [from, ...vias, to]
         const url =
           'https://router.project-osrm.org/route/v1/driving/' +
-          `${from.lon},${from.lat};${to.lon},${to.lat}` +
+          waypoints.map((point) => `${point.lon},${point.lat}`).join(';') +
           '?overview=simplified&geometries=geojson'
         const response = await fetch(url, { signal: controller.signal })
         if (!response.ok) throw new Error(`osrm ${response.status}`)
@@ -329,7 +384,24 @@ export default function app(data) {
       }
     },
 
-    estimateRoute(from, to) {
+    estimateRoute(from, to, via = null) {
+      if (!from || !to) return null
+      const vias = Array.isArray(via) ? via : (via ? [via] : [])
+      if (vias.length) {
+        const points = [from, ...vias, to]
+        let km = 0
+        for (let i = 0; i < points.length - 1; i += 1) {
+          const legKm = estimateKm(points[i], points[i + 1], overrides, this.calc)
+          if (!legKm) return null
+          km += legKm
+        }
+        return {
+          km,
+          minutes: estimateMinutes(km, this.calc),
+          coords: points.map((point) => [point.lat, point.lon]),
+          source: 'bypass',
+        }
+      }
       const km = estimateKm(from, to, overrides, this.calc)
       if (!km) return null
       return {
@@ -341,6 +413,86 @@ export default function app(data) {
         ],
         source: overrides[`${from.id}|${to.id}`] != null ? 'override' : 'haversine',
       }
+    },
+
+    estimateRouteOrZero(from, to) {
+      if (!from || !to) return null
+      if (from.id === to.id) {
+        return { km: 0, minutes: 0, coords: [[from.lat, from.lon], [from.lat, from.lon]], source: 'zero' }
+      }
+      return this.estimateRoute(from, to)
+    },
+
+    normalizeLeg(route, point) {
+      if (!route) {
+        return { km: 0, minutes: 0, coords: [[point.lat, point.lon], [point.lat, point.lon]], source: 'zero' }
+      }
+      const km = Number(route.km) || 0
+      const minutes = Number.isFinite(route.rawMinutes)
+        ? route.rawMinutes
+        : (Number.isFinite(route.minutes) ? route.minutes : estimateMinutes(km, this.calc))
+      return { km, minutes, coords: route.coords, source: route.source }
+    },
+
+    trainResult(from, to, first, second, exact = false) {
+      const stationFrom = this.trainFromPoint
+      const stationTo = this.trainToPoint
+      const railMinutes = this.crossing.railMinutes
+      const transferMinutes = this.crossing.transferMinutes
+      const rawMinutes = first.minutes + second.minutes + railMinutes + transferMinutes
+      const km = first.km + second.km
+      const step = this.calc.time_round
+      return {
+        km,
+        rawMinutes,
+        exact,
+        minutes: Math.max(step, Math.round(rawMinutes / step) * step),
+        coords: [...first.coords, ...second.coords],
+        legs: [
+          { type: 'auto', from: from.id, to: stationFrom.id, km: first.km, minutes: first.minutes, coords: first.coords },
+          { type: 'rail', from: stationFrom.id, to: stationTo.id, km: 0, minutes: railMinutes, coords: [[stationFrom.lat, stationFrom.lon], [stationTo.lat, stationTo.lon]] },
+          { type: 'auto', from: stationTo.id, to: to.id, km: second.km, minutes: second.minutes, coords: second.coords },
+        ],
+        source: 'train',
+      }
+    },
+
+    estimateTrainRoute(from, to) {
+      if (!this.trainFromPoint || !this.trainToPoint) return null
+      const first = this.normalizeLeg(this.estimateRouteOrZero(from, this.trainFromPoint), from)
+      const second = this.normalizeLeg(this.estimateRouteOrZero(this.trainToPoint, to), this.trainToPoint)
+      return this.trainResult(from, to, first, second)
+    },
+
+    estimateRouteForMode(from, to, mode) {
+      if (mode === 'train') return this.estimateTrainRoute(from, to)
+      if (mode === 'bypass') return this.estimateRoute(from, to, this.crossingCorridorPoints)
+      return this.estimateRoute(from, to)
+    },
+
+    async loadAutoRoute(from, to, via = null, mode = 'direct') {
+      if (!from || !to) return null
+      if (from.id === to.id) {
+        return { km: 0, rawMinutes: 0, coords: [[from.lat, from.lon], [from.lat, from.lon]], source: 'zero', mode }
+      }
+      // Яндекс (нужен apiKey) → публичный OSRM (5с) → null, вызывающий оставит fallback
+      let result = await this.routeFromYandex(from, to, via)
+      if (!result) result = await this.routeFromOsrm(from, to, via)
+      if (result) result.mode = mode
+      return result
+    },
+
+    async loadTrainRoute(from, to) {
+      const stationFrom = this.trainFromPoint
+      const stationTo = this.trainToPoint
+      if (!stationFrom || !stationTo) return null
+      const [firstResult, secondResult] = await Promise.all([
+        this.loadAutoRoute(from, stationFrom, null, 'train'),
+        this.loadAutoRoute(stationTo, to, null, 'train'),
+      ])
+      const first = this.normalizeLeg(firstResult || this.estimateRouteOrZero(from, stationFrom), from)
+      const second = this.normalizeLeg(secondResult || this.estimateRouteOrZero(stationTo, to), stationTo)
+      return this.trainResult(from, to, first, second, Boolean(firstResult && secondResult))
     },
 
     async loadRoute() {
@@ -355,42 +507,51 @@ export default function app(data) {
         return
       }
 
+      const mode = this.activeCrossingMode
       const key = `${from.id}|${to.id}`
+      const cacheKey = `${key}|${mode}`
 
-      if (routeCache.has(key)) {
-        this.geo = routeCache.get(key)
+      if (routeCache.has(cacheKey)) {
+        this.geo = routeCache.get(cacheKey)
         this.routeLoading = false
         this.refreshMap()
         return
       }
 
-      if (this.geo && this.geo.key === key && this.geo.source && this.geo.source !== 'override' && this.geo.source !== 'haversine') {
-        this.refreshMap()
-        return
+      if (this.geo && this.geo.key === key && (this.geo.mode || 'direct') === mode) {
+        const resolved = mode === 'train'
+          ? Boolean(this.geo.exact)
+          : Boolean(this.geo.source) && !['override', 'haversine', 'bypass', 'train'].includes(this.geo.source)
+        if (resolved) {
+          this.refreshMap()
+          return
+        }
       }
 
       // Сразу показываем км из override/оценки, линию А→Б; геометрию дорог дотягиваем фоном.
-      const fallback = this.estimateRoute(from, to)
+      const fallback = this.estimateRouteForMode(from, to, mode)
       if (fallback) {
         fallback.key = key
+        fallback.mode = mode
         this.geo = fallback
         this.refreshMap()
       }
 
       this.routeLoading = true
       try {
-        // Яндекс (нужен apiKey) → публичный OSRM (5с) → оставляем fallback
-        let result = await this.routeFromYandex(from, to)
-        if (revision !== routeRevision) return
-        if (!result) result = await this.routeFromOsrm(from, to)
+        let result = null
+        if (mode === 'train') result = await this.loadTrainRoute(from, to)
+        else if (mode === 'bypass') result = await this.loadAutoRoute(from, to, this.crossingCorridorPoints, 'bypass')
+        else result = await this.loadAutoRoute(from, to, null, 'direct')
         if (revision !== routeRevision) return
 
         if (result) {
           result.key = key
-          routeCache.set(key, result)
+          result.mode = mode
+          routeCache.set(cacheKey, result)
           this.geo = result
         } else if (fallback) {
-          routeCache.set(key, fallback)
+          routeCache.set(cacheKey, fallback)
           this.geo = fallback
         } else {
           this.geo = null
@@ -566,6 +727,75 @@ export default function app(data) {
       return estimateKm(a, b, overrides, this.calc)
     },
 
+    get railFromPoint() {
+      return this.points.find((p) => p.id === this.crossing.railFrom) || null
+    },
+
+    get railToPoint() {
+      return this.points.find((p) => p.id === this.crossing.railTo) || null
+    },
+
+    get crossingViaPoint() {
+      const point = this.points.find((p) => p.id === this.crossing.via)
+      if (point) return point
+      if (this.crossing.corridor.length) {
+        const first = this.crossing.corridor[0]
+        return { id: 'crossing-via', name: first.name, lat: first.lat, lon: first.lon }
+      }
+      return null
+    },
+
+    get crossingCorridorPoints() {
+      return this.corridorFor(this.fromPoint)
+    },
+
+    corridorFor(point) {
+      const list = this.crossing.corridor.length
+        ? this.crossing.corridor
+        : (this.crossingViaPoint ? [{ name: this.crossingViaPoint.name, lat: this.crossingViaPoint.lat, lon: this.crossingViaPoint.lon }] : [])
+      return isMainlandPoint(point) ? [...list].reverse() : list
+    },
+
+    get trainFromPoint() {
+      if (!this.isCrossRegion) return null
+      return isMainlandPoint(this.fromPoint) ? this.railToPoint : this.railFromPoint
+    },
+
+    get trainToPoint() {
+      if (!this.isCrossRegion) return null
+      return isMainlandPoint(this.fromPoint) ? this.railFromPoint : this.railToPoint
+    },
+
+    get crossingAvailable() {
+      return Boolean(this.crossing.enabled && this.crossingCorridorPoints.length)
+    },
+
+    get trainAvailable() {
+      return Boolean(this.crossingAvailable && this.railFromPoint && this.railToPoint)
+    },
+
+    get isCrossRegion() {
+      return this.crossingAvailable && isCrossRegionRoute(this.fromPoint, this.toPoint)
+    },
+
+    get activeCrossingMode() {
+      if (!this.isCrossRegion) return 'direct'
+      return this.crossingMode === 'train' && this.trainAvailable ? 'train' : 'bypass'
+    },
+
+    get crossingModeLabel() {
+      return this.activeCrossingMode === 'train' ? 'авто + поезд через мост' : 'объезд через Перекоп'
+    },
+
+    get crossingModeShort() {
+      return this.activeCrossingMode === 'train' ? 'Поезд через мост' : 'Объезд через Перекоп'
+    },
+
+    pointName(id) {
+      const point = this.points.find((p) => p.id === id)
+      return point ? point.name : id
+    },
+
     get fromPoint() {
       return this.findPoint(this.fromName)
     },
@@ -580,21 +810,52 @@ export default function app(data) {
       if (!from || !to || from.id === to.id) return null
 
       const key = `${from.id}|${to.id}`
-      if (this.geo?.key === key && Number.isFinite(this.geo.rawMinutes)) {
-        const step = this.calc.time_round
-        const minutes = Math.max(step, Math.round(this.geo.rawMinutes / step) * step)
-        return {
-          km: this.geo.km,
-          minutes,
-          duration: formatDuration(minutes),
-          exact: true,
-          source: this.geo.source,
+      const mode = this.activeCrossingMode
+      const geo = this.geo && this.geo.key === key && (this.geo.mode || 'direct') === mode ? this.geo : null
+      const step = this.calc.time_round
+      const roundMinutes = (raw) => Math.max(step, Math.round(raw / step) * step)
+
+      if (geo && Number.isFinite(geo.km)) {
+        if (mode === 'train' && Array.isArray(geo.legs)) {
+          const raw = Number.isFinite(geo.rawMinutes)
+            ? geo.rawMinutes
+            : estimateMinutes(geo.km, this.calc) + this.crossing.railMinutes + this.crossing.transferMinutes
+          const minutes = roundMinutes(raw)
+          return { km: geo.km, minutes, duration: formatDuration(minutes), exact: Boolean(geo.exact), source: 'train', mode: 'train', legs: geo.legs }
+        }
+        if (mode === 'bypass') {
+          const raw = Number.isFinite(geo.rawMinutes) ? geo.rawMinutes : estimateMinutes(geo.km, this.calc)
+          const minutes = roundMinutes(raw)
+          return { km: geo.km, minutes, duration: formatDuration(minutes), exact: Boolean(geo.rawMinutes), source: geo.source || 'bypass', mode: 'bypass' }
+        }
+        if (Number.isFinite(geo.rawMinutes)) {
+          const minutes = roundMinutes(geo.rawMinutes)
+          return { km: geo.km, minutes, duration: formatDuration(minutes), exact: true, source: geo.source, mode: 'direct' }
+        }
+      }
+
+      if (mode === 'train') {
+        const fallback = this.estimateTrainRoute(from, to)
+        if (fallback) {
+          return { km: fallback.km, minutes: fallback.minutes, duration: formatDuration(fallback.minutes), exact: false, source: 'train', mode: 'train', legs: fallback.legs }
+        }
+      }
+      if (mode === 'bypass') {
+        const fallback = this.estimateRoute(from, to, this.crossingCorridorPoints)
+        if (fallback) {
+          return { km: fallback.km, minutes: fallback.minutes, duration: formatDuration(fallback.minutes), exact: false, source: 'bypass', mode: 'bypass' }
         }
       }
 
       const km = estimateKm(from, to, overrides, this.calc)
       const minutes = estimateMinutes(km, this.calc)
-      return { km, minutes, duration: formatDuration(minutes), exact: false, source: overrides[`${from.id}|${to.id}`] != null ? 'override' : 'haversine' }
+      return { km, minutes, duration: formatDuration(minutes), exact: false, source: overrides[`${from.id}|${to.id}`] != null ? 'override' : 'haversine', mode: 'direct' }
+    },
+
+    get routeKmLabel() {
+      const km = this.routeInfo?.km
+      if (!Number.isFinite(km)) return ''
+      return this.activeCrossingMode === 'train' ? `${km} км на авто` : `${km} км`
     },
 
     get durationLabel() {
@@ -618,18 +879,37 @@ export default function app(data) {
     },
 
     /** Own ₽/км saved for this route and tariff in «Маршруты», if any. */
+    routePerKmFor(tariff, fromId, toId) {
+      if (!tariff || !fromId || !toId) return undefined
+      return routePrices[`${fromId}|${toId}|${tariff.id}`]
+    },
+
     routePerKm(tariff) {
       const from = this.fromPoint
       const to = this.toPoint
       if (!tariff || !from || !to) return undefined
-      return routePrices[`${from.id}|${to.id}|${tariff.id}`]
+      return this.routePerKmFor(tariff, from.id, to.id)
     },
 
     breakdownFor(tariff) {
-      return priceBreakdown(tariff, this.routeInfo?.km, {
-        roundTrip: this.roundTrip, extraStop: this.extraStop, childSeat: this.childSeat,
+      const info = this.routeInfo
+      if (!info) return null
+      const options = { roundTrip: this.roundTrip, extraStop: this.extraStop, childSeat: this.childSeat }
+      if (info.mode === 'train' && Array.isArray(info.legs)) {
+        const autoLegs = info.legs
+          .filter((leg) => leg.type === 'auto' && leg.km > 0)
+          .map((leg) => ({ from: leg.from, to: leg.to, km: leg.km, perKm: this.routePerKmFor(tariff, leg.from, leg.to) }))
+        return priceBreakdownLegs(tariff, autoLegs, options, this.calc)
+      }
+      return priceBreakdown(tariff, info.km, {
+        ...options,
         perKm: this.routePerKm(tariff),
       }, this.calc)
+    },
+
+    get trainPriceParts() {
+      if (this.activeCrossingMode !== 'train') return []
+      return this.breakdownFor(this.selectedTariff)?.parts || []
     },
 
     get labBreakdown() {
@@ -637,7 +917,7 @@ export default function app(data) {
     },
 
     get labDistanceSource() {
-      const labels = { yandex: 'Яндекс', osrm: 'OSRM', override: 'Ручной маршрут', haversine: 'Оценка по координатам' }
+      const labels = { yandex: 'Яндекс', osrm: 'OSRM', override: 'Ручной маршрут', haversine: 'Оценка по координатам', bypass: 'Объезд через Перекоп', train: 'Авто + поезд' }
       return labels[this.routeInfo?.source] || 'Маршрут не выбран'
     },
 
@@ -673,8 +953,11 @@ export default function app(data) {
           const from = this.points.find((p) => p.id === r.from)
           const to = this.points.find((p) => p.id === r.to)
           if (!from || !to) return null
-          const km = estimateKm(from, to, overrides, this.calc)
-          const minutes = estimateMinutes(km, this.calc)
+          const cross = this.crossingAvailable && isCrossRegionRoute(from, to)
+          const route = cross ? this.estimateRoute(from, to, this.corridorFor(from)) : this.estimateRoute(from, to)
+          const km = route?.km
+          if (!km) return null
+          const minutes = route.minutes ?? estimateMinutes(km, this.calc)
           const perKm = routePrices[`${from.id}|${to.id}|${economy.id}`] ?? economy.perKm
           const price = roundPrice(Math.max(economy.minPrice, economy.base + perKm * km), this.calc)
           return { from, to, km, duration: formatDuration(minutes), price: economy.onRequest ? null : price, tariffName: economy.name }
@@ -819,6 +1102,10 @@ export default function app(data) {
 
     buildOrder(tariff) {
       const isRequest = Boolean(tariff.onRequest)
+      const info = this.routeInfo
+      const autoLegs = info?.mode === 'train' && Array.isArray(info.legs)
+        ? info.legs.filter((leg) => leg.type === 'auto').map((leg) => ({ from: leg.from, to: leg.to, km: leg.km }))
+        : []
       return {
         id: `PT-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
         delivered: false,
@@ -835,7 +1122,10 @@ export default function app(data) {
         tariff: tariff.name,
         tariffSlug: tariff.id,
         cars: tariff.cars,
-        km: this.routeInfo ? this.routeInfo.km : null,
+        km: info ? info.km : null,
+        crossing: this.isCrossRegion ? this.activeCrossingMode : '',
+        crossingLabel: this.isCrossRegion ? this.crossingModeLabel : '',
+        legs: autoLegs,
         clientTotal: isRequest ? null : this.total,
         price: isRequest ? 'по запросу' : money(this.total),
         name: this.name.trim(),
@@ -860,6 +1150,8 @@ export default function app(data) {
         child_seat: order.childSeat,
         distance_km: order.km,
         total: order.clientTotal,
+        crossing_mode: order.crossing,
+        legs: order.legs,
         consent: this.consent,
         company: this.company,
       }
@@ -938,6 +1230,7 @@ export default function app(data) {
       if (!this.order) return ''
       return [
         `Маршрут: ${this.order.from} → ${this.order.to}`,
+        this.order.crossingLabel ? `Как добраться: ${this.order.crossingLabel}` : '',
         `Дата и время: ${formatDate(this.order.date)}, ${this.order.time}`,
         `Пассажиров: ${this.order.passengers}`,
         `Тариф: ${this.order.tariff}`,

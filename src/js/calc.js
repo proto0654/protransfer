@@ -102,6 +102,59 @@ export function priceBreakdown(tariff, km, options, settings = defaults) {
     total: tariff.onRequest ? null : roundPrice(beforeRounding, settings) }
 }
 
+/**
+ * A «train» crossing is two separate cars: one before the railway station and
+ * one after it. Each leg pays its own minimum and its own route rate, while
+ * round-trip and surcharges apply once to the sum.
+ */
+export function priceBreakdownLegs(tariff, legs, options = {}, settings = defaults) {
+  if (!tariff || !Array.isArray(legs)) return null
+  const parts = []
+  for (const leg of legs) {
+    const km = Number(leg.km)
+    if (!Number.isFinite(km) || km <= 0) continue
+    const override = Number(leg.perKm)
+    const usesRoutePrice = Number.isFinite(override) && override > 0
+    const perKm = usesRoutePrice ? override : Number(tariff.perKm)
+    const formula = Number(tariff.base) + perKm * km
+    const minimum = Number(tariff.minPrice)
+    parts.push({
+      from: leg.from || '', to: leg.to || '', km, perKm,
+      perKmSource: usesRoutePrice ? 'route' : 'tariff',
+      formula, minimum, basePrice: Math.max(minimum, formula),
+    })
+  }
+  if (!parts.length) return null
+  const basePrice = parts.reduce((sum, part) => sum + part.basePrice, 0)
+  const multiplier = options.roundTrip ? settings.round_trip_factor : 1
+  const extraStop = options.extraStop ? settings.extra_stop_price : 0
+  const childSeat = options.childSeat ? settings.child_seat_price : 0
+  const beforeRounding = basePrice * multiplier + extraStop + childSeat
+  return {
+    km: parts.reduce((sum, part) => sum + part.km, 0),
+    parts,
+    basePrice,
+    minimum: parts.reduce((sum, part) => sum + part.minimum, 0),
+    formula: parts.reduce((sum, part) => sum + part.formula, 0),
+    multiplier, extraStop, childSeat, beforeRounding,
+    roundStep: settings.price_round,
+    onRequest: Boolean(tariff.onRequest),
+    total: tariff.onRequest ? null : roundPrice(beforeRounding, settings),
+  }
+}
+
+/** Crimea is everything west of the Kerch strait; the mainland starts east of it. */
+export const MAINLAND_LON = 36.6
+
+export function isMainlandPoint(point) {
+  return Number(point?.lon) > MAINLAND_LON
+}
+
+export function isCrossRegionRoute(from, to) {
+  if (!from || !to || from.id === to.id) return false
+  return isMainlandPoint(from) !== isMainlandPoint(to)
+}
+
 export function money(value) {
   return `${new Intl.NumberFormat('ru-RU').format(value)} ₽`
 }

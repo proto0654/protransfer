@@ -367,6 +367,56 @@
     "group": "calculator",
     "default": "Часто заказывают"
   },
+  "calc_crossing_title": {
+    "label": "Калькулятор: заголовок выбора через пролив",
+    "group": "calculator",
+    "default": "Керченский мост закрыт для автомобилей"
+  },
+  "calc_crossing_text": {
+    "label": "Калькулятор: пояснение к выбору через пролив",
+    "group": "calculator",
+    "default": "Выберите, как пересечь пролив: в объезд через Перекоп или с пересадкой на поезд. Цена и маршрут на карте пересчитаются."
+  },
+  "calc_crossing_bypass": {
+    "label": "Калькулятор: вариант «В объезд»",
+    "group": "calculator",
+    "default": "В объезд"
+  },
+  "calc_crossing_bypass_sub": {
+    "label": "Калькулятор: подпись «через Перекоп»",
+    "group": "calculator",
+    "default": "через Перекоп"
+  },
+  "calc_crossing_train": {
+    "label": "Калькулятор: вариант «С поездом»",
+    "group": "calculator",
+    "default": "С поездом"
+  },
+  "calc_crossing_train_sub": {
+    "label": "Калькулятор: подпись «через мост»",
+    "group": "calculator",
+    "default": "через мост"
+  },
+  "calc_crossing_train_note": {
+    "label": "Калькулятор: пояснение к поезду",
+    "group": "calculator",
+    "default": "До станции — на автомобиле, через мост — на поезде, на другой стороне встречает другой автомобиль. Билеты на поезд пассажир покупает отдельно."
+  },
+  "calc_crossing_badge_bypass": {
+    "label": "Калькулятор: метка «Объезд через Перекоп»",
+    "group": "calculator",
+    "default": "Объезд через Перекоп"
+  },
+  "calc_crossing_badge_train": {
+    "label": "Калькулятор: метка «Поезд через мост»",
+    "group": "calculator",
+    "default": "Поезд через мост"
+  },
+  "calc_summary_crossing": {
+    "label": "Калькулятор: строка «Через пролив»",
+    "group": "calculator",
+    "default": "Через пролив"
+  },
   "calc_step_when": {
     "label": "Калькулятор: шаг «Когда»",
     "group": "calculator",

@@ -358,6 +358,14 @@ expect(get_post_meta($priced['id'], '_pt_client_total') === '999', 'A differing 
 $priced_payload = json_decode((string) get_post_meta($priced['id'], 'pt_payload'), true);
 expect(($priced_payload['total'] ?? null) === 999, 'The client total must remain visible in the snapshot');
 
+reset_order_state('203.0.113.18');
+$timed = pt_create_order(order_input(['distance_km' => 100, 'duration_minutes' => 155]));
+expect(is_array($timed), 'An order with a client duration must be accepted');
+$timed_quote = json_decode((string) get_post_meta($timed['id'], '_pt_quote'), true);
+expect(($timed_quote['minutes'] ?? 0) === 155, 'The client duration must be stored in the quote snapshot');
+$timed_payload = json_decode((string) get_post_meta($timed['id'], 'pt_payload'), true);
+expect(($timed_payload['duration_minutes'] ?? 0) === 155, 'The client duration must remain visible in the payload');
+
 reset_order_state('203.0.113.12');
 $priced = pt_create_order(order_input(['total' => 2500]));
 expect(get_post_meta($priced['id'], 'pt_price') === '2500', 'Without a client distance the configured override must be used');

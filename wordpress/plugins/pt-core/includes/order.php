@@ -140,6 +140,7 @@ function pt_order_prepare(array $input): array
         'extra_stop' => pt_order_bool($input['extra_stop'] ?? false),
         'child_seat' => pt_order_bool($input['child_seat'] ?? false),
         'distance_km' => null,
+        'duration_minutes' => null,
         'client_total' => null,
         'crossing_mode' => '',
         'legs' => [],
@@ -157,6 +158,12 @@ function pt_order_prepare(array $input): array
         $client_total = (float) $input['total'];
         if (is_finite($client_total) && $client_total >= 0) {
             $data['client_total'] = (int) round($client_total);
+        }
+    }
+    if (isset($input['duration_minutes']) && is_numeric($input['duration_minutes'])) {
+        $duration_minutes = (int) round((float) $input['duration_minutes']);
+        if ($duration_minutes > 0 && $duration_minutes <= 100000) {
+            $data['duration_minutes'] = $duration_minutes;
         }
     }
     $crossing_mode = pt_order_text($input['crossing_mode'] ?? '');
@@ -295,6 +302,11 @@ function pt_create_order(array $input): array|WP_Error
         $options['legs_km'] = array_map(static fn (array $leg): float => (float) $leg['km'], $data['legs']);
     }
     $quote = pt_calculate_quote(pt_point_payload($from), pt_point_payload($to), pt_tariff_payload($tariff), $options);
+    if ($data['duration_minutes'] !== null) {
+        // The browser shows the provider's road time; keep it in the order
+        // instead of replacing it with the coarser coordinate estimate.
+        $quote['minutes'] = $data['duration_minutes'];
+    }
 
     $total = is_int($quote['total']) ? $quote['total'] : null;
     $price = $total === null ? 'По запросу' : (string) $total;
@@ -321,6 +333,7 @@ function pt_create_order(array $input): array|WP_Error
         'extra_stop' => $data['extra_stop'],
         'child_seat' => $data['child_seat'],
         'distance_km' => $data['distance_km'],
+        'duration_minutes' => $data['duration_minutes'],
         'total' => $data['client_total'],
         'crossing_mode' => $data['crossing_mode'],
         'legs' => $data['legs'],

@@ -65,14 +65,14 @@ $yalta = add_point('yalta', 'Ялта', 44.4952, 34.1663);
 $anapa = add_point('anapa', 'Анапа', 44.8949, 37.3169);
 add_point('kerch-yuzhnaya', 'Керчь-Южная', 45.318079, 36.429475);
 add_point('taman', 'Тамань-Пассажирская', 45.2167, 36.7167);
-add_point('armyansk', 'Армянск', 46.108, 33.692);
+add_point('dzhankoy', 'Джанкой', 45.717, 34.383);
 
 $tariff = ['id' => 'comfort', 'base' => 200, 'per_km' => 20, 'min_price' => 1000];
 $theme_options['pt_route_overrides'] = [
     ['from_slug' => 'sip-air', 'to_slug' => 'kerch-yuzhnaya', 'km' => 200],
     ['from_slug' => 'taman', 'to_slug' => 'anapa', 'km' => 88],
-    ['from_slug' => 'sip-air', 'to_slug' => 'armyansk', 'km' => 250],
-    ['from_slug' => 'armyansk', 'to_slug' => 'melitopol', 'km' => 150],
+    ['from_slug' => 'sip-air', 'to_slug' => 'dzhankoy', 'km' => 90],
+    ['from_slug' => 'dzhankoy', 'to_slug' => 'melitopol', 'km' => 150],
     ['from_slug' => 'melitopol', 'to_slug' => 'berdyansk', 'km' => 120],
     ['from_slug' => 'berdyansk', 'to_slug' => 'mariupol', 'km' => 100],
     ['from_slug' => 'mariupol', 'to_slug' => 'rostov', 'km' => 180],
@@ -105,8 +105,8 @@ expect_equal($bypass['total'], 11200, 'bypass is one car for the whole distance'
 
 $legacy = pt_calculate_quote($sip, $anapa, $tariff, ['distance_km' => 300]);
 expect_equal($legacy['mode'], 'bypass', 'a legacy cross-region request is recalculated through the isthmus');
-expect_equal($legacy['km'], 1100, 'a legacy on-bridge distance is ignored');
-expect_equal($legacy['total'], 22200, 'a legacy quote matches the bypass');
+expect_equal($legacy['km'], 940, 'a legacy on-bridge distance is ignored');
+expect_equal($legacy['total'], 19000, 'a legacy quote matches the bypass');
 
 $reverse = pt_calculate_quote($anapa, $sip, $tariff, ['crossing_mode' => 'train']);
 expect_equal($reverse['legs'][0]['to'], 'taman', 'reverse train starts at the mainland station');

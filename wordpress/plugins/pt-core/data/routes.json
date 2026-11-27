@@ -3,9 +3,9 @@
     "enabled": true,
     "railFrom": "kerch-yuzhnaya",
     "railTo": "taman",
-    "via": "armyansk",
+    "via": "dzhankoy",
     "corridor": [
-      { "id": "armyansk", "name": "Армянск", "lat": 46.108, "lon": 33.692 },
+      { "id": "dzhankoy", "name": "Джанкой", "lat": 45.717, "lon": 34.383 },
       { "id": "melitopol", "name": "Мелитополь", "lat": 46.8389, "lon": 35.365 },
       { "id": "berdyansk", "name": "Бердянск", "lat": 46.755, "lon": 36.79 },
       { "id": "mariupol", "name": "Мариуполь", "lat": 47.095, "lon": 37.55 },

@@ -204,7 +204,7 @@ function pt_crossing_defaults(): array
         'enabled' => true,
         'railFrom' => 'kerch-yuzhnaya',
         'railTo' => 'taman',
-        'via' => 'armyansk',
+        'via' => 'dzhankoy',
         'corridor' => [],
         'railMinutes' => 45,
         'transferMinutes' => 30,
@@ -225,7 +225,7 @@ function pt_crossing_settings(): array
     } elseif ($enabled === '1') {
         $settings['enabled'] = true;
     }
-    foreach (['rail_from' => 'railFrom', 'rail_to' => 'railTo', 'via' => 'via'] as $option => $key) {
+    foreach (['rail_from' => 'railFrom', 'rail_to' => 'railTo'] as $option => $key) {
         $value = carbon_get_theme_option('pt_crossing_' . $option);
         if (is_string($value) && trim($value) !== '') {
             $settings[$key] = trim($value);

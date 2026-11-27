@@ -423,7 +423,7 @@ add_action('carbon_fields_register_fields', function () {
             Field::make('select', 'pt_crossing_enabled', 'Комбинированный маршрут через Керченский пролив')
                 ->add_options(['1' => 'Включён', '0' => 'Выключен'])
                 ->set_default_value((string) (pt_crossing_defaults()['enabled'] ? '1' : '0'))
-                ->set_help_text('Показывает выбор «в объезд через Перекоп» или «поездом через мост» для пар Крым ↔ материк.'),
+                ->set_help_text('Показывает выбор «в объезд через Джанкой» или «поездом через мост» для пар Крым ↔ материк.'),
             Field::make('select', 'pt_crossing_rail_from', 'Станция на крымской стороне')
                 ->add_options(pt_route_point_choices())
                 ->set_default_value((string) pt_crossing_defaults()['railFrom'])
@@ -432,10 +432,6 @@ add_action('carbon_fields_register_fields', function () {
                 ->add_options(pt_route_point_choices())
                 ->set_default_value((string) pt_crossing_defaults()['railTo'])
                 ->set_help_text('Например, «Тамань-Пассажирская». Если её нет, вариант с поездом скрыт.'),
-            Field::make('select', 'pt_crossing_via', 'Метка перешейка на карте')
-                ->add_options(pt_route_point_choices())
-                ->set_default_value((string) pt_crossing_defaults()['via'])
-                ->set_help_text('Подпись на карте. Объезд идёт по коридору из routes.json: Мелитополь — Бердянск — Мариуполь — Ростов.'),
             Field::make('text', 'pt_crossing_rail_minutes', 'Поезд через мост, мин')
                 ->set_default_value((string) pt_crossing_defaults()['railMinutes'])
                 ->set_attribute('type', 'number')

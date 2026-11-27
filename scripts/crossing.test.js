@@ -9,16 +9,16 @@ const points = [
   { id: 'anapa', name: 'Анапа', lat: 44.8949, lon: 37.3169 },
   { id: 'kerch-yuzhnaya', name: 'Керчь-Южная', lat: 45.318079, lon: 36.429475 },
   { id: 'taman', name: 'Тамань-Пассажирская', lat: 45.2167, lon: 36.7167 },
-  { id: 'armyansk', name: 'Армянск', lat: 46.108, lon: 33.692 },
+  { id: 'dzhankoy', name: 'Джанкой', lat: 45.717, lon: 34.383 },
 ]
 
 const crossing = {
   enabled: true,
   railFrom: 'kerch-yuzhnaya',
   railTo: 'taman',
-  via: 'armyansk',
+  via: 'dzhankoy',
   corridor: [
-    { id: 'armyansk', name: 'Армянск', lat: 46.108, lon: 33.692 },
+    { id: 'dzhankoy', name: 'Джанкой', lat: 45.717, lon: 34.383 },
     { id: 'rostov', name: 'Ростов-на-Дону', lat: 47.2357, lon: 39.7015 },
   ],
   railMinutes: 45,
@@ -31,8 +31,8 @@ const routes = {
   overrides: [
     { from: 'sip-air', to: 'kerch-yuzhnaya', km: 200 },
     { from: 'taman', to: 'anapa', km: 88 },
-    { from: 'sip-air', to: 'armyansk', km: 250 },
-    { from: 'armyansk', to: 'rostov', km: 500 },
+    { from: 'sip-air', to: 'dzhankoy', km: 90 },
+    { from: 'dzhankoy', to: 'rostov', km: 600 },
     { from: 'rostov', to: 'anapa', km: 300 },
   ],
 }
@@ -73,9 +73,9 @@ test('a Crimea-mainland route starts on the bypass and switches to two cars plus
   assert.equal(trip.isCrossRegion, true)
   assert.equal(trip.activeCrossingMode, 'bypass')
   assert.equal(trip.routeInfo.mode, 'bypass')
-  assert.equal(trip.routeInfo.km, 1050)
-  assert.equal(trip.priceFor(tariff), 21200)
-  assert.match(trip.crossingModeLabel, /Перекоп/)
+  assert.equal(trip.routeInfo.km, 990)
+  assert.equal(trip.priceFor(tariff), 20000)
+  assert.match(trip.crossingModeLabel, /Джанкой/)
 
   trip.crossingMode = 'train'
   assert.equal(trip.activeCrossingMode, 'train')
@@ -128,5 +128,5 @@ test('without the mainland station the bypass stays available and the train swit
   assert.equal(trip.trainAvailable, false)
   assert.equal(trip.activeCrossingMode, 'bypass')
   assert.equal(trip.routeInfo.mode, 'bypass')
-  assert.equal(trip.priceFor(tariff), 21200)
+  assert.equal(trip.priceFor(tariff), 20000)
 })

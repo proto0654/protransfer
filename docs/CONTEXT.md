@@ -10,6 +10,6 @@ Staging owns CMS records and uploaded media. Local Vite proxies its API/media pa
 
 The booking form now creates real orders: the public form posts to `POST /wp-json/pt/v1/order`, and WordPress validates the request, recalculates the price on the server, stores a `pt_order` record and sends a Telegram and MAX notification when the matching bot settings are filled. A static/browser-only build without a backend keeps the localStorage draft and messenger handoff as a fallback. Landing-copy save-and-render and order creation were verified on the stand; a field-by-field acceptance across every editor screen is still incomplete.
 
-Crossing the Kerch strait: pairs between Crimea and the mainland use a land bypass corridor (Perekop, Melitopol, Berdyansk, Mariupol, Rostov) and an optional two-car train transfer via Kerch-Yuzhnaya and Taman-Passazhirskaya. The station and timing settings live in «Точки → Маршруты»; the corridor coordinates live in `routes.json` under `crossing.corridor`.
+Crossing the Kerch strait: pairs between Crimea and the mainland use a land bypass corridor (Dzhankoy/Chonhar, Melitopol, Berdyansk, Mariupol, Rostov) and an optional two-car train transfer via Kerch-Yuzhnaya and Taman-Passazhirskaya. The station and timing settings live in «Точки → Маршруты»; the corridor coordinates live in `routes.json` under `crossing.corridor`.
 
 Documentation index: [README.md](README.md).

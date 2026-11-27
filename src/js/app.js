@@ -736,13 +736,7 @@ export default function app(data) {
     },
 
     get crossingViaPoint() {
-      const point = this.points.find((p) => p.id === this.crossing.via)
-      if (point) return point
-      if (this.crossing.corridor.length) {
-        const first = this.crossing.corridor[0]
-        return { id: 'crossing-via', name: first.name, lat: first.lat, lon: first.lon }
-      }
-      return null
+      return this.points.find((p) => p.id === this.crossing.via) || null
     },
 
     get crossingCorridorPoints() {
@@ -784,11 +778,11 @@ export default function app(data) {
     },
 
     get crossingModeLabel() {
-      return this.activeCrossingMode === 'train' ? 'авто + поезд через мост' : 'объезд через Перекоп'
+      return this.activeCrossingMode === 'train' ? 'авто + поезд через мост' : 'объезд через Джанкой'
     },
 
     get crossingModeShort() {
-      return this.activeCrossingMode === 'train' ? 'Поезд через мост' : 'Объезд через Перекоп'
+      return this.activeCrossingMode === 'train' ? 'Поезд через мост' : 'Объезд через Джанкой'
     },
 
     pointName(id) {
@@ -917,7 +911,7 @@ export default function app(data) {
     },
 
     get labDistanceSource() {
-      const labels = { yandex: 'Яндекс', osrm: 'OSRM', override: 'Ручной маршрут', haversine: 'Оценка по координатам', bypass: 'Объезд через Перекоп', train: 'Авто + поезд' }
+      const labels = { yandex: 'Яндекс', osrm: 'OSRM', override: 'Ручной маршрут', haversine: 'Оценка по координатам', bypass: 'Объезд через Джанкой', train: 'Авто + поезд' }
       return labels[this.routeInfo?.source] || 'Маршрут не выбран'
     },
 
